@@ -2,7 +2,7 @@ function showactive(data) {
     //console.log(data);
     $('.tradesbody').html('');
     if (data[0] != null) {
-      var tradehtml = '<div class="usertrades"><div class="header">Your Active Trades <span style="float:right;"><i class="fa fa-clock-o"></i> <span class="expiretime"></span></span></div>';
+      var tradehtml = '<div class="usertrades"><div class="header">Your Active Trades <span style="float:right;"><span class="expiretime"></span> <i class="fa fa-clock-o"></i></span></div>';
     } else {
       var tradehtml = '<div class="usertrades"><div class="header">No Active Trades</div>';
     }

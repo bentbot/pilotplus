@@ -61,7 +61,7 @@ function displayOptions(displaysymbols) {
          '</div>'+
          '<div style="clear:both;"></div>'+
         '</div>');
-       $(".trading").append(option[index]);
+       $(".trading").html(option[index]);
       });
     $(".trading").addClass('symbols');
   }

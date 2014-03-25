@@ -1,7 +1,7 @@
 require(['modules/historictrades']);
 require(['modules/chart']);
 require(['modules/protodate']);
-var displayoptions = require(['modules/displayoptions']);
+var displayOptions = require(['modules/displayoptions']);
 var showactive = require(['modules/activetrades']);
 
 function validateEmail(email) { 
@@ -55,9 +55,16 @@ if (username) {
         '<button type="button" style="height: 31px;" class="btn btn-success btnuser username">'+username+'</button>'+      
         '<button type="button" style="height: 31px;" class="btn btn-blue userbal btnfinance"></button>'+
       '</div>';
-
-    $('.topcontainer .right').html(login);
+} else { 
+  var login = '<div class="btn-group accountinfo" style="padding: 0px; ">' +
+        '<div class="input-group input-group-sm loginform">' +
+        '<input type="text" autocomplete="off" class="form-control headerlogin headerusername" name="email" id="email" placeholder="Email" style="border-radius: 4px 0px 0px 4px !important;">' +
+        '<input type="password" autocomplete="off" class="form-control headerlogin" name="password" id="password" placeholder="Password">' +
+        '<button type="submit" style="height: 31px;border-radius: 0px 4px 4px 0px;" class="btn btn-success loginbtn username">Login</button>' +
+        '</div>'+
+    '</div>';
 }
+$('.topcontainer .right').html(login);
 }
 
 
@@ -104,7 +111,7 @@ var symbols = ['BTCUSD', 'EURUSD', 'GBPUSD', 'JPYUSD', '^DJI', 'CLJ14.NYM', 'GCJ
         case 'trade':
           loadtrades(data.symbol)
         break;
-        case 'accound':
+        case 'account':
           loadaccount(data.user);
         break;
       }
@@ -158,7 +165,7 @@ var symbols = ['BTCUSD', 'EURUSD', 'GBPUSD', 'JPYUSD', '^DJI', 'CLJ14.NYM', 'GCJ
         $('.progress'+key+' .progress-bar').attr('aria-valuetransitiongoal', obj);
         $('.progress'+key+' .progress-bar').progressbar();
       }
-    });   
+    });
    socket.on('offer', function (data) {
       $('.rawoffer').html(data);
       $('.info h1').html(data*100+'%');
@@ -252,11 +259,8 @@ showhistoric(data, user, lastprice);
             },2500);
           });   
 
-
-
-var sitename = $('.btnlogo .sitename').html();
-
   socket.on('disconnect', function () {
+    var sitename = $('.btnlogo .sitename').html();
     $('.btnlogo').removeClass('btn-warning').addClass('btn-danger');
     $('.btnlogo .sitename').html('<span class="glyphicon glyphicon-warning-sign"></span> Lost Connection');
   })
@@ -265,15 +269,10 @@ var sitename = $('.btnlogo .sitename').html();
     $('.btnlogo .sitename').html('<span class="glyphicon glyphicon-lock"></span> Reconnected');
     setTimeout(function(){
       $('.btnlogo').removeClass('btn-success').removeClass('btn-danger').addClass('btn-warning');
-      $('.btnlogo .sitename').html(sitename);
+      $('.btnlogo .sitename').html('<span class="glyphicon glyphicon-arrow-up"></span><span class="glyphicon glyphicon-arrow-down"></span>');
     },3000);
   })
 
-
-
-  socket.on('loginreturn', function (data) {
-    console.log(data);
-  });
 
   socket.on('tradingopen', function (data) {
     var tradingopen = data;
@@ -286,6 +285,10 @@ socket.on('alertuser', function (data) {
   } else if (data.color == 'red') {
     showDanger(data.message, data.trinket, showSymbols);
   }
+});
+
+socket.on('tradeoutcome', function (data) {
+  showSplit(data.win,data.loss,data.push,showSymbols);
 });
 
 // Proto

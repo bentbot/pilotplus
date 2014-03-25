@@ -3,6 +3,27 @@
 // Trading
 $(function() {
 
+
+  $('.loginbtn').click(function() {
+    var email = $("#email").val();
+    var password = $("#password").val();
+        console.log(email);
+    var url = encodeURIComponent("/login/" + email + "/" + password);
+    $.ajax({
+      url: url,
+      cache: false
+    }).done(function( html ) {
+      if (html == "Too many requests.") {
+        $('.loginbtn').removeClass('btn-warning').addClass('btn-danger').html(html);
+      } else if (html == "Invalid username or password."){
+        $('.loginbtn').removeClass('btn-success').addClass('btn-warning').html('Try again');
+      } else if (html == "OK") {
+        $('.loginbtn').removeClass('btn-warning').addClass('btn-success').html('Logged in');
+        setTimeout(function(){location.reload()},1000);
+      }
+    });
+  });
+
     $(".applytrade").click(function(e) {
           var symbol = $(this).parent().parent().attr('id');
           var direction = $('#'+symbol+' .info .direction .action').html();
@@ -22,9 +43,13 @@ $(function() {
     var offer = $('#'+symbol+' .info .details .rawoffer').html();
     var amount = $('#'+symbol+' .info .trader .amount .amountfield').val();
     if (amount > 0) {
-      var possiblewin = (+amount+(amount*offer));
-      $('#'+symbol+' .info .details h1').html("m฿" + possiblewin.toFixed(2));
-    } else {
+      if (amount <= lastbal) {
+        var possiblewin = (+amount+(amount*offer));
+        $('#'+symbol+' .info .details h1').html("m฿" + possiblewin.toFixed(2));
+      } else {
+         $('#'+symbol+' .info .trader .amount .amountfield').val(lastbal);
+      }
+    } else { // keep amount above zero
       $('#'+symbol+' .info .trader .amount .amountfield').val(0);
       $('#'+symbol+' .info .details h1').html(offer * 100 + "%");
     }
@@ -57,62 +82,16 @@ $(function() {
 
 // UI Stuff
 // Animated header strip
-var headercounter = 0;
+
   // $('.header').click(function(e) {
   //   //e.preventDefault();
   //   $(this).disableSelection();
   //   $(this).next().toggleClass('hideme');
   // });
-  $(".right").click(function() {
-    if (headercounter != 1) {
-      headercounter = 1;
-      showAccount();
-    } else {
-      showSymbols();
-      headercounter = 0;
-    }
-  });
-  $(".btnfinance").click(function() {
-    if (headercounter != 2) {
-      headercounter = 2;
-      showFinances();
-    } else {
-      showSymbols();
-      headercounter = 0;
-    }
-  });
-  $(".btnlogo").click(function() {
-    headercounter = 0;
-    showSymbols();
-  });
-  $(".signupbtn").click(function() {
-    var email = $('#email').val();
-    var password = $('#password').val();
-    console.log(email + password);
-  });
 
-  $('.loginbtn').click(function() {
-    var email = $("#email").val();
-    var password = $("#password").val();
-    var url = encodeURIComponent("/login/" + email + "/" + password);
-    $.ajax({
-      url: url,
-      cache: false
-    }).done(function( html ) {
-      if (html == "Too many requests.") {
-        $('.loginbtn').removeClass('btn-warning').addClass('btn-danger').html(html);
-      } else if (html == "Invalid username or password."){
-        $('.loginbtn').removeClass('btn-success').addClass('btn-warning').html('Try again');
-      } else if (html == "OK") {
-        $('.loginbtn').removeClass('btn-warning').addClass('btn-success').html('Logged in');
-        setTimeout(function(){location.reload()},1000);
-      }
-    });
-  });
 
     showloginfield();
-    $('.info h1').html(defaultoption*100+'%');
-
+    $('.info .details h1').html(0.75*100+'%');
 
 // Proto chat
 
@@ -154,6 +133,8 @@ function hideAllPanels() {
   $(".accounttray").css('height', '0px');    
   $(".announcesuccess").css('height', '0px');
   $(".announcedanger").css('height', '0px');
+  $(".announcesplit").css('height', '0px');
+  $(".announcexp").css('height', '0px');
   $(".linktray").css('height', '0px');
 }
 
@@ -176,14 +157,42 @@ function showDanger(msg, xp, next) {
   },3500);
 }
 
+function showSplit(x, y, z, next) {
+  hideAllPanels();
+  $(".announcesplit").css('height', 30);
+
+var total = x+y+z;
+$(".announcesplit .x").css('width', (x/total)*100+'%').html('Won m฿ '+x);
+$(".announcesplit .y").css('width', (y/total)*100+'%').css('left', (x/total)*100+'%').html('Pushed m฿ '+y);
+$(".announcesplit .z").css('width', (z/total)*100+'%').html(z+' m฿ Lost');
+
+    if (x>z) { $(".announcesplit .x").addClass('applyspotlight'); $(".announcesplit .z").removeClass('applyspotlight'); }
+    if (x<z) { $(".announcesplit .z").addClass('applyspotlight'); $(".announcesplit .x").removeClass('applyspotlight'); }
+    if (x==y || y>0) { $(".announcesplit .z").removeClass('applyspotlight'); $(".announcesplit .x").removeClass('applyspotlight'); }
+    if (y>0) $(".announcesplit .y").addClass('applyspotlight');
+    if (y==0) $(".announcesplit .y").removeClass('applyspotlight');
+    setTimeout(function(){
+      next();
+    },5700);
+}
+
+function showXp(xp, next) {
+  hideAllPanels();
+  $(".announcexp").css('height', 30);
+  $(".announcexp .y").css('width', 100+'%').html('You gained '+xp+'XP');
+    setTimeout(function(){
+      next();
+    },2670);
+}
 
 function showSymbols() {
   hideAllPanels();
   $(".linktray").css('height', 30);
 }
 function showAccount() {
-  hideAllPanels();
-  $(".accounttray").css('height', 30);
+  //hideAllPanels();
+  //$(".accounttray").css('height', 30);
+  console.log('show accound func');
 
 }
 function showFinances() {
