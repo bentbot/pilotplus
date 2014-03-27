@@ -1,5 +1,5 @@
-function showhistoric(data, user, lastprice){
-    var display = 5;
+function showhistoric(data, user, trim){
+    if (!trim) trim = 0;
     var tid = 0;
     $('.historictrades').html('');
       var tradehtml = '<div class="userblock"><div class="header">Trade History</div>';    
@@ -16,11 +16,6 @@ function showhistoric(data, user, lastprice){
         possiblewin = possiblewin.toFixed(2);
         entry.price = Number(entry.price);
 
-        if (!lastprice) {
-          lastprice = '-.--';
-        }
-
-
         if (entry.direction == 'Call') {
           var arrowhtml = '<span style="opacity: 0.7" class="glyphicon glyphicon-arrow-up"></span>';
         } else if (entry.direction == 'Put') {
@@ -36,23 +31,25 @@ function showhistoric(data, user, lastprice){
         }
         var entrytime = new Date(0);
         var entrydate = new Date(0);
+        var iodate = new Date(0);
         entrytime.setUTCMilliseconds(entry.time);
         entrydate.setUTCMilliseconds(entry.time);
+        iodate.setUTCMilliseconds(entry.time);
         entrytime = entrytime.customFormat( "#hhh#:#mm#:#ss# " );
         entrydate = entrydate.customFormat( "#DD#/#MM#/#YYYY#" );
+        iodate = iodate.toISOString();
 
-
-        //if (tid < display) {
+        if (tid <= trim) {
         tradehtml = tradehtml + '<tr class="historictrade" id="'+entry._id+'">' +
                     '<td class="symbol">'+entry.symbol+'</td>'+
-                    '<td>'+entrytime+'</td>'+
+                    '<td><time class="timeago" datetime="'+iodate+'">'+entrytime+'</time></td>'+
                     '<td>'+arrowhtml+' <span class="tradeprice">'+entry.price+'</span></td>'+
                     //'<td title="Expires: '+thisdate+' '+thistime+'">'+thistime+'</td>'+
                     '<td>'+thumbhtml+'</td>'+
                     //'<td class="bold" title="Expires: '+thisdate+' '+thistime+'">Trade in: <span class="expiretime"></span></td>'+
                   '</tr>';
-        //}
-      tid++;
+        if (trim > 0) tid++;
+      } 
     }
   }
     tradehtml = tradehtml + '</div></div></div></tbody></table></div>';

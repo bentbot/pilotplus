@@ -1,25 +1,4 @@
 <% include init.html %>
 <% include top.html %>
-<div class="container" style="padding: 4px 0px;">
-  <div class="notif"></div>
-  <div class="trading"></div>
 
-<% if (col >= 1) { %>
-<div class="col1">
-<% if (activetrades) { %>
-<div class="tradestable">
-</div>
-<% } %>
-</div>
-<% } if (col >= 2) { %>
-
-<div class="col2">
-<% if (historictrades) { %>
-<div class="historictrades">
-</div>
-<% } %>
-</div>
-<% } %>
-
-</div>
 <% include bottom.html %>

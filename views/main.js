@@ -1,54 +1,32 @@
+var displayOptions = require(['modules/displayoptions']);
+var showactive = require(['modules/activetrades']);
 require(['modules/historictrades']);
 require(['modules/chart']);
 require(['modules/protodate']);
-var displayOptions = require(['modules/displayoptions']);
-var showactive = require(['modules/activetrades']);
+require(['modules/remote']);
+require(['modules/local']);
 
-function validateEmail(email) { 
-    var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-    return re.test(email);
-} 
-function symbolSwitch(symbol) {
-    switch (symbol) {
-      case '^DJI':
-        symbol = 'DOW'
-      break;
-      case 'CLJ14.NYM':
-        symbol = 'OIL'
-      break;
-      case 'GCJ14.CMX':
-        symbol = 'GOLD'
-      break;
-      case '^GSPC':
-        symbol = 'SP500'
-      break;
-      case '^IXIC':
-        symbol = 'NASDAQ'
-      break;
-      case 'SLV':
-        symbol = 'SILVER'
-      break;
-    }
-    return symbol;
-}
-
-var tradingopen = true;
-
-
-var defaultoption = 0.75;
-
-var autocolor = 1;
-function uitradeico(symbol, direction, manual) {
-  if (manual) { autocolor = 0; }
-  if (direction == 0) {
-       $(".icon"+symbol).removeClass('green').removeClass('glyphicon-arrow-up').addClass('red').addClass('glyphicon-arrow-down');
-    } else {
-        $(".icon"+symbol).removeClass('red').removeClass('glyphicon-arrow-down').addClass('green').addClass('glyphicon-arrow-up');
-    }
-}
-
-
-
+    var socket = io.connect('https://vbit.io:3000', {secure: true});
+    var user, userid, option, offer, price, expires, direction, userdeposit;
+    var $users = $('#users ul');
+    var $chatOutput = $('.messages');
+    var $chatInput = $('#chat input');
+    var $messagesOutput = $('.messages');
+    var $messagesInput = $('#chat input');
+    var target = 0;
+    var autocolor = 1;
+    var defaultoption = 0.75;
+    var tradingopen = true;
+var publictrades = true;
+    var nexttrade = {};
+    var chartinit = new Array();
+         socket.on('nexttrade', function (data) {
+           data[1] = ('0' + data[1]).slice(-2);
+          nexttrade = data;
+            if (data[0] || data[1]) {
+              $('.expiretime').html(data[0] + ':' + data[1]);
+            }
+          });     
 function showloginfield(username) {
 if (username) {
   var login = '<div class="btn-group accountinfo" style="padding: 0px;">'+
@@ -58,7 +36,7 @@ if (username) {
 } else { 
   var login = '<div class="btn-group accountinfo" style="padding: 0px; ">' +
         '<div class="input-group input-group-sm loginform">' +
-        '<input type="text" autocomplete="off" class="form-control headerlogin headerusername" name="email" id="email" placeholder="Email" style="border-radius: 4px 0px 0px 4px !important;">' +
+        '<input type="text" autocomplete="off" class="form-control headerlogin headerusername" name="email" id="email" placeholder="Email or Username" style="border-radius: 4px 0px 0px 4px !important;">' +
         '<input type="password" autocomplete="off" class="form-control headerlogin" name="password" id="password" placeholder="Password">' +
         '<button type="submit" style="height: 31px;border-radius: 0px 4px 4px 0px;" class="btn btn-success loginbtn username">Login</button>' +
         '</div>'+
@@ -67,41 +45,72 @@ if (username) {
 $('.topcontainer .right').html(login);
 }
 
-
-
-    // $('.box').cycle({ 
-    // fx:     'scrollLeft', 
-    // speed:  300, 
-    // next:   '.box', 
-    // timeout: 0 
-    // });
-    
-    var socket = io.connect('https://vbit.io:3000', {secure: true});
-    var user, userid, option, offer, price, expires, direction, userdeposit;
-    var $users = $('#users ul');
-    var $chatOutput = $('.messages');
-    var $chatInput = $('#chat input');
-    var $messagesOutput = $('.messages');
-    var $messagesInput = $('#chat input');
-    var target = 0;
-
 function loadtrades(displaysymbols) {
+  $('.hook').html('');
+  var page = '<div class="container" style="padding: 4px 0px;">'+
+    '<div class="notif"></div>'+
+    '<div class="trading"></div>'+
+    '<div class="col1">'+
+    '<div class="tradestable">'+
+    '</div>'+
+    '</div>'+
+    '<div class="col2">'+
+    '<div class="historictrades">'+
+    '</div>'+
+    '</div>'+
+    '</div>';
+  $('.hook').html(page);
   if (!displaysymbols) {
   }
-  // Load chart
+  // Load chart and options
   displayOptions(displaysymbols);
     $.each(displaysymbols, function( index, symbol ) {
+      chartinit[symbol] = false;
       socket.on(symbol+'_chart', function (data) {
       symbol = symbolSwitch(symbol);
       if (chartinit[symbol] != true) {
        loadChart(symbol, data);
+       chartinit[symbol] = true;
       }
-    });      
+    });
+    // Update the chart
       socket.on(symbol+'_updatedchart', function (data) {
       symbol = symbolSwitch(symbol);
       updateChart(symbol, data);
     });
   });
+
+  socket.on('activetrades', function (data) {
+    showactive(data, nexttrade);
+  });
+
+  socket.on('historictrades', function (data) {
+    showhistoric(data, user, 5);
+  });
+}
+function loadbalsync() {
+  $('.hook').html('');
+  var page = '<div class="container" style="padding: 4px 0px;">'+
+    '<div class="notif"></div>'+
+    '<div class="col1 sync">'+
+    '<div class="local">'+
+    '</div>'+
+    '</div>'+
+    '<div class="col2 sync">'+
+    '<div class="remote">'+
+    '</div>'+
+    '</div>'+
+    '</div>';
+  $('.hook').html(page);
+
+  socket.on('localbals', function (data) {
+    showLocalBals(data);
+  });
+
+  socket.on('remotebals', function (data) {
+    showRemoteBals(data);
+  });
+
 }
               //Bitcoin   Euro      Pound    Yen       Dow     Oil           Gold        Silver  S&P 500   Nasdaq
 var symbols = ['BTCUSD', 'EURUSD', 'GBPUSD', 'JPYUSD', '^DJI', 'CLJ14.NYM', 'GCJ14.CMX', 'SLV', '^GSPC', '^IXIC'];
@@ -113,6 +122,9 @@ var symbols = ['BTCUSD', 'EURUSD', 'GBPUSD', 'JPYUSD', '^DJI', 'CLJ14.NYM', 'GCJ
         break;
         case 'account':
           loadaccount(data.user);
+        break;
+        case 'admin':
+          loadbalsync();
         break;
       }
     });
@@ -133,7 +145,7 @@ var symbols = ['BTCUSD', 'EURUSD', 'GBPUSD', 'JPYUSD', '^DJI', 'CLJ14.NYM', 'GCJ
   var lastbal = 0;
    socket.on('bankbal', function (data) {
       $('.bankbal').html(data);
-    });   
+    });
     
    socket.on('userbal', function (data) {
       $('.userbal').html('m฿'+data+'');
@@ -208,16 +220,6 @@ var symbols = ['BTCUSD', 'EURUSD', 'GBPUSD', 'JPYUSD', '^DJI', 'CLJ14.NYM', 'GCJ
     });
   });
 
-
-var publictrades = true;
-socket.on('activetrades', function (data) {
-  showactive(data);
-});
-
-   socket.on('historictrades', function (data) {
-showhistoric(data, user, lastprice);
-});
-
     $('.showallhistoric').click(function() {
       $('.historictrade').each(function( index ) {
         $(this).addClass('hide');
@@ -229,12 +231,7 @@ showhistoric(data, user, lastprice);
           console.log('Bank: '+data);
         });
 
-         socket.on('nexttrade', function (data) {
-           data[1] = ('0' + data[1]).slice(-2)
-            if (data[0] || data[1]) {
-              $('.expiretime').html(data[0] + ':' + data[1]);
-            }
-          });     
+
 
          socket.on('tradeadded', function (symbol) {
           symbol = symbolSwitch(symbol);
@@ -314,6 +311,14 @@ socket.on('tradeoutcome', function (data) {
       $(".messages").scrollTop($(".messages")[0].scrollHeight);
     });
     
+    function action(i) {
+      socket.emit('action', i);   
+    }
+    
+    function page(name, symbol) {
+      socket.emit('page', {page: name, symbol: symbol});   
+    }
+
     function chat(message) {
       socket.emit('chat', message);   
     }
@@ -324,5 +329,5 @@ socket.on('tradeoutcome', function (data) {
       });
     }
 
-
+$(".timeago").timeago();
 require(['modules/onloadui']);

@@ -2,12 +2,12 @@
 
 // Trading
 $(function() {
+console.log('loaded ui jquery');
 
-
-  $('.loginbtn').click(function() {
+  $(".right").on("click",".loginbtn",function(e) {
     var email = $("#email").val();
     var password = $("#password").val();
-        console.log(email);
+    if (email && password) {
     var url = encodeURIComponent("/login/" + email + "/" + password);
     $.ajax({
       url: url,
@@ -22,9 +22,10 @@ $(function() {
         setTimeout(function(){location.reload()},1000);
       }
     });
+  }
   });
 
-    $(".applytrade").click(function(e) {
+    $(".hook").on("click",".applytrade",function(e) {
           var symbol = $(this).parent().parent().attr('id');
           var direction = $('#'+symbol+' .info .direction .action').html();
           var amount = Number($('#'+symbol+' .info .amount .amountfield').val());
@@ -38,12 +39,13 @@ $(function() {
             user : user
           });
         });
-  $( ".amountfield" ).change(function() {
+  $(".hook").on("change",".amountfield",function() {
     var symbol = $(this).parent().parent().parent().parent().attr('id');
     var offer = $('#'+symbol+' .info .details .rawoffer').html();
     var amount = $('#'+symbol+' .info .trader .amount .amountfield').val();
+    var lastbal = 999;
     if (amount > 0) {
-      if (amount <= lastbal) {
+      if (amount < lastbal) {
         var possiblewin = (+amount+(amount*offer));
         $('#'+symbol+' .info .details h1').html("m฿" + possiblewin.toFixed(2));
       } else {
@@ -54,8 +56,7 @@ $(function() {
       $('#'+symbol+' .info .details h1').html(offer * 100 + "%");
     }
   });
-  $(".callbtn").click(function() {
-    console.log('callbtn');
+  $(".hook").on("click",".callbtn",function() {
     var symbol = $(this).parent().parent().attr('id');
     $('.apply'+symbol).removeClass('btn-default').addClass('btn-warning');
     $('.put'+symbol).removeClass('btn-danger').addClass('btn-default');
@@ -66,7 +67,8 @@ $(function() {
     var autocolor = 0;
     var direction = 'call';
   });
-  $(".putbtn").click(function() {
+  $(".hook").on("click",".putbtn",function() {
+
     var symbol = $(this).parent().parent().attr('id');
     $('.apply'+symbol).removeClass('btn-default').addClass('btn-warning');
     $('.put'+symbol).addClass('btn-danger').removeClass('btn-default');
@@ -77,8 +79,6 @@ $(function() {
     var direction = 'put';
   });
 
-});
-$(function() {
 
 // UI Stuff
 // Animated header strip
@@ -88,7 +88,9 @@ $(function() {
   //   $(this).disableSelection();
   //   $(this).next().toggleClass('hideme');
   // });
-
+$('.btnlogo').click(function() {
+  showSymbols();
+});
 
     showloginfield();
     $('.info .details h1').html(0.75*100+'%');
@@ -119,14 +121,15 @@ $(function() {
     //   $users.find('li').removeClass('selected');
     //   $user.addClass('selected');
     // });
-console.log('loaded ui jquery');
 
+
+
+// onload
 });
 
 // Ui functions
 
 function isOdd(num) { return num % 2;}
-
 
 function hideAllPanels() {
   $(".financestray").css('height', '0px');
@@ -144,7 +147,7 @@ function showSuccess(msg, xp, next) {
   $(".announcesuccess .container ul li a").html(msg);
   $(".announcesuccess .container span").html(xp);
   setTimeout(function(){
-    next();
+    hideAllPanels();next();
   },3500);
 }
 function showDanger(msg, xp, next) {
@@ -153,7 +156,7 @@ function showDanger(msg, xp, next) {
   $(".announcedanger .container ul li a").html(msg);
   $(".announcedanger .container span").html(xp);
   setTimeout(function(){
-    next();
+    hideAllPanels();next();
   },3500);
 }
 
@@ -162,9 +165,9 @@ function showSplit(x, y, z, next) {
   $(".announcesplit").css('height', 30);
 
 var total = x+y+z;
-$(".announcesplit .x").css('width', (x/total)*100+'%').html('Won m฿ '+x);
-$(".announcesplit .y").css('width', (y/total)*100+'%').css('left', (x/total)*100+'%').html('Pushed m฿ '+y);
-$(".announcesplit .z").css('width', (z/total)*100+'%').html(z+' m฿ Lost');
+$(".announcesplit .x").css('width', (x/total)*100+'%').html('Won for m฿ '+x);
+$(".announcesplit .y").css('width', (y/total)*100+'%').css('left', (x/total)*100+'%').html('Pushed for m฿ '+y);
+$(".announcesplit .z").css('width', (z/total)*100+'%').html('Lost for m฿'+z);
 
     if (x>z) { $(".announcesplit .x").addClass('applyspotlight'); $(".announcesplit .z").removeClass('applyspotlight'); }
     if (x<z) { $(".announcesplit .z").addClass('applyspotlight'); $(".announcesplit .x").removeClass('applyspotlight'); }
@@ -172,7 +175,7 @@ $(".announcesplit .z").css('width', (z/total)*100+'%').html(z+' m฿ Lost');
     if (y>0) $(".announcesplit .y").addClass('applyspotlight');
     if (y==0) $(".announcesplit .y").removeClass('applyspotlight');
     setTimeout(function(){
-      next();
+      hideAllPanels();next();
     },5700);
 }
 
@@ -181,7 +184,7 @@ function showXp(xp, next) {
   $(".announcexp").css('height', 30);
   $(".announcexp .y").css('width', 100+'%').html('You gained '+xp+'XP');
     setTimeout(function(){
-      next();
+      hideAllPanels();next();
     },2670);
 }
 
@@ -199,4 +202,13 @@ function showFinances() {
   hideAllPanels();
 $(".financestray").css('height', 30);
 }
+function uitradeico(symbol, direction, manual) {
+  if (manual) { autocolor = 0; }
+  if (direction == 0) {
+       $(".icon"+symbol).removeClass('green').removeClass('glyphicon-arrow-up').addClass('red').addClass('glyphicon-arrow-down');
+    } else {
+        $(".icon"+symbol).removeClass('red').removeClass('glyphicon-arrow-down').addClass('green').addClass('glyphicon-arrow-up');
+    }
+}
+
 

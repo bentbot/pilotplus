@@ -610,7 +610,7 @@ border-top: 0px solid #FFF;
 } 
 
 .headerlogin {
-  width: 125px !important; 
+  width: 150px !important; 
   margin-top: 5px; 
   border: 0px;
   float: left;
@@ -782,4 +782,8 @@ padding: 1px 5px !important;
 font-size: 12px !important;
 line-height: 1.5 !important;
 border-radius: 3px !important;
+}
+
+.input-group-sm > .form-control, .input-group-sm > .input-group-addon, .input-group-sm > .input-group-btn > .btn {
+padding: 6px 15px !important;
 }
