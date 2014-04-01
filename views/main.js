@@ -7,7 +7,7 @@ require(['modules/remote']);
 require(['modules/local']);
 
     var socket = io.connect('https://vbit.io:3000', {secure: true});
-    var user, userid, option, offer, price, expires, direction, userdeposit;
+    var user, userid, option, price, expires, direction, userdeposit;
     var $users = $('#users ul');
     var $chatOutput = $('.messages');
     var $chatInput = $('#chat input');
@@ -15,9 +15,8 @@ require(['modules/local']);
     var $messagesInput = $('#chat input');
     var target = 0;
     var autocolor = 1;
-    var defaultoption = 0.75;
     var tradingopen = true;
-var publictrades = true;
+    var publictrades = true;
     var nexttrade = {};
     var chartinit = new Array();
          socket.on('nexttrade', function (data) {
@@ -26,17 +25,17 @@ var publictrades = true;
             if (data[0] || data[1]) {
               $('.expiretime').html(data[0] + ':' + data[1]);
             }
-          });     
+          });
 function showloginfield(username) {
 if (username) {
   var login = '<div class="btn-group accountinfo" style="padding: 0px;">'+
-        '<button type="button" style="height: 31px;" class="btn btn-success btnuser username">'+username+'</button>'+      
+        '<button type="button" style="height: 31px;" class="btn btn-success btnuser username">'+username+'</button>'+
         '<button type="button" style="height: 31px;" class="btn btn-blue userbal btnfinance"></button>'+
       '</div>';
-} else { 
+} else {
   var login = '<div class="btn-group accountinfo" style="padding: 0px; ">' +
         '<div class="input-group input-group-sm loginform">' +
-        '<input type="text" autocomplete="off" class="form-control headerlogin headerusername" name="email" id="email" placeholder="Email or Username" style="border-radius: 4px 0px 0px 4px !important;">' +
+        '<input type="text" autocomplete="off" class="form-control headerlogin headerusername" name="email" id="email" placeholder="Username" style="border-radius: 4px 0px 0px 4px !important;">' +
         '<input type="password" autocomplete="off" class="form-control headerlogin" name="password" id="password" placeholder="Password">' +
         '<button type="submit" style="height: 31px;border-radius: 0px 4px 4px 0px;" class="btn btn-success loginbtn username">Login</button>' +
         '</div>'+
@@ -44,9 +43,11 @@ if (username) {
 }
 $('.topcontainer .right').html(login);
 }
-
+var displaysymbols;
 function loadtrades(displaysymbols) {
+
   $('.hook').html('');
+
   var page = '<div class="container" style="padding: 4px 0px;">'+
     '<div class="notif"></div>'+
     '<div class="trading"></div>'+
@@ -59,35 +60,19 @@ function loadtrades(displaysymbols) {
     '</div>'+
     '</div>'+
     '</div>';
+
+
   $('.hook').html(page);
-  if (!displaysymbols) {
-  }
   // Load chart and options
-  displayOptions(displaysymbols);
-    $.each(displaysymbols, function( index, symbol ) {
-      chartinit[symbol] = false;
-      socket.on(symbol+'_chart', function (data) {
-      symbol = symbolSwitch(symbol);
-      if (chartinit[symbol] != true) {
-       loadChart(symbol, data);
-       chartinit[symbol] = true;
-      }
-    });
-    // Update the chart
-      socket.on(symbol+'_updatedchart', function (data) {
-      symbol = symbolSwitch(symbol);
-      updateChart(symbol, data);
-    });
-  });
 
-  socket.on('activetrades', function (data) {
-    showactive(data, nexttrade);
-  });
+  //$.each(displaysymbols, function(index, symbol) {
+    //symbol = symbolSwitch(symbol);
+    displayOptions(displaysymbols);
+    updateOption(displaysymbols);
+  //});
 
-  socket.on('historictrades', function (data) {
-    showhistoric(data, user, 5);
-  });
 }
+
 function loadbalsync() {
   $('.hook').html('');
   var page = '<div class="container" style="padding: 4px 0px;">'+
@@ -112,10 +97,33 @@ function loadbalsync() {
   });
 
 }
-              //Bitcoin   Euro      Pound    Yen       Dow     Oil           Gold        Silver  S&P 500   Nasdaq
-var symbols = ['BTCUSD', 'EURUSD', 'GBPUSD', 'JPYUSD', '^DJI', 'CLJ14.NYM', 'GCJ14.CMX', 'SLV', '^GSPC', '^IXIC'];
-    
+
+function loadDeposit() {
+  $('.hook').html('');
+  var page = '<div class="container" style="padding: 4px 0px;">'+
+    '<div class="notif"></div>'+
+    '<div class="wallet">'+
+    '</div>'+
+    '</div>';
+  $('.hook').html(page);
+
+  socket.on('wallet', function (data) {
+    showWallet(data);
+  });
+
+}
+              //Bitcoin             Euro      Pound    China      Dow     Oil           Gold        Silver  S&P 500   Nasdaq
+var symbols = ['BTCUSD', 'BTCCNY', 'EURUSD', 'GBPUSD', 'USDCNY', '^DJI', 'CLJ14.NYM', 'GCJ14.CMX', 'SLV', '^GSPC', '^IXIC'];
+// var symbols;
+
+// socket.on('symbols', function (data) {
+// symbols = data;
+// console.log('Symbols: '+symbols);
+// });
+
+
     socket.on('loadpage', function (data) {
+      console.log('loadpage' + data.page);
       switch (data.page) {
         case 'trade':
           loadtrades(data.symbol)
@@ -123,11 +131,19 @@ var symbols = ['BTCUSD', 'EURUSD', 'GBPUSD', 'JPYUSD', '^DJI', 'CLJ14.NYM', 'GCJ
         case 'account':
           loadaccount(data.user);
         break;
+        case 'wallet':
+          loadDeposit();
+        break;
         case 'admin':
           loadbalsync();
         break;
       }
     });
+
+    function page(name, symbol) {
+      console.log('changepage '+name+' '+symbol);
+      socket.emit('page', {page: name, symbol: symbol});
+    }
 
     // socket.on('displaysymbols', function (data) {
     //   loadtrades(data);
@@ -146,7 +162,7 @@ var symbols = ['BTCUSD', 'EURUSD', 'GBPUSD', 'JPYUSD', '^DJI', 'CLJ14.NYM', 'GCJ
    socket.on('bankbal', function (data) {
       $('.bankbal').html(data);
     });
-    
+
    socket.on('userbal', function (data) {
       $('.userbal').html('m฿'+data+'');
       if (lastbal < data) {
@@ -157,21 +173,21 @@ var symbols = ['BTCUSD', 'EURUSD', 'GBPUSD', 'JPYUSD', '^DJI', 'CLJ14.NYM', 'GCJ
         $('.userbal').addClass("btn-blue").removeClass('btn-success').removeClass('btn-danger');
       }
       lastbal = data;
-    });   
+    });
 
 
    socket.on('totalcall', function (data) {
       $('.totalcall').html(data);
-    });   
+    });
    socket.on('totalput', function (data) {
       $('.totalput').html(data);
-    });   
+    });
    socket.on('option', function (data) {
       $('.info h1').html(data);
-    });      
+    });
    socket.on('ratios', function (data) {
       for (var key in data) {
-        var obj = data[key]; 
+        var obj = data[key];
         key = symbolSwitch(key);
         //console.log(key + obj);
         $('.progress'+key+' .progress-bar').attr('aria-valuetransitiongoal', obj);
@@ -181,12 +197,12 @@ var symbols = ['BTCUSD', 'EURUSD', 'GBPUSD', 'JPYUSD', '^DJI', 'CLJ14.NYM', 'GCJ
    socket.on('offer', function (data) {
       $('.rawoffer').html(data);
       $('.info h1').html(data*100+'%');
-      
-    });    
+
+    });
    socket.on('servertime', function (data) {
     var date = new Date(data);
-      $('.servertime').html(date.customFormat( "#hhh#:#mm#:#ss#" ));      
-    }); 
+      $('.servertime').html(date.customFormat( "#hhh#:#mm#:#ss#" ));
+    });
    // New Trade
 
 
@@ -194,7 +210,7 @@ var symbols = ['BTCUSD', 'EURUSD', 'GBPUSD', 'JPYUSD', '^DJI', 'CLJ14.NYM', 'GCJ
 // Keystones and Prices
    var lastprice, index, symbol;
    var price = {};
-   
+
   $.each(symbols, function( index, symbol ) {
 
    socket.on(symbol+'_price', function (data) {
@@ -202,7 +218,7 @@ var symbols = ['BTCUSD', 'EURUSD', 'GBPUSD', 'JPYUSD', '^DJI', 'CLJ14.NYM', 'GCJ
     if (price[symbol] > data){
         $('.keystone'+symbol).addClass('red');
         $('.keystone'+symbol).removeClass('green');
-       uitradeico(symbol,0); 
+       uitradeico(symbol,0);
       } else if (price[symbol] < data){
         $('.keystone'+symbol).addClass('green');
         $('.keystone'+symbol).removeClass('red');
@@ -243,7 +259,7 @@ var symbols = ['BTCUSD', 'EURUSD', 'GBPUSD', 'JPYUSD', '^DJI', 'CLJ14.NYM', 'GCJ
                 $('#'+symbol+' .direction .action').html('If');
                 $('.apply'+symbol).removeClass('btn-success').addClass('btn-default').html('Apply');
             },500);
-          });      
+          });
 
          socket.on('tradeerror', function (data) {
           symbol = data.sym;
@@ -254,7 +270,7 @@ var symbols = ['BTCUSD', 'EURUSD', 'GBPUSD', 'JPYUSD', '^DJI', 'CLJ14.NYM', 'GCJ
            setTimeout(function(e){
                 $('.apply'+symbol).removeClass('btn-danger').addClass('btn-warning').html('Apply');
             },2500);
-          });   
+          });
 
   socket.on('disconnect', function () {
     var sitename = $('.btnlogo .sitename').html();
@@ -291,7 +307,7 @@ socket.on('tradeoutcome', function (data) {
 // Proto
     socket.on('listing', function (data) {
      // console.log('listing:', data);
-      window.users = data; 
+      window.users = data;
       target = 0;
       $users.empty();
       $.each(data, function (index, user) {
@@ -301,26 +317,22 @@ socket.on('tradeoutcome', function (data) {
       $users.find('li:first').addClass('selected');
     });
     socket.on('chat', function (message) {
-      console.log('chat:', message); 
+      console.log('chat:', message);
       $messagesOutput.append('<div>' + message);
       $(".messages").scrollTop($(".messages")[0].scrollHeight);
     });
     socket.on('message', function (message) {
-      console.log('message', message); 
-      $messagesOutput.append('<div>' + message +'</div>'); 
+      console.log('message', message);
+      $messagesOutput.append('<div>' + message +'</div>');
       $(".messages").scrollTop($(".messages")[0].scrollHeight);
     });
-    
+
     function action(i) {
-      socket.emit('action', i);   
-    }
-    
-    function page(name, symbol) {
-      socket.emit('page', {page: name, symbol: symbol});   
+      socket.emit('action', i);
     }
 
     function chat(message) {
-      socket.emit('chat', message);   
+      socket.emit('chat', message);
     }
     function message(user, message) {
       socket.emit('message', {
@@ -328,6 +340,24 @@ socket.on('tradeoutcome', function (data) {
         message: message
       });
     }
+
+function updateOption(symbol) {
+  socket.on('activetrades', function (data) {
+    showactive(data, nexttrade);
+  });
+
+  socket.on('historictrades', function (data) {
+    showhistoric(data, user, 5);
+  });
+
+  socket.on(symbol+'_updatedchart', function (data) {
+    updateChart(symbol, data);
+  });
+
+  socket.on(symbol+'_chart', function (data) {
+    loadChart(symbol, data);
+  });
+}
 
 $(".timeago").timeago();
 require(['modules/onloadui']);

@@ -1,16 +1,24 @@
-var h;
+var h = new Array();
 var chartinit = {};
 function updateChart(symbol, data) {
+symbol = symbol[0];
+symbol = symbolSwitch(symbol);
+if($("#" + symbol + "_container").length == 1) {
   //console.log(data);
-  var series = h.series[0];
-            h.series[0].addPoint(data, true);
+  if (h[symbol]) {
+  var series = h[symbol].series[0];
+  h[symbol].series[0].addPoint(data, true);
   // Currently this code can only handle the display of one live chart at a time
-}
+  }
+}}
 
 function loadChart(symbol, data) {
   // create the chart
 // she can not be tamed
+symbol = symbol[0];
 symbol = symbolSwitch(symbol);
+if($("#" + symbol + "_container").length == 1) {
+//console.log(symbol);
   Highcharts.setOptions({
     global: {
       useUTC: false,
@@ -18,7 +26,7 @@ symbol = symbolSwitch(symbol);
     }
   });
     var container = symbol + "_container";
-    h=new Highcharts.Chart({
+    h[symbol]=new Highcharts.Chart({
         chart: {
           renderTo: container,
             zoomType: 'x',
@@ -117,4 +125,4 @@ symbol = symbolSwitch(symbol);
         ]
     });
   chartinit[symbol] = true;
-}
+}}

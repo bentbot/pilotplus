@@ -1,4 +1,30 @@
-
+function validateEmail(email) { 
+    var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return re.test(email);
+} 
+function symbolSwitch(symbol) {
+    switch (symbol) {
+      case '^DJI':
+        symbol = 'DOW'
+      break;
+      case 'CLJ14.NYM':
+        symbol = 'OIL'
+      break;
+      case 'GCJ14.CMX':
+        symbol = 'GOLD'
+      break;
+      case '^GSPC':
+        symbol = 'SP500'
+      break;
+      case '^IXIC':
+        symbol = 'NASDAQ'
+      break;
+      case 'SLV':
+        symbol = 'SILVER'
+      break;
+    }
+    return symbol;
+}
     // Function to add custom formats to dates in milliseconds
     Date.prototype.customFormat = function(formatString){
         var YYYY,YY,MMMM,MMM,MM,M,DDDD,DDD,DD,D,hhh,hh,h,mm,m,ss,s,ampm,AMPM,dMod,th;

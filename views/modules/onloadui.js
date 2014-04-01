@@ -2,10 +2,50 @@
 
 // Trading
 $(function() {
+
+// $("[data-translate]").jqTranslate('trans',{defaultLang: 'es'});
+
+$(".globalheader").on("click",".keystones li a",function(e) {
+  e.preventDefault();
+  var symbol = [$(this).parent().attr('id')];
+  console.log(symbol);
+  page('trade', symbol);
+});
+
 console.log('loaded ui jquery');
+  $(".right").on("keyup","#password",function(e) {
+    if(e.keyCode == 13) {
+      login();
+    }
+  });
 
   $(".right").on("click",".loginbtn",function(e) {
-    var email = $("#email").val();
+    login();
+  });
+  
+  var showlogin = false;
+  $(".right").on("click",".username",function(e) {
+    if (showlogin == false) {
+      showAccount();
+      showlogin = true;
+    } else {
+      showSymbols();
+      showlogin = false;
+    }
+  });  
+  var showfin = false;
+  $(".right").on("click",".userbal",function(e) {
+    if (showfin == false) {
+      showFinances();
+      showfin = true;
+    } else {
+      showSymbols();
+      showfin = false;
+    }
+  });
+
+  function login () {
+        var email = $("#email").val();
     var password = $("#password").val();
     if (email && password) {
     var url = encodeURIComponent("/login/" + email + "/" + password);
@@ -23,7 +63,7 @@ console.log('loaded ui jquery');
       }
     });
   }
-  });
+  }
 
     $(".hook").on("click",".applytrade",function(e) {
           var symbol = $(this).parent().parent().attr('id');
@@ -92,7 +132,7 @@ $('.btnlogo').click(function() {
   showSymbols();
 });
 
-    showloginfield();
+    //showloginfield();
     $('.info .details h1').html(0.75*100+'%');
 
 // Proto chat
@@ -193,10 +233,8 @@ function showSymbols() {
   $(".linktray").css('height', 30);
 }
 function showAccount() {
-  //hideAllPanels();
-  //$(".accounttray").css('height', 30);
-  console.log('show accound func');
-
+  hideAllPanels();
+  $(".accounttray").css('height', 30);
 }
 function showFinances() {
   hideAllPanels();

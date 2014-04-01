@@ -5,6 +5,24 @@
         padding-bottom: 0px;
       }
 
+
+::selection {
+background:hsl(28, 99%, 46%);
+
+color:#fff;
+}
+
+::-moz-selection {
+background:hsl(28, 99%, 46%);
+
+color:#fff;
+}
+
+::-webkit-selection {
+background:hsl(28, 99%, 46%);
+color:#fff;
+
+}
       .input-group-addon {
 padding: 6px 12px;
 font-size: 14px;

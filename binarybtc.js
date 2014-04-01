@@ -75,12 +75,12 @@ Pageviews.remove({}, function(err) {
 function pay(amount, tradeuser) {
   rclient.get('myaccount', function(err, reply) {
     if (err) throw (err)
-      var updatedbank = (+reply-amount);
+      var updatedbank = round(+reply-amount,6);
       rclient.set('myaccount', updatedbank, function(err, reply) {
         if (err) throw (err)
           rclient.get(tradeuser, function(err, reply) {
           if (err) throw (err)
-            var updatedbal = (+reply+amount);
+            var updatedbal = round(+reply+amount,6);
             rclient.set(tradeuser, updatedbal, function(err, reply) {
               if (err) throw (err)
                 return;
@@ -91,12 +91,12 @@ function pay(amount, tradeuser) {
 }function collectbank(amount, tradeuser, cb) {
   rclient.get(tradeuser, function(err, reply) {
     if (err) throw (err)
-      var updatedbal = (+reply-amount);
+      var updatedbal = round(+reply-amount,6);
       rclient.set(tradeuser, updatedbal, function(err, reply) {
         if (err) throw (err)
           rclient.get('myaccount', function(err, reply) {
           if (err) throw (err)
-            var updatedbal = (+reply+amount);
+            var updatedbal = round(+reply+amount,6);
             rclient.set('myaccount', updatedbal, function(err, reply) {
               if (err) throw (err)
                 cb(reply);
@@ -179,7 +179,15 @@ function syncLocal(cb) {
   if (err) throw (err);
     info.forEach(function(entry) {
         var amount = (+entry.amount*1000);
-        rclient.set(entry.account, amount);
+        rclient.get(user.username, function (err,register) {
+          if (amount > register) {
+            var difference = amount - register;
+            rclient.set(entry.account, amount);
+          } else if (amount < register) {
+            var difference = register - amount;
+            rclient.set(entry.account, amount);
+          }
+        });
     });
       var action = "Dumped bitcoin wallets to local.";
       rclient.set('last',action)
@@ -196,7 +204,7 @@ function addressbalance(account, confirmations) {
   });
 }
 
-function dbcuserbalance(username, cb) {
+function chainuserbalance(username, cb) {
   User.findOne({ username: username }, function(err, user) {
     if (err) throw err;
     if (user != null){
@@ -225,11 +233,17 @@ function syncRemote(cb){
         data.forEach(function(user) {
           rclient.get(user.username, function (err,register) {
             if (err) throw (err);
-              dbcuserbalance(user.username, function (err, balance) {
+              chainuserbalance(user.username, function (err, balance) {
                 //console.log(balance);
                 if (err) throw (err)
                   if (balance != register) {
-                    rclient.set(user.username, balance);
+                    // Sync the register and balances for each user
+                    //if (balance > register) rclient.set(user.username, balance);
+                    if (register < balance) {
+                      var amount = (+balance - register);
+                      collectbank(amount, user.username);
+                    }
+                    
                   }
               });
           });
@@ -238,9 +252,9 @@ function syncRemote(cb){
 
 }
 
-var bitcoinsync = setInterval(function() { 
-  syncRemote();
-}, 60000)
+// var bitcoinsync = setInterval(function() { 
+//   syncLocal();
+// }, 1000)
 
 
 // Webserver
@@ -279,8 +293,8 @@ var User = require('user-model');
 
 
 // Tradeserver Variables
-              //Bitcoin   Euro      Pound    Yen       Dow     Oil           Gold        Silver  S&P 500   Nasdaq
-var symbols = ['BTCUSD', 'EURUSD', 'GBPUSD', 'JPYUSD', '^DJI', 'CLJ14.NYM', 'GCJ14.CMX', 'SLV', '^GSPC', '^IXIC'];
+              //Bitcoin and Crypto  Euro      Pound    China      Dow     Oil           Gold        Silver  S&P 500   Nasdaq
+var symbols = ['BTCUSD', 'BTCCNY', 'EURUSD', 'GBPUSD', 'USDCNY', '^DJI', 'CLJ14.NYM', 'GCJ14.CMX', 'SLV', '^GSPC', '^IXIC'];
 
 var bank = 200;
 var put = 0;
@@ -289,7 +303,7 @@ var maxamount = 1000; // the max amount a user can set for any one trade
 var maxoffset = { bottom: 75, top: 25 }; 
 var cuttrading = 0; // seconds before trading where the user is locked out from adding a trade (zero to disable)
 var offer = 0.75;
-var tradeevery = 3; // Defaut time in minutes before trading again
+var tradeevery = 5; // Defaut time in minutes before trading again
 var userNumber = 1;
 var userbalance = new Array();
 var trades = new Array();
@@ -614,6 +628,8 @@ var chartdata = new Array();
 
 var lag = 0;
 function getPrice(symbol, force, callback) {
+
+
   var err = 0;var data = null;
 if (lag < 1) {
 if (symbol == 'BTCUSD') {
@@ -639,7 +655,30 @@ http.get(options, function(resp){
 }).on("error", function(e){
   console.log("Got "+options.host+" error: " + e.message);
 }); // if symbol is a currency, we run it through for the exchange rate
-}else if (symbol == 'EURUSD' || symbol == 'GBPUSD' || symbol == 'JPYUSD') {
+} else if (symbol == 'BTCCNY') {
+var options = {
+  host: 'api.bitcoinaverage.com',
+  port: 80,
+  path: '/ticker/CNY/last'
+};
+http.get(options, function(resp){
+  var decoder = new StringDecoder('utf8');
+  resp.on('data', function(chunk){
+    chunk = decoder.write(chunk);
+    //console.log(chunk);
+    var data = chunk;
+    if(parseInt(data, 10) > 0) { 
+    //console.log('Polling '+options.host+' for '+symbol+' : '+data);
+    updatePrice(data, force, symbol);
+    price[symbol] = data;
+    }else {
+      lag = lag+2;
+    }
+  });
+}).on("error", function(e){
+  console.log("Got "+options.host+" error: " + e.message);
+}); // if symbol is a currency, we run it through for the exchange rate
+} else if (symbol == 'EURUSD' || symbol == 'GBPUSD' || symbol == 'USDCNY') {
 var options = {
   host: 'download.finance.yahoo.com',
   port: 80,
@@ -750,7 +789,7 @@ function updateChart(data, symbol, force) {
 }
 
 // Emit a single updated chart point for the client
-function chartPoint( data, symbol) {
+function chartPoint (data, symbol) {
           chartsymbol = symbol + '_updatedchart';
         if (Number(data)) {
           chartentry[symbol] = [time, Number(data)];
@@ -764,7 +803,7 @@ var tradeupdater = setInterval(function() {
 for (index = 0; index < symbols.length; ++index) {
     getPrice(symbols[index], 1);
 }
-}, 4000);
+}, 1000);
 User.count({ }, function (err, count) {
   if (err) throw(err);
   userNumber = (userNumber+count);
@@ -781,47 +820,41 @@ io.sockets.on('connection', function (socket) {
   var ipaddress = hs.address; //ipaddress.address/ipaddress.port
   ipaddress = ipaddress.address;
 
-var userpage = [];
-var displaysymbols = ['EURUSD'];
+  io.sockets.emit('symbols', symbols);
+  var userpage = [];
+  var displaysymbols = ['GCJ14.CMX'];
 
-socket.on('page', function (data) {
-userpage[myName] = data.page;
-if (data.page == 'trade' && !data.symbol) { symbol = displaysymbols; } else { symbol = data.symbol; }
-  socket.emit('loadpage', {page: data, symbol: symbol});
-});
+  socket.on('page', function (data) {
+  userpage[myName] = data.page;
+  //if (data.page == 'trade' && !data.symbol) { var symbol = displaysymbols; } else { var symbol = data.symbol; }
+    socket.emit('loadpage', {page: data.page, symbol: data.symbol});
+  });
 
-if (!userpage[myName]){
-    socket.emit('loadpage', {page: 'trade', symbol: displaysymbols});
-}
-//socket.emit('displaysymbols', displaysymbols);
-io.sockets.emit('tradingopen', tradingopen); // Update trading status
+  if (!userpage[myName]){
+      socket.emit('loadpage', {page: 'trade', symbol: displaysymbols});
+  }
 
+      socket.emit('hello', { hello: myName, id: myNumber });
+
+  //socket.emit('displaysymbols', displaysymbols);
+  io.sockets.emit('tradingopen', tradingopen); // Update trading status
   // Check the users cookie key
   checkcookie(socket, function(myName, isloggedin) { // isloggedin = true/false
-    // Run the script securely
+// Everything inside
 
-// Add the users banace to the global blanace array and let them know strait away
+  // Get the user's balance
+  rclient.get(myName, function(err, reply) {
+  if (reply && reply != null) {
+  userbalance[myName] = reply;
+  } else {
+  userbalance[myName] = 0;
+  }
+  });
 
-  // bal(myName, function(balance) {
-  //   userbalance[myName] = balance;
-  //   socket.emit('userbal', userbalance[myName]);
-  // });
-
-// if (!userbalance[myName]) {
-//   userbalance[myName] = 15;
-// }
-rclient.get(myName, function(err, reply) {
-if (reply != null) {
-userbalance[myName] = reply;
-} else {
-userbalance[myName] = 0;
-}
-});
-
+  // Assign them a number
   myNumber = userNumber++;
   if (!myName) { myName = 'Guest'+myNumber; } 
-
-// Assign the socket to a user array
+  // Assign them a socket
   users[myName] = socket;
 
   // Say hello
@@ -920,7 +953,6 @@ userbalance[myName] = 0;
 // User functions
  
  // Emit trade objects
-  socket.emit('symbols', symbols);
   io.sockets.emit('totalcall', call);
   io.sockets.emit('totalput', put);
   //io.sockets.emit('option', symbol);
