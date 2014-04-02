@@ -1,7 +1,7 @@
 var remoteinitstate = true;
 function showRemoteBals(data){
     $('.remote').html('');
-      var remotehtml = '<div class="userblock"><div class="header remoteheader">Blockchain</div>';    
+      var remotehtml = '<div class="userblock"><div class="header remoteheader">Blockchain</div>';
     if (remoteinitstate == true) {
     remotehtml = remotehtml + '<div class="row-fluid"><div class="span12"><div><table class="table" id="remotebals">';
     } else {
@@ -15,10 +15,10 @@ function showRemoteBals(data){
 
         remotehtml = remotehtml + '<tr class="remotebal" id="'+entry.address+'">' +
                     '<td>'+entry.account+'</td>'+
-                    '<td>'+entry.address+'</td>';
+                    '<td><a target="_black" href="https://blockchain.info/qr?data='+entry.address+'">'+entry.address+'</a</td>';
                     //'<td><time class="timeago" datetime="'+iodate+'">'+entrytime+'</time></td>'+
-                    
-                    if (entry.confirmations < 1) { 
+
+                    if (entry.confirmations < 1) {
                       remotehtml = remotehtml + '<td class="orange">'+amount+'</td>';
                     } else {
                       remotehtml = remotehtml + '<td>'+amount+'</td>';
@@ -27,7 +27,7 @@ function showRemoteBals(data){
   }
     remotehtml = remotehtml + '</div></div></div></tbody></table></div>';
     $('.remote').html(remotehtml);
-}$(function() { 
+}$(function() {
 
 $(".hook").on("click",".remoteheader",function(e) {
   if (remoteinitstate == true) {

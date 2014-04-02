@@ -37,7 +37,7 @@ if (username) {
         '<div class="input-group input-group-sm loginform">' +
         '<input type="text" autocomplete="off" class="form-control headerlogin headerusername" name="email" id="email" placeholder="Username" style="border-radius: 4px 0px 0px 4px !important;">' +
         '<input type="password" autocomplete="off" class="form-control headerlogin" name="password" id="password" placeholder="Password">' +
-        '<button type="submit" style="height: 31px;border-radius: 0px 4px 4px 0px;" class="btn btn-success loginbtn username">Login</button>' +
+        '<button type="submit" style="height: 31px;border-radius: 0px 4px 4px 0px;" class="btn btn-success loginbtn">Login</button>' +
         '</div>'+
     '</div>';
 }
@@ -64,7 +64,6 @@ function loadtrades(displaysymbols) {
 
   $('.hook').html(page);
   // Load chart and options
-
   //$.each(displaysymbols, function(index, symbol) {
     //symbol = symbolSwitch(symbol);
     displayOptions(displaysymbols);
@@ -112,8 +111,8 @@ function loadDeposit() {
   });
 
 }
-              //Bitcoin             Euro      Pound    China      Dow     Oil           Gold        Silver  S&P 500   Nasdaq
-var symbols = ['BTCUSD', 'BTCCNY', 'EURUSD', 'GBPUSD', 'USDCNY', '^DJI', 'CLJ14.NYM', 'GCJ14.CMX', 'SLV', '^GSPC', '^IXIC'];
+              //Bitcoin             Euro      Pound    China      Dow     Oil           Gold        Silver      S&P 500   Nasdaq
+var symbols = ['BTCUSD', 'BTCCNY', 'EURUSD', 'GBPUSD', 'USDCNY', '^DJI', 'CLK14.NYM', 'GCJ14.CMX', 'SIJ14.CMX', '^GSPC', '^IXIC'];
 // var symbols;
 
 // socket.on('symbols', function (data) {
@@ -123,7 +122,7 @@ var symbols = ['BTCUSD', 'BTCCNY', 'EURUSD', 'GBPUSD', 'USDCNY', '^DJI', 'CLJ14.
 
 
     socket.on('loadpage', function (data) {
-      console.log('loadpage' + data.page);
+      console.log('loadpage ' + data.page);
       switch (data.page) {
         case 'trade':
           loadtrades(data.symbol)

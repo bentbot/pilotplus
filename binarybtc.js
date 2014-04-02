@@ -56,10 +56,10 @@ var Historicprices = mongoose.model('historicprices', schema);
 
 // Empty temporary database
 Pageviews.remove({}, function(err) {
-  if (err) console.log(err);  
+  if (err) console.log(err);
 });
 // Activetrades.remove({}, function(err) {
-//   if (err) console.log(err);  
+//   if (err) console.log(err);
 // });
 
 
@@ -109,7 +109,7 @@ function pay(amount, tradeuser) {
 // Bitcoin layer
 var client = null;
 var gclient = null;
-function Bitcoinconnect(next) { 
+function Bitcoinconnect(next) {
   fs.readFile('/home/node/keys/bitcoin.id', 'utf8', function (err,data) {
     if (err) return console.log(err);
     var id = data.replace("\n", "").replace("\r", "");
@@ -118,7 +118,7 @@ function Bitcoinconnect(next) {
       var key = data.replace("\n", "").replace("\r", "");
         fs.readFile('/home/node/keys/bitcoin.host', 'utf8', function (err,data) {
           if (err) return console.log(err);
-       
+
           var host = data.replace("\n", "").replace("\r", "");
           fs.readFile('/home/node/keys/bitcoin.port', 'utf8', function (err,data) {
             if (err) return console.log(err);
@@ -243,7 +243,7 @@ function syncRemote(cb){
                       var amount = (+balance - register);
                       collectbank(amount, user.username);
                     }
-                    
+
                   }
               });
           });
@@ -252,7 +252,7 @@ function syncRemote(cb){
 
 }
 
-// var bitcoinsync = setInterval(function() { 
+// var bitcoinsync = setInterval(function() {
 //   syncLocal();
 // }, 1000)
 
@@ -293,14 +293,14 @@ var User = require('user-model');
 
 
 // Tradeserver Variables
-              //Bitcoin and Crypto  Euro      Pound    China      Dow     Oil           Gold        Silver  S&P 500   Nasdaq
-var symbols = ['BTCUSD', 'BTCCNY', 'EURUSD', 'GBPUSD', 'USDCNY', '^DJI', 'CLJ14.NYM', 'GCJ14.CMX', 'SLV', '^GSPC', '^IXIC'];
+              //Bitcoin and Crypto  Euro      Pound    China      Dow     Oil         Gold          Silver      S&P 500   Nasdaq
+var symbols = ['BTCUSD', 'BTCCNY', 'EURUSD', 'GBPUSD', 'USDCNY', '^DJI', 'CLK14.NYM', 'GCJ14.CMX', 'SIJ14.CMX', '^GSPC', '^IXIC'];
 
 var bank = 200;
 var put = 0;
 var call = 0;
 var maxamount = 1000; // the max amount a user can set for any one trade
-var maxoffset = { bottom: 75, top: 25 }; 
+var maxoffset = { bottom: 75, top: 25 };
 var cuttrading = 0; // seconds before trading where the user is locked out from adding a trade (zero to disable)
 var offer = 0.75;
 var tradeevery = 5; // Defaut time in minutes before trading again
@@ -392,17 +392,17 @@ function trade() {
           });
         } else if (tradeprice > price[tradesymbol]) {
           outcome = 'Lose';//Lose
-          // User loses call  
+          // User loses call
         } else if (tradeprice == price[tradesymbol]) {
           outcome = 'Tie';
           pay(amount, tradeuser);
         }
       }
-      
+
       //console.log(tradeuser + ' ' + outcome + ' ' + amount);
 
     // Store the processed trades in the db
-    var dbhistorictrades = new Historictrades({ 
+    var dbhistorictrades = new Historictrades({
       symbol: tradesymbol,
       price: tradeprice,
       offer: offer,
@@ -438,7 +438,7 @@ function trade() {
   totalput = {};
   trades = [];
   Activetrades.remove({}, function(err) {
-  if (err) console.log(err);  
+  if (err) console.log(err);
   });
 
 // // Debug outputs
@@ -514,7 +514,7 @@ function addTrade(symbol, amount, direction, user, socket) {
 
 
           // Insert the trade into the database
-          var dbactivetrades = new Activetrades({ 
+          var dbactivetrades = new Activetrades({
             symbol: symbol,
             price: price[symbol],
             offer: offer,
@@ -576,7 +576,7 @@ function addTrade(symbol, amount, direction, user, socket) {
     err.msg = 'Pick';
     socket.emit('tradeerror', err);
     return false;
-  } 
+  }
 }
 
 var nexttrade;
@@ -603,7 +603,7 @@ function checknextTrade() {
 
 // Proto trade shaping
 // function calculateImbalance(symbol) {
-//   Activetrades.find({symbol: symbol},function(err,trades){ 
+//   Activetrades.find({symbol: symbol},function(err,trades){
 //     trades.forEach(function(elem, index, array) {
 //       elem.offer = "apple";
 //       elem.amount =
@@ -617,7 +617,7 @@ function getUsers () {
    var userNames = [];
    for(var name in users) {
      if(users[name]) {
-       userNames.push(name);  
+       userNames.push(name);
      }
    }
    return userNames;
@@ -644,8 +644,7 @@ http.get(options, function(resp){
     chunk = decoder.write(chunk);
     //console.log(chunk);
     var data = chunk;
-    if(parseInt(data, 10) > 0) { 
-    //console.log('Polling '+options.host+' for '+symbol+' : '+data);
+    if(parseInt(data, 10) > 0) {
     updatePrice(data, force, symbol);
     price[symbol] = data;
     }else {
@@ -667,8 +666,7 @@ http.get(options, function(resp){
     chunk = decoder.write(chunk);
     //console.log(chunk);
     var data = chunk;
-    if(parseInt(data, 10) > 0) { 
-    //console.log('Polling '+options.host+' for '+symbol+' : '+data);
+    if(parseInt(data, 10) > 0) {
     updatePrice(data, force, symbol);
     price[symbol] = data;
     }else {
@@ -692,9 +690,7 @@ http.get(options, function(resp){
     data = data[1];
 
     if(parseInt(data, 10) > 0) { // is this data even numeric?
-      //console.log('Polling '+options.host+' for '+symbol+' : '+data);
       updatePrice(data, force, symbol);
-      //price_eurusd = data;
       price[symbol] = data;
     }else {
       lag = lag+2;
@@ -719,9 +715,7 @@ http.get(options, function(resp){
     data = data[1];
 
     if(parseInt(data, 10) > 0) { // is this data even numeric?
-      //console.log('Polling '+options.host+' for '+symbol+' : '+data);
       updatePrice(data, force, symbol);
-      //price_eurusd = data;
       price[symbol] = data;
     }else {
       lag = lag+5;
@@ -764,7 +758,7 @@ function updateChart(data, symbol, force) {
             chartdata = [];
           }
           chartentry = new Array(time, Number(data));
-//console.log('Charting '+symbol+' : '+chartentry);
+console.log('Charting '+symbol+' : '+chartentry);
           chartdata.push(chartentry);
           //console.log(chartdata);
           chart[symbol] = chartdata;
@@ -784,7 +778,7 @@ function updateChart(data, symbol, force) {
               io.sockets.emit(chartsymbol, chart[symbol]);
               //console.log(chartdata);
             }
-      } 
+      }
     //}
 }
 
@@ -794,7 +788,7 @@ function chartPoint (data, symbol) {
         if (Number(data)) {
           chartentry[symbol] = [time, Number(data)];
           io.sockets.emit(chartsymbol, chartentry[symbol]);
-      } 
+      }
 }
 
 
@@ -853,7 +847,7 @@ io.sockets.on('connection', function (socket) {
 
   // Assign them a number
   myNumber = userNumber++;
-  if (!myName) { myName = 'Guest'+myNumber; } 
+  if (!myName) { myName = 'Guest'+myNumber; }
   // Assign them a socket
   users[myName] = socket;
 
@@ -862,7 +856,7 @@ io.sockets.on('connection', function (socket) {
   socket.emit('hello', { hello: myName, id: myNumber });
   socket.emit('userbal', userbalance[myName]); // Update userbalance
   //Send user current data on connect
-  for (index = 0; index < symbols.length; ++index) { 
+  for (index = 0; index < symbols.length; ++index) {
       io.sockets.emit(symbols[index]+'_price', price[symbols[index]]);
       io.sockets.emit(symbols[index]+'_chart', chart[symbols[index]]);
   }
@@ -915,7 +909,7 @@ io.sockets.on('connection', function (socket) {
   // Pass new trade details from the socket to addTrade
   socket.on('trade', function (data) {
     // Check if input data is valid
-    var re = new RegExp(/[\s\[\]\(\)=,"\/\?@\:\;]/g); 
+    var re = new RegExp(/[\s\[\]\(\)=,"\/\?@\:\;]/g);
     if (re.test(data.amount)) { console.log('Illegal trade input from '+myName); } else {
       // Push data to addTrade
       //console.log('add trade for ' + data.user);
@@ -951,20 +945,20 @@ io.sockets.on('connection', function (socket) {
 
 
 // User functions
- 
+
  // Emit trade objects
   io.sockets.emit('totalcall', call);
   io.sockets.emit('totalput', put);
   //io.sockets.emit('option', symbol);
   io.sockets.emit('offer', offer);
-  
+
   // Protochat
   // socket.on('chat', function (message) {
   //   io.sockets.emit('chat', myName + ': ' + message);
-  // });  
+  // });
   // socket.on('message', function (data) {
   //   users[data.user] &&
-  //     users[data.user].emit('message', myName + '-> ' + data.message); 
+  //     users[data.user].emit('message', myName + '-> ' + data.message);
   // });
 
 // User disconnects
@@ -999,7 +993,7 @@ app.get('/', function(req,res) {
     activetrades: true,
     historictrades: true,
     col: 2
-  });  
+  });
 
 });
 app.get('/index', function(req, res) {
@@ -1134,7 +1128,7 @@ if (signupsopen == true) {
     });
   // save user to database
   newUser.save(function(err) {
-    if (err) { 
+    if (err) {
       res.send(err);
     // Something goes wrong
       // switch(err.code){
@@ -1150,7 +1144,7 @@ if (signupsopen == true) {
     });
     } else {
       res.send('Error creating Bitcoin address.')
-    } 
+    }
   });
 } else {
   res.send('Signups are not open at this time.');
@@ -1196,14 +1190,14 @@ var result = null;
           next(docs.user, true);
             //console.log(myName+':'+myNumber+' connected');
           // Log the connection
-          var pageload = new Pageviews({ 
+          var pageload = new Pageviews({
             ip: socket.handshake.address.address,
             time: time,
             handle: myName
           });
-          pageload.save(function (err) { 
+          pageload.save(function (err) {
             if (err) throw (err);
-          }); 
+          });
         } // if docs
         }
       });
@@ -1272,7 +1266,7 @@ function symbolswitch(symbol){
       break;
       case 'NASDAQ':
         symbol = '^IXIC'
-      break;      
+      break;
       case 'SILVER':
         symbol = 'SLV'
       break;

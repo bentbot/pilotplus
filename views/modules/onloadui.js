@@ -15,6 +15,7 @@ $(".globalheader").on("click",".keystones li a",function(e) {
 console.log('loaded ui jquery');
   $(".right").on("keyup","#password",function(e) {
     if(e.keyCode == 13) {
+      $('.loginbtn').html('Working');
       login();
     }
   });
@@ -22,7 +23,7 @@ console.log('loaded ui jquery');
   $(".right").on("click",".loginbtn",function(e) {
     login();
   });
-  
+
   var showlogin = false;
   $(".right").on("click",".username",function(e) {
     if (showlogin == false) {
@@ -32,7 +33,7 @@ console.log('loaded ui jquery');
       showSymbols();
       showlogin = false;
     }
-  });  
+  });
   var showfin = false;
   $(".right").on("click",".userbal",function(e) {
     if (showfin == false) {
@@ -154,7 +155,7 @@ $('.btnlogo').click(function() {
     });
 
 
-//Uncaught ReferenceError: $users is not defined 
+//Uncaught ReferenceError: $users is not defined
     // $users.on('click', 'li', function (event) {
     //   var $user = $(this);
     //   target = $user.index();
@@ -173,7 +174,7 @@ function isOdd(num) { return num % 2;}
 
 function hideAllPanels() {
   $(".financestray").css('height', '0px');
-  $(".accounttray").css('height', '0px');    
+  $(".accounttray").css('height', '0px');
   $(".announcesuccess").css('height', '0px');
   $(".announcedanger").css('height', '0px');
   $(".announcesplit").css('height', '0px');
@@ -248,5 +249,3 @@ function uitradeico(symbol, direction, manual) {
         $(".icon"+symbol).removeClass('red').removeClass('glyphicon-arrow-down').addClass('green').addClass('glyphicon-arrow-up');
     }
 }
-
-
