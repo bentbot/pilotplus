@@ -1,0 +1,21 @@
+{
+	"call": "Arriba",
+	"put": "Abajo",
+	"apply": "Aplicar",
+	"login": "Login",
+	"if": "Si",
+	"from": "De",
+	"in": "A",
+	"instant": "Momento",
+	"instantbody": "Depositar de forma instantánea, el comercio, y la retirada con Bitcoin.",
+	"safe": "Seguro",
+	"safebody": "El cifrado y la autorización del factor dual para proteger sus fondos.",
+	"options": "Elección",
+	"optionsbody": "Comercio sobre tipos de cambio, cryptocurrencies, acciones, y mucho más.",
+	"loggingin": "Marcha",
+	"settingup": "Establecer",
+	"signup": "Registro",
+	"inviteonly": "Inscripción cerrada",
+	"registrationsdisabled": "Sentimos que estamos tomando no hay nuevos usuarios.",
+	"haveaninvite": "Invitado"
+}

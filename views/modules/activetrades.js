@@ -2,9 +2,9 @@ function showactive(data, nexttrade) {
     //console.log(data);
     $('.tradesbody').html('');
     if (data[0] != null) {
-      var tradehtml = '<div class="usertrades"><div class="header">Your Active Trades <span style="float:right;"><span class="expiretime">'+nexttrade[0]+':'+nexttrade[1]+'</span> <i class="fa fa-clock-o hide"></i></span></div>';
+      var tradehtml = '<div class="usertrades"><div class="header"><span data-translate="activetrades">Active Trades</span> <span style="float:right;"><span class="expiretime">'+nexttrade[0]+':'+nexttrade[1]+'</span> <i class="fa fa-clock-o hide"></i></span></div>';
     } else {
-      var tradehtml = '<div class="usertrades"><div class="header">No Active Trades</div>';
+      var tradehtml = '<div class="usertrades"><div class="header" data-translate="noactivetrades">No Active Trades</div>';
     }
           tradehtml = tradehtml + '<div class="row-fluid"><div class="span12 "><div><table class="table tradestable" id="trades">';
               // '<thead>' +

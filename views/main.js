@@ -5,6 +5,7 @@ require(['modules/chart']);
 require(['modules/protodate']);
 require(['modules/remote']);
 require(['modules/local']);
+require(['modules/guest']);
 
     var socket = io.connect('https://vbit.io:3000', {secure: true});
     var user, userid, option, price, expires, direction, userdeposit;
@@ -37,17 +38,16 @@ if (username) {
         '<div class="input-group input-group-sm loginform">' +
         '<input type="text" autocomplete="off" class="form-control headerlogin headerusername" name="email" id="email" placeholder="Username" style="border-radius: 4px 0px 0px 4px !important;">' +
         '<input type="password" autocomplete="off" class="form-control headerlogin" name="password" id="password" placeholder="Password">' +
-        '<button type="submit" style="height: 31px;border-radius: 0px 4px 4px 0px;" class="btn btn-success loginbtn">Login</button>' +
+        '<button type="submit" style="height: 31px;border-radius: 0px 4px 4px 0px;" class="btn btn-success loginbtn" data-translate="login">Login</button>' +
         '</div>'+
     '</div>';
 }
 $('.topcontainer .right').html(login);
 }
 var displaysymbols;
-function loadtrades(displaysymbols) {
+function loadtrades(displaysymbols, guest) {
 
   $('.hook').html('');
-
   var page = '<div class="container" style="padding: 4px 0px;">'+
     '<div class="notif"></div>'+
     '<div class="trading"></div>'+
@@ -59,17 +59,15 @@ function loadtrades(displaysymbols) {
     '<div class="historictrades">'+
     '</div>'+
     '</div>'+
+    '<div class="guest">'+
     '</div>';
-
-
+    var page = page + '</div>';
   $('.hook').html(page);
-  // Load chart and options
-  //$.each(displaysymbols, function(index, symbol) {
-    //symbol = symbolSwitch(symbol);
-    displayOptions(displaysymbols);
-    updateOption(displaysymbols);
-  //});
 
+  displayOptions(displaysymbols);
+  updateOption(displaysymbols);
+  if (guest) showGuest();
+  if (guest) showloginfield();
 }
 
 function loadbalsync() {
@@ -103,11 +101,23 @@ function loadDeposit() {
     '<div class="notif"></div>'+
     '<div class="wallet">'+
     '</div>'+
+    '<div class="col1">'+
+    '<div class="wallettx">'+
+    '</div>'+
+    '</div>'+
+    '<div class="col2">'+
+    '<div class="historictrades">'+
+    '</div>'+
+    '</div>'+
     '</div>';
   $('.hook').html(page);
 
   socket.on('wallet', function (data) {
     showWallet(data);
+  });
+
+  socket.on('wallettx', function (data) {
+    showTx(data);
   });
 
 }
@@ -122,15 +132,15 @@ var symbols = ['BTCUSD', 'BTCCNY', 'EURUSD', 'GBPUSD', 'USDCNY', '^DJI', 'CLK14.
 
 
     socket.on('loadpage', function (data) {
-      console.log('loadpage ' + data.page);
+      //console.log('loadpage ' + data.page);
       switch (data.page) {
         case 'trade':
-          loadtrades(data.symbol)
+          loadtrades(data.symbol,data.guest);
         break;
         case 'account':
           loadaccount(data.user);
         break;
-        case 'wallet':
+      case 'deposit':
           loadDeposit();
         break;
         case 'admin':
@@ -140,14 +150,10 @@ var symbols = ['BTCUSD', 'BTCCNY', 'EURUSD', 'GBPUSD', 'USDCNY', '^DJI', 'CLK14.
     });
 
     function page(name, symbol) {
-      console.log('changepage '+name+' '+symbol);
-      socket.emit('page', {page: name, symbol: symbol});
+      //console.log('changepage '+name+' '+symbol);
+      if (user) socket.emit('page', {page: name, symbol: symbol});
+      if (!user) socket.emit('page', {page: name, symbol: symbol, guest: true});
     }
-
-    // socket.on('displaysymbols', function (data) {
-    //   loadtrades(data);
-    // });
-
 
     socket.on('hello', function (data) {
       $('.username').html(data.hello);
@@ -274,11 +280,11 @@ var symbols = ['BTCUSD', 'BTCCNY', 'EURUSD', 'GBPUSD', 'USDCNY', '^DJI', 'CLK14.
   socket.on('disconnect', function () {
     var sitename = $('.btnlogo .sitename').html();
     $('.btnlogo').removeClass('btn-warning').addClass('btn-danger');
-    $('.btnlogo .sitename').html('<span class="glyphicon glyphicon-warning-sign"></span> Lost Connection');
+    $('.btnlogo .sitename').html('<span class="glyphicon glyphicon-warning-sign"></span> <span data-translate="lostconnection">Lost Connection</span>');
   })
   socket.on('reconnect', function () {
     $('.btnlogo').removeClass('btn-warning').removeClass('btn-danger').addClass('btn-success');
-    $('.btnlogo .sitename').html('<span class="glyphicon glyphicon-lock"></span> Reconnected');
+    $('.btnlogo .sitename').html('<span class="glyphicon glyphicon-lock"></span> <span data-translate="reconnected">Reconnected</span>');
     setTimeout(function(){
       $('.btnlogo').removeClass('btn-success').removeClass('btn-danger').addClass('btn-warning');
       $('.btnlogo .sitename').html('<span class="glyphicon glyphicon-arrow-up"></span><span class="glyphicon glyphicon-arrow-down"></span>');
@@ -358,5 +364,10 @@ function updateOption(symbol) {
   });
 }
 
+$("[data-translate]").jqTranslate('index');
+$('.keystones').scrollbox();
+
 $(".timeago").timeago();
 require(['modules/onloadui']);
+
+

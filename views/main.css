@@ -271,6 +271,14 @@ background: ;
   color: green;
 }
 
+.alertbtn {
+float: right;
+font-size: 15px;
+position: relative;
+top: -7px;
+right: -7px;
+}
+
 .accounttray {
   -webkit-transition: height 0.5s; /* For Safari 3.1 to 6.0 */
 transition: height 0.5s;
@@ -296,6 +304,55 @@ margin-right: 15px;
 }.accounttray a:hover {
   color: white;
   text-decoration: none;
+}
+
+.guest {
+  margin-top:25px;
+}.guest .input-group {
+  width: 100%;
+}.signupbox {
+  margin-top: 25px;
+}.signupbox .input-group i {
+  float: left;
+  width: 5%;
+  text-align: center;
+  font-size: 25px;
+  padding-top: 5px;
+  transition: all 0.4s ease-out;
+}.signupbox .input-group input {
+  float: left;
+  width: 20%;
+  border: 0px;
+  outline: none;
+  box-shadow: 0px 0px 6px 0px #ccc;
+  transition: all 0.4s ease-out;
+}.signupbox .input-group input:focus {
+outline: none;
+}.signupbox .input-group button {
+box-shadow: 0px 0px 10px 0px rgba(182, 40, 40, 0.35);
+float: left;
+width: 25%;
+border-radius: 0px 4px 4px 0px;
+position: relative;
+transition: all 0.4s ease-out;
+}.signupbox .input-group button i {
+float: left;
+font-size: 20px;
+transition: all 0.4s ease-out;
+width: initial;
+padding: 0px;
+}
+
+.guestpanels .col-md-4 {
+  text-align:center;
+}.guestpanels .col-md-4 h1 {
+  font-size: 35px;
+  margin-top: 10px;
+}.guestpanels .col-md-4 p {
+  font-size: 19px;
+}.guestpanels .col-md-4 .fa {
+  font-size: 60px;
+  color: hsl(113, 100%, 35%) !important;
 }
 
 .financestray {

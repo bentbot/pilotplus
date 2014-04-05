@@ -7,7 +7,7 @@ function symbolSwitch(symbol) {
       case '^DJI':
         symbol = 'DOW'
       break;
-      case 'CLJ14.NYM':
+      case 'CLK14.NYM':
         symbol = 'OIL'
       break;
       case 'GCJ14.CMX':
@@ -19,7 +19,7 @@ function symbolSwitch(symbol) {
       case '^IXIC':
         symbol = 'NASDAQ'
       break;
-      case 'SLV':
+      case 'SIJ14.CMX':
         symbol = 'SILVER'
       break;
     }

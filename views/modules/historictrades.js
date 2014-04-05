@@ -2,7 +2,10 @@ function showhistoric(data, user, trim){
     if (!trim) trim = 0;
     var tid = 0;
     $('.historictrades').html('');
-      var tradehtml = '<div class="userblock"><div class="header">Trade History</div>';    
+    var tradehtml = '';
+    if (trim==0) tradehtml = tradehtml+ '<div class="userblock"><div class="header" data-translate="historictrades">Historic Trades</div>';    
+    if (trim>0) tradehtml = tradehtml+ '<div class="userblock"><div class="header" data-translate="lasttrades">Last Trades</div>';    
+    if (data) {
     tradehtml = tradehtml + '<div class="row-fluid"><div class="span12"><div><table class="table" id="historictrades">';
     tradehtml = tradehtml + '<tbody>';
     var index;
@@ -23,9 +26,9 @@ function showhistoric(data, user, trim){
         }
 
         if (entry.outcome == 'Win') {
-          var thumbhtml = '<span class="green">Won</span></td><td> m฿'+possiblewin+'</span></td>';
+          var thumbhtml = '<span class="green" data-translate="won">Won</span></td><td> m฿'+possiblewin+'</span></td>';
         } else if (entry.outcome == 'Lose') {
-          var thumbhtml = '<span class="red">Lost</span></td><td> m฿'+entry.amount+'</span></td>';
+          var thumbhtml = '<span class="red" data-translate="lost">Lost</span></td><td> m฿'+entry.amount+'</span></td>';
         } else if (entry.outcome == 'Tie') {
           var thumbhtml = '<span>Push</span></td><td> m฿'+entry.amount+'</span></td>';
         }
@@ -52,6 +55,7 @@ function showhistoric(data, user, trim){
       } 
     }
   }
+}
     tradehtml = tradehtml + '</div></div></div></tbody></table></div>';
     $('.historictrades').html(tradehtml);
 }

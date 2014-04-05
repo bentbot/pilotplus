@@ -1,0 +1,21 @@
+{
+	"call": "Appel",
+	"put": "Mettre",
+	"apply": "Appliquer",
+	"login": "Login",
+	"if": "Si",
+	"from": "De",
+	"in": "À",
+	"instant": "Instant",
+	"instantbody": "Immédiatement déposer, le commerce, et le retrait avec Bitcoin.",
+	"safe": "Sûr",
+	"safebody": "Cryptologie et le double autorisation pour protéger vos fonds.",
+	"options": "Sélection",
+	"optionsbody": "Commerce sur les taux de change, cryptocurrencies, les stocks, et plus encore.",
+	"loggingin": "Course",
+	"settingup": "Établissement",
+	"signup": "Enregistrer",
+	"inviteonly": "Sur invitation seulement",
+	"registrationsdisabled": "Nouveaux utilisateurs anonymes ne sont pas autorisés.",
+	"haveaninvite": "Invité"
+}

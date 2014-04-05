@@ -12,6 +12,7 @@ var port = 8080
   , Keygrip = require('keygrip')
   , bitcoin = require('bitcoin')
   , bson = require('bson')
+  , async = require('async')
   , LocalStrategy = require('passport-local').Strategy
   , StringDecoder = require('string_decoder').StringDecoder
 
@@ -22,6 +23,9 @@ var clock = setInterval(function() {
   time = new Date().getTime();
   date = new Date();
   checknextTrade(); // Check for the next trade
+  getnewtransactions(function(time, id) {
+    console.log('tx: '+time+' '+id); // Check for new transactions
+  });
   io.sockets.emit('servertime', time);
 }, 1000);
 
@@ -53,6 +57,11 @@ var schema = new mongoose.Schema({ symbol: 'string', price: 'string', offer: 'st
 var Historictrades = mongoose.model('historictrades', schema);
 var schema = new mongoose.Schema({ symbol: 'string', chart: 'string'});
 var Historicprices = mongoose.model('historicprices', schema);
+var schema = new mongoose.Schema({ from: 'string', to: 'string', amount: 'string', txid: 'string', time: 'string'});
+var Sentpayments = mongoose.model('sentpayments', schema);
+var schema = new mongoose.Schema({ option: 'string', setting: 'string'});
+var Globalvars = mongoose.model('globalvars', schema);
+
 
 // Empty temporary database
 Pageviews.remove({}, function(err) {
@@ -65,7 +74,7 @@ Pageviews.remove({}, function(err) {
 
 // Key value connect and money handling
   fs.readFile('/home/node/keys/redis.key', 'utf8', function (err,data) {
-    if (err) return console.log(err);
+    if (err) throw (err);
     var key = data.replace("\n", "").replace("\r", "");
     var options = {
       auth_pass: key
@@ -107,150 +116,7 @@ function pay(amount, tradeuser) {
 }
 
 // Bitcoin layer
-var client = null;
-var gclient = null;
-function Bitcoinconnect(next) {
-  fs.readFile('/home/node/keys/bitcoin.id', 'utf8', function (err,data) {
-    if (err) return console.log(err);
-    var id = data.replace("\n", "").replace("\r", "");
-      fs.readFile('/home/node/keys/bitcoin.key', 'utf8', function (err,data) {
-        if (err) return console.log(err);
-      var key = data.replace("\n", "").replace("\r", "");
-        fs.readFile('/home/node/keys/bitcoin.host', 'utf8', function (err,data) {
-          if (err) return console.log(err);
 
-          var host = data.replace("\n", "").replace("\r", "");
-          fs.readFile('/home/node/keys/bitcoin.port', 'utf8', function (err,data) {
-            if (err) return console.log(err);
-            var port = data.replace("\n", "").replace("\r", "");
-          var client = new bitcoin.Client({
-            host: host,
-            port: port,
-            user: id,
-            pass: key,
-            timeout: 5000
-          });
-          //console.log(host+':'+port);
-          next(client);
-        });
-        });
-    });
-  });
-}
-
-Bitcoinconnect(function(client) {
-  // After connection
-  gclient = client;
-  loginfo();
-  //syncRemote();
-
-  // addressbalance('liam');
-  // createAddress('liam', function(address){
-  //  console.log('new address: liam '+address);
-  // });
-  //balance('liam');
-  //ßconsole.log(loginfo());
-  // createAddress('bent',function(a) {
-  //   console.log(a);
-  // });
-});
-// dump(1, 'liam');
-//console.log(balances);
-
-function loginfo(){
-  gclient.cmd('getinfo', function(err, info){
-  if (err) throw (err);
-    console.log('Bitcoin loaded ', info);
-    return info;
-  });
-}
-
-function displayAccounts(cb) {
-    gclient.cmd('listreceivedbyaddress', 0, false, function(err, info){
-      if (err) throw (err);
-      cb(info);
-  });
-}
-
-
-
-function syncLocal(cb) {
-  gclient.cmd('listreceivedbyaddress', 0, true, function(err, info){
-  if (err) throw (err);
-    info.forEach(function(entry) {
-        var amount = (+entry.amount*1000);
-        rclient.get(user.username, function (err,register) {
-          if (amount > register) {
-            var difference = amount - register;
-            rclient.set(entry.account, amount);
-          } else if (amount < register) {
-            var difference = register - amount;
-            rclient.set(entry.account, amount);
-          }
-        });
-    });
-      var action = "Dumped bitcoin wallets to local.";
-      rclient.set('last',action)
-      if (cb) cb();
-  });
-}
-
-function addressbalance(account, confirmations) {
-  if (!confirmations) confirmations = 1;
-  gclient.cmd('getbalance', account, confirmations, function(err, balance, resHeaders) {
-    if (err) return console.log(err);
-    //console.log(account+":", balance);
-    return balance;
-  });
-}
-
-function chainuserbalance(username, cb) {
-  User.findOne({ username: username }, function(err, user) {
-    if (err) throw err;
-    if (user != null){
-    gclient.cmd('getbalance', user.username, 1, function(err, balance, resHeaders) {
-      balance = (+balance*1000);
-      cb(err, balance);
-    });
-    }
-  });
-}
-function createAddress(label, cb) {
-  //console.log('create address: '+label)
-  gclient.cmd('getnewaddress', label, function(err, add, resHeaders) {
-    if (err) return console.log(err);
-    //console.log('Create address '+add)
-    cb(err, add);
-    //return add;
-  });
-}
-
-
-function syncRemote(cb){
-
-      User.find({ }, function (err, data) {
-        if (err) throw (err);
-        data.forEach(function(user) {
-          rclient.get(user.username, function (err,register) {
-            if (err) throw (err);
-              chainuserbalance(user.username, function (err, balance) {
-                //console.log(balance);
-                if (err) throw (err)
-                  if (balance != register) {
-                    // Sync the register and balances for each user
-                    //if (balance > register) rclient.set(user.username, balance);
-                    if (register < balance) {
-                      var amount = (+balance - register);
-                      collectbank(amount, user.username);
-                    }
-
-                  }
-              });
-          });
-        });
-      });
-
-}
 
 // var bitcoinsync = setInterval(function() {
 //   syncLocal();
@@ -261,6 +127,7 @@ function syncRemote(cb){
 
 // Include SSL server.key and domain.crt from a safe place
 var options = {
+  ca: fs.readFileSync('/home/node/keys/AddTrustExternalCARoot.crt'),
   key: fs.readFileSync('/home/node/keys/server.key'),
   cert: fs.readFileSync('/home/node/keys/vbit_io.crt')
 }
@@ -415,7 +282,9 @@ function trade() {
     dbhistorictrades.save(function (err) {
       if (err) console.log(err)
       // and in the ram
-      processedtrades.push({
+
+    });
+          processedtrades.push({
         symbol: tradesymbol,
         price: tradeprice,
         offer: offer,
@@ -425,10 +294,8 @@ function trade() {
         user: tradeuser,
         outcome: outcome
       });
-    });
     ratio[tradesymbol] = 50;
     }//foreach trade
-    console.log(processedtrades);
     processTrade(processedtrades);
 
   // empty the ram and database of old objects
@@ -436,19 +303,10 @@ function trade() {
   puts = {};
   totalcall = {};
   totalput = {};
-  trades = [];
+  trades = new Array();
   Activetrades.remove({}, function(err) {
   if (err) console.log(err);
   });
-
-// // Debug outputs
-//           rclient.get('myaccount', function(err, reply) {
-//             if (err) throw (err)
-//             var bank = round(reply, 2);
-//               console.log('m฿'+bank);
-//               io.sockets.emit('bank', bank);
-//           });
-
 }
 
 
@@ -530,7 +388,7 @@ function addTrade(symbol, amount, direction, user, socket) {
             console.log('Total Call '+symbol+':'+totalcall.symbol);
             console.log('Total Put '+symbol+':'+totalput.symbol);
             console.log('Ratio '+symbol+' %'+ratio[symbol]);
-              // Inser the trade into the ram
+              // Insert the trade into the ram
               var tradeinit = new Array();
               tradeinit[0] = symbol;
               tradeinit[1] = price[symbol];
@@ -624,113 +482,6 @@ function getUsers () {
 }
 
 
-var chartdata = new Array();
-
-var lag = 0;
-function getPrice(symbol, force, callback) {
-
-
-  var err = 0;var data = null;
-if (lag < 1) {
-if (symbol == 'BTCUSD') {
-var options = {
-  host: 'api.bitcoinaverage.com',
-  port: 80,
-  path: '/ticker/USD/last'
-};
-http.get(options, function(resp){
-  var decoder = new StringDecoder('utf8');
-  resp.on('data', function(chunk){
-    chunk = decoder.write(chunk);
-    //console.log(chunk);
-    var data = chunk;
-    if(parseInt(data, 10) > 0) {
-    updatePrice(data, force, symbol);
-    price[symbol] = data;
-    }else {
-      lag = lag+2;
-    }
-  });
-}).on("error", function(e){
-  console.log("Got "+options.host+" error: " + e.message);
-}); // if symbol is a currency, we run it through for the exchange rate
-} else if (symbol == 'BTCCNY') {
-var options = {
-  host: 'api.bitcoinaverage.com',
-  port: 80,
-  path: '/ticker/CNY/last'
-};
-http.get(options, function(resp){
-  var decoder = new StringDecoder('utf8');
-  resp.on('data', function(chunk){
-    chunk = decoder.write(chunk);
-    //console.log(chunk);
-    var data = chunk;
-    if(parseInt(data, 10) > 0) {
-    updatePrice(data, force, symbol);
-    price[symbol] = data;
-    }else {
-      lag = lag+2;
-    }
-  });
-}).on("error", function(e){
-  console.log("Got "+options.host+" error: " + e.message);
-}); // if symbol is a currency, we run it through for the exchange rate
-} else if (symbol == 'EURUSD' || symbol == 'GBPUSD' || symbol == 'USDCNY') {
-var options = {
-  host: 'download.finance.yahoo.com',
-  port: 80,
-  path: '/d/quotes.csv?s='+symbol+'=X&f=sl1d1t1c1ohgv&e=.csv'
-};
-http.get(options, function(resp){
-  var decoder = new StringDecoder('utf8');
-  resp.on('data', function(chunk){
-    chunk = decoder.write(chunk);
-    data = chunk.split(',');
-    data = data[1];
-
-    if(parseInt(data, 10) > 0) { // is this data even numeric?
-      updatePrice(data, force, symbol);
-      price[symbol] = data;
-    }else {
-      lag = lag+2;
-    }
-  });
-}).on("error", function(e){
-  console.log("Got "+options.host+" error: " + e.message);
-  err++;
-});
-// if symbol is a stock, run it through for the price
-}else {
-var options = {
-  host: 'download.finance.yahoo.com',
-  port: 80,
-  path: '/d/quotes.csv?s='+symbol+'&f=sl1d1t1c1ohgv&e=.csv'
-};
-http.get(options, function(resp){
-  var decoder = new StringDecoder('utf8');
-  resp.on('data', function(chunk){
-    chunk = decoder.write(chunk);
-    data = chunk.split(',');
-    data = data[1];
-
-    if(parseInt(data, 10) > 0) { // is this data even numeric?
-      updatePrice(data, force, symbol);
-      price[symbol] = data;
-    }else {
-      lag = lag+5;
-    }
-  });
-}).on("error", function(e){
-  console.log("Got "+options.host+" error: " + e.message);
-  err++;
-});
-}// jump over third-party gates
-} else {
-  //console.log('Finances API Lag: '+lag);
-  lag--;
-}
-}
 
 // price and chart updaters
 
@@ -758,7 +509,7 @@ function updateChart(data, symbol, force) {
             chartdata = [];
           }
           chartentry = new Array(time, Number(data));
-console.log('Charting '+symbol+' : '+chartentry);
+//console.log('Charting '+symbol+' : '+chartentry);
           chartdata.push(chartentry);
           //console.log(chartdata);
           chart[symbol] = chartdata;
@@ -775,8 +526,17 @@ console.log('Charting '+symbol+' : '+chartentry);
              if (timewindow > 1800000) {
               i--;
               chartdata.shift();
-              io.sockets.emit(chartsymbol, chart[symbol]);
-              //console.log(chartdata);
+
+//               var hipstoricprices = new Historicprices({
+//                 symbol: chartsymbol,
+//                 chart: chart[symbol]
+//               });
+//               hipstoricprices.update(function (err) {
+//                 if (err) console.log(err)
+//                 io.sockets.emit(chartsymbol, chart[symbol]);
+// //Dump chart data to the console super bad 
+// //console.log(chartdata);
+//               });
             }
       }
     //}
@@ -788,22 +548,45 @@ function chartPoint (data, symbol) {
         if (Number(data)) {
           chartentry[symbol] = [time, Number(data)];
           io.sockets.emit(chartsymbol, chartentry[symbol]);
+          //console.log(chartsymbol + ':' + chartentry[symbol]);
       }
 }
 
 
-var symbolindex = 0;
 var tradeupdater = setInterval(function() {
-for (index = 0; index < symbols.length; ++index) {
-    getPrice(symbols[index], 1);
-}
-}, 1000);
+  var symbols = ['BTCUSD', 'BTCCNY', 'EURUSD', 'GBPUSD', 'USDCNY', '^DJI', 'CLK14.NYM', 'GCJ14.CMX', 'SIJ14.CMX', '^GSPC', '^IXIC'];
+
+  async.each(symbols,function (symbol, callback) {
+      getPrice(symbol, 1);
+    }, function (err) {
+      if (err) throw(err);
+  });
+}, 2753);
+
+
+
 User.count({ }, function (err, count) {
   if (err) throw(err);
   userNumber = (userNumber+count);
 });
 
-
+// Fill the ram with active trades from the database
+Activetrades.find({ },function(err, data) {
+  if (err) throw (err)
+    for (var i = 0; i<data.length; i++){
+      var trade = data[i];
+      var tradeinit = new Array();
+        tradeinit[0] = trade.symbol;
+        tradeinit[1] = trade.price;
+        tradeinit[2] = trade.offer;
+        tradeinit[3] = trade.amount;
+        tradeinit[4] = trade.direction;
+        tradeinit[5] = trade.now;
+        tradeinit[6] = trade.user;
+        trades.push(tradeinit);
+    }
+    io.sockets.emit('activetrades', trades);
+});
 
 // Socketeering
 //=socks
@@ -816,25 +599,33 @@ io.sockets.on('connection', function (socket) {
 
   io.sockets.emit('symbols', symbols);
   var userpage = [];
-  var displaysymbols = ['GCJ14.CMX'];
 
-  socket.on('page', function (data) {
-  userpage[myName] = data.page;
-  //if (data.page == 'trade' && !data.symbol) { var symbol = displaysymbols; } else { var symbol = data.symbol; }
-    socket.emit('loadpage', {page: data.page, symbol: data.symbol});
-  });
 
-  if (!userpage[myName]){
-      socket.emit('loadpage', {page: 'trade', symbol: displaysymbols});
-  }
 
-      socket.emit('hello', { hello: myName, id: myNumber });
+  // if (!userpage[myName]){
+  //     socket.emit('loadpage', {page: 'trade', symbol: displaysymbols});
+  // }
 
+      //socket.emit('hello', { hello: myName, id: myNumber });
   //socket.emit('displaysymbols', displaysymbols);
   io.sockets.emit('tradingopen', tradingopen); // Update trading status
+
+//var displaysymbol = ['BTCUSD'];
+//socket.emit('loadpage', {page: 'trade', symbol: displaysymbol, guest: true}); 
+ // socket.emit('loadpage', {page: 'trade', symbol: displaysymbol}); 
+  // socket.on('page', function (data) {
+  //   userpage[myName] = data.page;
+  //   socket.emit('loadpage', {page: data.page, symbol: data.symbol, guest: true}); 
+  // });
+
+  socket.on('page', function (data) {
+    userpage[myName] = data.page;
+    socket.emit('loadpage', {page: data.page, symbol: data.symbol, guest: data.guest}); 
+  });
   // Check the users cookie key
   checkcookie(socket, function(myName, isloggedin) { // isloggedin = true/false
 // Everything inside
+
 
   // Get the user's balance
   rclient.get(myName, function(err, reply) {
@@ -941,6 +732,10 @@ io.sockets.on('connection', function (socket) {
     io.sockets.emit('tradingopen', tradingopen); // Update trading status
     socket.emit('ratios', ratio); // Update ratios
     io.sockets.emit('listing', getUsers()); // Update user listing
+
+
+
+
   },750); // Run every second
 
 
@@ -988,63 +783,69 @@ app.use('/', express.static(__dirname + '/views'));
 // Send index
 app.get('/', function(req,res) {
   res.render('index', {
-    symbol: 'GCJ14.CMX',
     user: true,
-    activetrades: true,
-    historictrades: true,
     col: 2
   });
 
-});
-app.get('/index', function(req, res) {
-    res.render('index', {
-    symbol: 'GCJ14.CMX',
-    user: true,
-    activetrades: true,
-    historictrades: true,
-    col: 2
-  });
-});
-
-app.get('/account', function(req, res) {
-    res.render('account', {
-    user: true,
-    activetrades: true,
-    historictrades: true,
-    col: 2
-
-  });
 });
 
 app.get('/btcstatus', function(req, res, next){
 loginfo();
 });
 
-app.get('/nexttrade/', function(req, res, next){
-  res.send(nexttrade[0]+':'+nexttrade[1]);
-});
-// Proto
-app.get('/symbol/:id', function(req, res, next){
-  res.render('index', {
-    symbol: req.params.id,
-    user: true,
-    activetrades: true,
-    historictrades: true,
-    col: 2
+app.get('/checkusername/:data', function(req, res, next){
+  var un = req.params.data;
+  var query  = User.where({ username: un });
+  query.findOne(function (err, user) {
+    if (err) throw (err);
+    if (user) res.send('NO');
+    if (!user) res.send('OK');
   });
-});
-app.get('/trade/:id', function(req, res, next){
-  res.send(req.params.id);
-  //res.render('index.html');
+});app.get('/checkemail/:data', function(req, res, next){
+  var em = req.params.data;
+  var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+  var query  = User.where({ email: em });
+  query.findOne(function (err, user) {
+    if (err) throw (err);
+    if (user || re.test(em) == false) res.send('NO');
+    if (!user && re.test(em)) res.send('OK');
+  });
+});app.get('/checkpass/:data', function(req, res, next){
+  var pwd = req.params.data;
+  var matches = pwd.match(/\d+/g);
+
+  if (pwd.length > 5 && matches) {
+    res.send('OK');
+  } else {
+    res.send('NO');
+  }
 });
 
+
+// Proto
+app.get('/nexttrade', function(req, res, next){
+  res.send(nexttrade[0]+':'+nexttrade[1]);
+});app.get('/tradeevery', function(req, res, next){
+  res.send(tradeevery);
+});app.get('/secs', function(req, res, next){
+  var secs = ((+nexttrade[0]*60)+nexttrade[1]);
+  res.send(secs);
+});app.get('/progress', function(req, res, next){
+  var secs = ((+nexttrade[0]*60)+nexttrade[1]);
+  var every = (+tradeevery * 60);
+  var progress = ((+tradeevery/secs)*10);
+  res.send(progress);
+});
+
+
+
+
+// Login
 app.get('/logout', function(req, res) {
   res.clearCookie('key');
   res.writeHead(302, {location: '/'});
   res.end();
 });
-
-// Login
 app.get('/login/:email/:password', function(req, res) {
       // Get username and password variables
       var password = decodeURI(req.param('password', null));
@@ -1114,7 +915,8 @@ app.get('/adduser/:username/:email/:password', function(req, res, next){
 if (signupsopen == true) {
 
   // Create a new bitcoin address
-    createAddress(req.params.username, function(data) {
+    createAddress(req.params.username, function(err, data) {
+      if (err) throw (err);
        rclient.set(req.params.username, 0);
       //console.log(data);
       if (data != null) {
@@ -1123,35 +925,41 @@ if (signupsopen == true) {
         username: req.params.username,
         email: req.params.email,
         password: req.params.password,
-        btc: data,
-        role: 'user'
+        btc: data
     });
   // save user to database
   newUser.save(function(err) {
     if (err) {
       res.send(err);
     // Something goes wrong
-      // switch(err.code){
-      //   case 11000: // Username exists
-      //   res.send('Username Taken');
-      // break
-        // default:
-        // res.send(err);
-        // }
+      switch(err.code){
+        case 11000: // Username exists
+        res.send('Email or Username Taken');
+      break
+        default:
+        res.send('Database Error');
+        }
     } else {
       res.send('OK');
     }
     });
     } else {
-      res.send('Error creating Bitcoin address.')
+      res.send('Bitcoin Error')
     }
   });
 } else {
-  res.send('Signups are not open at this time.');
+  res.send('Signups are not open');
 }
 });
 app.get('/adduser', function(req, res, next){
   res.send('Let me explain /adduser/{username}/{email}/{password}');
+});
+app.get('/signupsopen', function(req, res, next){
+  if (signupsopen == true) {
+    res.send('OK');
+  } else {
+    res.send('NO');
+  }
 });
 
 // Load subpages
@@ -1182,7 +990,7 @@ var result = null;
     }
     if (cookieObj.key) {
       Activeusers.find({ key: cookieObj.key }, function (err, docs) {
-        if (err) { } else {
+        if (err) { throw (err) } else {
         docs = docs[0];
         // User authorized
         if (docs) {
@@ -1198,7 +1006,9 @@ var result = null;
           pageload.save(function (err) {
             if (err) throw (err);
           });
-        } // if docs
+        } else {
+          next('Guest', false);
+        }
         }
       });
       }
@@ -1206,12 +1016,11 @@ var result = null;
 }
 
 function processTrade(trades) {
-
+  console.log('Processed trades '+date.toString());
+  console.log(trades);
   var index; //Loop the trades
   for (index = 0; index < trades.length; ++index) {
-
-
-    console.log(trades[index]);
+    //console.log(trades[index]);
   }
 
 }
@@ -1272,6 +1081,315 @@ function symbolswitch(symbol){
       break;
     }
   return symbol;
+}
+
+var lastdata;
+function getnewtransactions(cb) {
+  var options = {
+    host: '24.52.219.6',
+    port: 80,
+    path: '/payment.log'
+  };
+  http.get(options, function(resp){
+    var decoder = new StringDecoder('utf8');
+    resp.on('data', function(chunk){
+      chunk = decoder.write(chunk);
+      if (lastdata != chunk) {
+        var split = chunk.split('\n');
+        for (var i = 0; i < split.length; i++) {
+          var line = split[i].split('-');
+          cb(line[0],line[1]);
+        }
+        lastdata = chunk;
+      }
+    });
+  });
+}
+
+
+var chartdata = new Array();
+var lag = 0;
+function getPrice(symbol, force, callback) {
+  var err = 0;var data = null;
+
+  if (symbol == 'BTCUSD') {
+  var options = {
+    host: 'api.bitcoinaverage.com',
+    port: 80,
+    path: '/ticker/USD/last'
+  };
+  http.get(options, function(resp){
+    var decoder = new StringDecoder('utf8');
+    resp.on('data', function(chunk){
+      chunk = decoder.write(chunk);
+      //console.log('BTC'+chunk);
+      var data = chunk;
+      if(parseInt(data, 10) > 0) {
+      updatePrice(data, force, symbol);
+      price[symbol] = data;
+      }else {
+        lag = lag+2;
+      }
+    });
+  }).on("error", function(e){
+    console.log("Got "+options.host+" error: " + e.message);
+  });
+  } else if (symbol == 'BTCCNY') {
+  var options = {
+    host: 'api.bitcoinaverage.com',
+    port: 80,
+    path: '/ticker/CNY/last'
+  };
+  http.get(options, function(resp){
+    var decoder = new StringDecoder('utf8');
+    resp.on('data', function(chunk){
+      chunk = decoder.write(chunk);
+      //console.log('BTCCNY:'+chunk);
+      var data = chunk;
+      if(parseInt(data, 10) > 0) {
+      updatePrice(data, force, symbol);
+      price[symbol] = data;
+      }else {
+        lag = lag+2;
+      }
+    });
+  }).on("error", function(e){
+    console.log("Got "+options.host+" error: " + e.message);
+  }); // if symbol is a currency, we run it through for the exchange rate
+  } else if (symbol == 'EURUSD' || symbol == 'GBPUSD' || symbol == 'USDCNY') {
+  var options = {
+    host: 'download.finance.yahoo.com',
+    port: 80,
+    path: '/d/quotes.csv?s='+symbol+'=X&f=sl1d1t1c1ohgv&e=.csv'
+  };
+  http.get(options, function(resp){
+    var decoder = new StringDecoder('utf8');
+    resp.on('data', function(chunk){
+      chunk = decoder.write(chunk);
+      data = chunk.split(',');
+      data = data[1];
+      //console.log(symbol+':'+data);
+      if(parseInt(data, 10) > 0) { // is this data even numeric?
+        updatePrice(data, force, symbol);
+        price[symbol] = data;
+      }else {
+        lag = lag+2;
+      }
+    });
+  }).on("error", function(e){
+    console.log("Got "+options.host+" error: " + e.message);
+    err++;
+  });
+  // if symbol is a stock, run it through for the price
+  }else {
+  var options = {
+    host: 'download.finance.yahoo.com',
+    port: 80,
+    path: '/d/quotes.csv?s='+symbol+'&f=sl1d1t1c1ohgv&e=.csv'
+  };
+  http.get(options, function(resp){
+    var decoder = new StringDecoder('utf8');
+    resp.on('data', function(chunk){
+      chunk = decoder.write(chunk);
+      data = chunk.split(',');
+      data = data[1];
+
+      if(parseInt(data, 10) > 0) { // is this data even numeric?
+        updatePrice(data, force, symbol);
+        price[symbol] = data;
+      }else {
+        lag = lag+5;
+      }
+    });
+  }).on("error", function(e){
+    console.log("Got "+options.host+" error: " + e.message);
+    err++;
+  });
+  }// jump over third-party gates
+}
+
+
+var  bitcoin = require('bitcoin')
+  ,fs = require('fs')
+  ,mongoose = require('mongoose')
+  ,User = require('user-model');
+var client = null;
+var gclient = null;
+function Bitcoinconnect(next) {
+  fs.readFile('/home/node/keys/bitcoin.id', 'utf8', function (err,data) {
+    if (err) throw (err);
+    var id = data.replace("\n", "").replace("\r", "");
+      fs.readFile('/home/node/keys/bitcoin.key', 'utf8', function (err,data) {
+        if (err) throw (err);
+      var key = data.replace("\n", "").replace("\r", "");
+        fs.readFile('/home/node/keys/bitcoin.host', 'utf8', function (err,data) {
+          if (err) throw (err);
+
+          var host = data.replace("\n", "").replace("\r", "");
+          fs.readFile('/home/node/keys/bitcoin.port', 'utf8', function (err,data) {
+            if (err) throw (err);
+            var port = data.replace("\n", "").replace("\r", "");
+          var client = new bitcoin.Client({
+            host: host,
+            port: port,
+            user: id,
+            pass: key,
+            timeout: 5000
+          });
+          //console.log(host+':'+port);
+          next(client);
+        });
+        });
+    });
+  });
+}
+
+Bitcoinconnect(function(client) {
+  // After connection
+  gclient = client;
+  loginfo();
+  //syncRemote();
+// sendfrom('myaccount', '1A5BWZULifJVtfomBtFKRWzDxg9MVSWkjG', '1', function(err, txid) {
+//   console.log(txid);
+// });
+  // addressbalance('liam');
+  // createAddress('liam', function(address){
+  //  console.log('new address: liam '+address);
+  // });
+  //balance('liam');
+  //ßconsole.log(loginfo());
+  // createAddress('bent',function(a) {
+  //   console.log(a);
+  // });
+});
+// dump(1, 'liam');
+//console.log(balances);
+
+function loginfo(){
+  gclient.cmd('getinfo', function(err, info){
+  if (err) throw (err);
+    console.log('Bitcoin loaded ', info);
+    return info;
+  });
+}
+
+function displayAccounts(cb) {
+    gclient.cmd('listreceivedbyaddress', 0, false, function(err, info){
+      if (err) throw (err);
+      cb(info);
+  });
+}
+
+
+
+function syncLocal(cb) {
+  gclient.cmd('listreceivedbyaddress', 0, true, function(err, info){
+  if (err) throw (err);
+    info.forEach(function(entry) {
+        var amount = (+entry.amount*1000);
+        rclient.get(user.username, function (err,register) {
+          if (amount > register) {
+            var difference = amount - register;
+            rclient.set(entry.account, amount);
+          } else if (amount < register) {
+            var difference = register - amount;
+            rclient.set(entry.account, amount);
+          }
+        });
+    });
+      var action = "Dumped bitcoin wallets to local.";
+      rclient.set('last',action)
+      if (cb) cb();
+  });
+}
+
+function addressbalance(account, confirmations) {
+  if (!confirmations) confirmations = 1;
+  gclient.cmd('getbalance', account, confirmations, function(err, balance, resHeaders) {
+    if (err) throw (err);
+    return balance;
+  });
+}
+
+function chainuserbalance(username, cb) {
+  User.findOne({ username: username }, function(err, user) {
+    if (err) throw err;
+    if (user != null){
+    gclient.cmd('getbalance', user.username, 1, function(err, balance, resHeaders) {
+      balance = (+balance*1000);
+      cb(err, balance);
+    });
+    }
+  });
+}
+
+function createAddress(label, cb) {
+  gclient.cmd('getnewaddress', label, function(err, add, resHeaders) {
+    if (err) throw (err);
+    cb(err, add);
+  });
+}
+
+function listreceivedbyaddress(cb) {
+  gclient.cmd('listreceivedbyaddress', function(err, result, resHeaders) {
+    if (err) throw (err);
+      cb(err, result);
+  });
+}
+
+function sendfrom(from, to, amount, cb) {
+  amount = (+amount / 1000);
+  gclient.cmd('sendfrom', from, to, amount, function(err, txid, resHeaders) {
+    if (err) throw (err);
+    var DbsendPayment = new Sentpayments({
+      from: from,
+      to: to,
+      amount: amount,
+      txid: txid,
+      time: time
+    })
+    DbsendPayment.save(function (err) {
+      if (err) console.log(err)
+    });
+
+    cb(err, txid);
+  });
+}
+
+function move(from, to, amount, cb) {
+  amount = (+amount / 1000);
+  gclient.cmd('move', from, to, amount, function(err, resHeaders) {
+    if (err) throw (err);
+    cb(err);
+  });
+}
+
+
+
+function syncRemote(cb){
+
+      User.find({ }, function (err, data) {
+        if (err) throw (err);
+        data.forEach(function(user) {
+          rclient.get(user.username, function (err,register) {
+            if (err) throw (err);
+              chainuserbalance(user.username, function (err, balance) {
+                //console.log(balance);
+                if (err) throw (err)
+                  if (balance != register) {
+                    // Sync the register and balances for each user
+                    //if (balance > register) rclient.set(user.username, balance);
+                    if (register < balance) {
+                      var amount = (+balance - register);
+                      collectbank(amount, user.username);
+                    }
+
+                  }
+              });
+          });
+        });
+      });
+
 }
 
 function randomString(length, chars) {

@@ -5,7 +5,7 @@ function displayOptions(displaysymbols) {
   if (displaysymbols) {
     $.each(displaysymbols, function( index, symbol ) {
     symbol = symbolSwitch(symbol);
-    //console.log('displayOptions: '+symbol);
+    console.log('displayOptions: '+symbol);
     var show = '<div class="controls" id="'+symbol+'">'+
         '<div class="progress progress'+symbol+' vertical">'+
             '<div class="progress-bar progress-bar-success" role="progressbar" aria-valuetransitiongoal="0"></div>'+
@@ -28,19 +28,19 @@ function displayOptions(displaysymbols) {
             '<h1>75%</h1>'+
             '<span class="hide rawoffer">0.75</span>'+
            '<!--  <span class="bold rate">Payout if</span><br /> -->'+
-            '<span class="direction bold"><span class="action" data-translate="if">If</span>: <span class="option">'+symbol+'</span> <span class="tradeicon glyphicon icon'+symbol+' green glyphicon-arrow-up"></span></span><br />'+
-            '<span class="price"><span data-translate="from">From:</span> <span class="keystone keystone'+symbol+'"> --.--</span> <span class="lock"></span></span><br />'+
-            '<span class="expires bold"><span data-translate="in">In:</span> <span class="expiretime"></span></span>'+
+            '<span class="direction bold"><span class="action">If</span>: <span class="option">'+symbol+'</span> <span class="tradeicon glyphicon icon'+symbol+' green glyphicon-arrow-up"></span></span><br />'+
+            '<span class="price">From: <span class="keystone keystone'+symbol+'"> --.--</span> <span class="lock"></span></span><br />'+
+            '<span class="expires bold">In: <span class="expiretime"></span></span>'+
           '</div><div class="trader">' +
             '<div class="input-group amount">'+
                   '<span class="input-group-addon">m฿</span>'+
                   '<input type="number" class="form-control amountfield" placeholder="">'+
             '</div></div>'+
-            '<button type="button" data-translate="apply" class="btn btn-default applytrade apply'+symbol+'">Apply</button>'+
+            '<button type="button" class="btn btn-default applytrade apply'+symbol+'">Apply</button>'+
           '</div>'+
          '</div>'+
-        '<span class="tradewarning" data-translate="youcannotcancelatrade">You cannot cancel a trade.</span>';
-    var lock = '<div class="nooffer"><i class="fa fa-lock" style="font-size: 25px;"></i><br /><span data-translate="tradingisclosed">Trading is Closed</span> <br />'+symbol+':<span class="keystone'+symbol+'"></span></div>';
+        '<span class="tradewarning">You cannot cancel a trade.</span>';
+    var lock = '<div class="nooffer"><i class="fa fa-lock" style="font-size: 25px;"></i><br />Trading is Closed <br />'+symbol+':<span class="keystone'+symbol+'"></span></div>';
 
     //if trading is allowed on this symbol
     if (tradingopen) {

@@ -2,17 +2,30 @@
 
 // Trading
 $(function() {
+  var defaultsymbol = ['BTCUSD'];
+  page('trade', defaultsymbol);
+
 
 // $("[data-translate]").jqTranslate('trans',{defaultLang: 'es'});
+$(".hook").on("mousedown",".reveal",function(e) {
+    $(".pwd").replaceWith($('.pwd').clone().attr('type', 'text'));
+});
+$(".hook").on("mouseup",".reveal",function(e) {
+    $(".pwd").replaceWith($('.pwd').clone().attr('type', 'password'));
+});
 
+var lastitem;
 $(".globalheader").on("click",".keystones li a",function(e) {
   e.preventDefault();
   var symbol = [$(this).parent().attr('id')];
+  if (lastitem != symbol) {
+  page('trade',symbol);
+  lastitem = symbol;
   console.log(symbol);
-  page('trade', symbol);
+  }
 });
 
-console.log('loaded ui jquery');
+//console.log('loaded ui jquery');
   $(".right").on("keyup","#password",function(e) {
     if(e.keyCode == 13) {
       $('.loginbtn').html('Working');
@@ -96,6 +109,22 @@ console.log('loaded ui jquery');
       $('#'+symbol+' .info .trader .amount .amountfield').val(0);
       $('#'+symbol+' .info .details h1').html(offer * 100 + "%");
     }
+  });  $(".hook").on("keyup",".amountfield",function() {
+    var symbol = $(this).parent().parent().parent().parent().attr('id');
+    var offer = $('#'+symbol+' .info .details .rawoffer').html();
+    var amount = $('#'+symbol+' .info .trader .amount .amountfield').val();
+    var lastbal = 999;
+    if (amount > 0) {
+      if (amount < lastbal) {
+        var possiblewin = (+amount+(amount*offer));
+        $('#'+symbol+' .info .details h1').html("m฿" + possiblewin.toFixed(2));
+      } else {
+         $('#'+symbol+' .info .trader .amount .amountfield').val(lastbal);
+      }
+    } else { // keep amount above zero
+      $('#'+symbol+' .info .trader .amount .amountfield').val(0);
+      $('#'+symbol+' .info .details h1').html(offer * 100 + "%");
+    }
   });
   $(".hook").on("click",".callbtn",function() {
     var symbol = $(this).parent().parent().attr('id');
@@ -121,6 +150,13 @@ console.log('loaded ui jquery');
   });
 
 
+  $(".globalheader").on("click","#account",function() {
+    page('account');
+  });
+
+  $(".globalheader").on("click","#deposit",function() {
+    page('deposit');
+  });
 // UI Stuff
 // Animated header strip
 
@@ -162,8 +198,6 @@ $('.btnlogo').click(function() {
     //   $users.find('li').removeClass('selected');
     //   $user.addClass('selected');
     // });
-
-
 
 // onload
 });
