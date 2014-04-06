@@ -17,5 +17,14 @@
 	"signup": "Registro",
 	"inviteonly": "Inscripción cerrada",
 	"registrationsdisabled": "Sentimos que estamos tomando no hay nuevos usuarios.",
-	"haveaninvite": "Invitado"
+	"haveaninvite": "Invitado",
+	"bitcoinwallet": "Monedero Bitcoin",
+	"yourbtcaddress": "El Bitcoin Dirección",
+	"dualfactorenabled": "<strong>Protección</strong> de Dos Factores activada",
+	"enabledualfactor": "Aumentar la seguridad",
+	"nobtcwalletfound": "Sin billetera Bitcoin encontrado",
+	"wallettx": "Transacciones recientes",
+	"confirmations": "Confirmaciones",
+	"received": "Recibido",
+	"sent": "Enviado"
 }

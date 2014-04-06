@@ -306,6 +306,72 @@ margin-right: 15px;
   text-decoration: none;
 }
 
+.wallet {
+  position: relative;
+}
+.btcaddress {
+font-family: museo-slab,Georgia,"Times New Roman",Times,serif;
+font-weight: 500;
+font-size: 21px;
+text-align: center;
+padding-top: 5px;
+color: black;
+cursor: default;
+}
+.btcqr {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  cursor: default;
+}.btcbal {
+  font-size: 21px;
+  text-align: center;
+  font-family: museo-slab,Georgia,"Times New Roman",Times,serif;
+  padding-top: 5px;
+  cursor: default;
+}.btcwallet {
+  /*padding-top: 5px;*/
+  font-size: 19px;
+  color: #31708f;
+  text-align: center;
+  margin: auto;
+  font-family: museo-slab,Georgia,"Times New Roman",Times,serif;
+  cursor: default;
+}.btcsecure {
+position: absolute;
+top: 0px;
+right: 0px;
+}.btcsecure i {
+position: absolute;
+top: 15px;
+right: 43px;
+font-size: 75px;
+opacity: 0.6;
+}.btcsecure span {
+position: absolute;
+top: 85px;
+right: 15px;
+width: 110px;
+font-size: 12px;
+text-align: center;
+}.btcsecure a {
+position: absolute;
+top: 95px;
+right: 15px;
+width: 136px;
+font-size: 12px;
+text-align: center;
+}
+
+.lastbtctxs {
+font-size: 15px;
+}.lastbtctxs .recieved {
+
+}.lastbtctxs .recieved i {
+
+}
+
+
 .guest {
   margin-top:25px;
 }.guest .input-group {

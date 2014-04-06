@@ -893,6 +893,12 @@ height: 88px;
   .container {
     width: auto;
   }
+  .btcqr {
+    display: none;
+  }
+  .btcsecure {
+    display: none;
+  }
   .row-fluid {
     width: 100%;
   }

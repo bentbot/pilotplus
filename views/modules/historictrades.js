@@ -26,11 +26,11 @@ function showhistoric(data, user, trim){
         }
 
         if (entry.outcome == 'Win') {
-          var thumbhtml = '<span class="green" data-translate="won">Won</span></td><td> m฿'+possiblewin+'</span></td>';
+          var thumbhtml = '<span class="green" data-translate="won">Won</span></td><td> m<i class="fa fa-btc"></i>'+possiblewin+'</span></td>';
         } else if (entry.outcome == 'Lose') {
-          var thumbhtml = '<span class="red" data-translate="lost">Lost</span></td><td> m฿'+entry.amount+'</span></td>';
+          var thumbhtml = '<span class="red" data-translate="lost">Lost</span></td><td> m<i class="fa fa-btc"></i>'+entry.amount+'</span></td>';
         } else if (entry.outcome == 'Tie') {
-          var thumbhtml = '<span>Push</span></td><td> m฿'+entry.amount+'</span></td>';
+          var thumbhtml = '<span>Push</span></td><td> m<i class="fa fa-btc"></i>'+entry.amount+'</span></td>';
         }
         var entrytime = new Date(0);
         var entrydate = new Date(0);

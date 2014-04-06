@@ -33,7 +33,7 @@ function displayOptions(displaysymbols) {
             '<span class="expires bold"><span data-translate="in">In:</span> <span class="expiretime"></span></span>'+
           '</div><div class="trader">' +
             '<div class="input-group amount">'+
-                  '<span class="input-group-addon">m฿</span>'+
+                  '<span class="input-group-addon">m<i class="fa fa-btc"></i></span>'+
                   '<input type="number" class="form-control amountfield" placeholder="">'+
             '</div></div>'+
             '<button type="button" data-translate="apply" class="btn btn-default applytrade apply'+symbol+'">Apply</button>'+

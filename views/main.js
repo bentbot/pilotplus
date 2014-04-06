@@ -6,7 +6,13 @@ require(['modules/protodate']);
 require(['modules/remote']);
 require(['modules/local']);
 require(['modules/guest']);
+require(['modules/wallet']);
 
+  // $.each(symbols, function( index, symbol ) {
+    // each something          index, current
+  // });
+
+  var dualfactor = false;
     var socket = io.connect('https://vbit.io:3000', {secure: true});
     var user, userid, option, price, expires, direction, userdeposit;
     var $users = $('#users ul');
@@ -99,24 +105,22 @@ function loadDeposit() {
   $('.hook').html('');
   var page = '<div class="container" style="padding: 4px 0px;">'+
     '<div class="notif"></div>'+
+    //'<div class="col1">'+
     '<div class="wallet">'+
     '</div>'+
-    '<div class="col1">'+
+    ///'</div>'+
+    //'<div class="col2">'+
     '<div class="wallettx">'+
     '</div>'+
-    '</div>'+
-    '<div class="col2">'+
-    '<div class="historictrades">'+
-    '</div>'+
-    '</div>'+
+    //'</div>'+
     '</div>';
   $('.hook').html(page);
 
-  socket.on('wallet', function (data) {
-    showWallet(data);
+  socket.on('wallet', function (data) { // btc address
+    showWallet(data.address, data.balance);
   });
 
-  socket.on('wallettx', function (data) {
+  socket.on('wallettx', function (data) { // raw json tx
     showTx(data);
   });
 
@@ -168,8 +172,11 @@ var symbols = ['BTCUSD', 'BTCCNY', 'EURUSD', 'GBPUSD', 'USDCNY', '^DJI', 'CLK14.
       $('.bankbal').html(data);
     });
 
+   var autopage = 0;
    socket.on('userbal', function (data) {
-      $('.userbal').html('m฿'+data+'');
+    if (data < 1000) $('.userbal').html('m<i class="fa fa-btc"></i>'+data+'');
+    if (data > 1000) $('.userbal').html('<i class="fa fa-btc"></i>'+data/1000+'');
+    if (data == 0 && autopage < 2) { page('deposit'); autopage++; }
       if (lastbal < data) {
         $('.userbal').addClass("btn-success").removeClass('btn-danger').removeClass('btn-blue');
       } else if (lastbal > data) {
@@ -177,6 +184,7 @@ var symbols = ['BTCUSD', 'BTCCNY', 'EURUSD', 'GBPUSD', 'USDCNY', '^DJI', 'CLK14.
       } else {
         $('.userbal').addClass("btn-blue").removeClass('btn-success').removeClass('btn-danger');
       }
+
       lastbal = data;
     });
 
@@ -306,7 +314,7 @@ socket.on('alertuser', function (data) {
 });
 
 socket.on('tradeoutcome', function (data) {
-  showSplit(data.win,data.loss,data.push,showSymbols);
+  showSplit(data.x,data.y,data.z,showSymbols);
 });
 
 // Proto
@@ -369,5 +377,3 @@ $('.keystones').scrollbox();
 
 $(".timeago").timeago();
 require(['modules/onloadui']);
-
-

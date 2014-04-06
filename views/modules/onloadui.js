@@ -56,6 +56,7 @@ $(".globalheader").on("click",".keystones li a",function(e) {
       showSymbols();
       showfin = false;
     }
+    page('deposit');
   });
 
   function login () {
@@ -122,7 +123,7 @@ $(".globalheader").on("click",".keystones li a",function(e) {
          $('#'+symbol+' .info .trader .amount .amountfield').val(lastbal);
       }
     } else { // keep amount above zero
-      $('#'+symbol+' .info .trader .amount .amountfield').val(0);
+      //$('#'+symbol+' .info .trader .amount .amountfield').val(0);
       $('#'+symbol+' .info .details h1').html(offer * 100 + "%");
     }
   });
@@ -167,6 +168,7 @@ $(".globalheader").on("click",".keystones li a",function(e) {
   // });
 $('.btnlogo').click(function() {
   showSymbols();
+  page('trade', defaultsymbol);
 });
 
     //showloginfield();

@@ -82,6 +82,7 @@ Pageviews.remove({}, function(err) {
     rclient = redis.createClient(null, null, options);
   });
 function pay(amount, tradeuser) {
+  amount = round(amount, 6);
   rclient.get('myaccount', function(err, reply) {
     if (err) throw (err)
       var updatedbank = round(+reply-amount,6);
@@ -98,6 +99,7 @@ function pay(amount, tradeuser) {
       });
   });
 }function collectbank(amount, tradeuser, cb) {
+  amount = round(amount, 6);
   rclient.get(tradeuser, function(err, reply) {
     if (err) throw (err)
       var updatedbal = round(+reply-amount,6);
@@ -166,7 +168,7 @@ var symbols = ['BTCUSD', 'BTCCNY', 'EURUSD', 'GBPUSD', 'USDCNY', '^DJI', 'CLK14.
 var bank = 200;
 var put = 0;
 var call = 0;
-var maxamount = 1000; // the max amount a user can set for any one trade
+var maxamount = 100; // the max amount a user can set for any one trade
 var maxoffset = { bottom: 75, top: 25 };
 var cuttrading = 0; // seconds before trading where the user is locked out from adding a trade (zero to disable)
 var offer = 0.75;
@@ -176,6 +178,7 @@ var userbalance = new Array();
 var trades = new Array();
 var signupsopen = true; // Allow signups?
 var tradingopen = true; // Allow trading? -proto
+var diff = {};
 var users = {};
 var price = {};
 var ratio = {};
@@ -184,6 +187,9 @@ var calls = {};
 var puts = {};
 var totalcall = {};
 var totalput = {};
+var y = new Array();
+var x = new Array();
+var z = new Array();
 var a = 0;
 var processedtrades = new Array();
 
@@ -299,6 +305,10 @@ function trade() {
     processTrade(processedtrades);
 
   // empty the ram and database of old objects
+  x = new Array(); //win
+  y = new Array(); //tie
+  z = new Array(); //lose
+  t = new Array(); //totals
   calls = {};
   puts = {};
   totalcall = {};
@@ -365,9 +375,14 @@ function addTrade(symbol, amount, direction, user, socket) {
           if (!totalcall.symbol) { totalcall.symbol = 0; }
           if (!totalput.symbol) { totalput.symbol = 0; }
 
-            // Adjust the ratios
+          if (totalcall.symbol > totalput.symbol) diff[symbol] = (totalcall.symbol - totalput.symbol);
+          if (totalcall.symbol < totalput.symbol) diff[symbol] = (totalput.symbol - totalcall.symbol);
+          if (totalcall.symbol == totalput.symbol) diff[symbol] = 0;
+
+            // Add the two sides to make a total
           var t = Number(totalcall.symbol) + Number(totalput.symbol);
-          //console.log('Total '+symbol+' pot $'+t);
+
+          // Create a ratio percentage
           ratio[symbol] = round(Number(totalcall.symbol) / Number(t) * 100);
 
 
@@ -388,6 +403,7 @@ function addTrade(symbol, amount, direction, user, socket) {
             console.log('Total Call '+symbol+':'+totalcall.symbol);
             console.log('Total Put '+symbol+':'+totalput.symbol);
             console.log('Ratio '+symbol+' %'+ratio[symbol]);
+            console.log('Raw Difference: '+diff[symbol]);
               // Insert the trade into the ram
               var tradeinit = new Array();
               tradeinit[0] = symbol;
@@ -437,7 +453,8 @@ function addTrade(symbol, amount, direction, user, socket) {
   }
 }
 
-var nexttrade;
+var nexttrade = new Array();
+var nexttradesecs = tradeevery*60;
 // Calculate the next trade
 function checknextTrade() {
   // Get minutes in the global date object [10:01:02AM]
@@ -450,7 +467,9 @@ function checknextTrade() {
   } else {
     secs = 00;
   }
-  var nexttrade = [Number(mins),Number(secs)];  // Put the next trade in an array [8:58]
+  nexttrade = [Number(mins),Number(secs)];  // Put the next trade in an array [8:58]
+  nexttradesecs = (mins*60)+secs;
+  //console.log(nexttradesecs);
   io.sockets.emit('nexttrade', nexttrade); // Emit to chrome
   //console.log(mins+':'+secs);
   // If it's time to trade
@@ -598,7 +617,8 @@ io.sockets.on('connection', function (socket) {
   ipaddress = ipaddress.address;
 
   io.sockets.emit('symbols', symbols);
-  var userpage = [];
+  var userpage = new Array();
+  var useraddress = new Array();
 
 
 
@@ -620,8 +640,9 @@ io.sockets.on('connection', function (socket) {
 
   socket.on('page', function (data) {
     userpage[myName] = data.page;
-    socket.emit('loadpage', {page: data.page, symbol: data.symbol, guest: data.guest}); 
+    socket.emit('loadpage', {page: data.page, symbol: data.symbol, guest: data.guest});
   });
+
   // Check the users cookie key
   checkcookie(socket, function(myName, isloggedin) { // isloggedin = true/false
 // Everything inside
@@ -629,7 +650,7 @@ io.sockets.on('connection', function (socket) {
 
   // Get the user's balance
   rclient.get(myName, function(err, reply) {
-  if (reply && reply != null) {
+  if (reply && reply != null && reply != 'NaN') {
   userbalance[myName] = reply;
   } else {
   userbalance[myName] = 0;
@@ -699,14 +720,16 @@ io.sockets.on('connection', function (socket) {
 
   // Pass new trade details from the socket to addTrade
   socket.on('trade', function (data) {
-    // Check if input data is valid
-    var re = new RegExp(/[\s\[\]\(\)=,"\/\?@\:\;]/g);
-    if (re.test(data.amount)) { console.log('Illegal trade input from '+myName); } else {
-      // Push data to addTrade
-      //console.log('add trade for ' + data.user);
-      addTrade(data.symbol, data.amount, data.direction, data.user, socket);
-      // Emit active trades again
-      socket.emit('activetrades', trades);
+    if (data.user == myName) {
+      // Check if input data is valid
+      var re = new RegExp(/[\s\[\]\(\)=,"\/\?@\:\;]/g);
+      if (re.test(data.amount)) { console.log('Illegal trade input from '+myName); } else {
+        // Push data to addTrade
+        //console.log('add trade for ' + data.user);
+        addTrade(data.symbol, data.amount, data.direction, data.user, socket);
+        // Emit active trades again
+        socket.emit('activetrades', trades);
+      }
     }
   });
 
@@ -717,11 +740,6 @@ io.sockets.on('connection', function (socket) {
 
   // Create a general script updater
   var updater = setInterval(function() {
-    // Balance updater
-    rclient.get(myName, function(err, reply) {
-      if (reply != null) { userbalance[myName] = reply; }
-      else { userbalance[myName] = 0; }
-    });
     socket.emit('userbal', userbalance[myName]); // Update userbalance
 
     socket.emit('username', myName); // Update userbalance
@@ -732,11 +750,28 @@ io.sockets.on('connection', function (socket) {
     io.sockets.emit('tradingopen', tradingopen); // Update trading status
     socket.emit('ratios', ratio); // Update ratios
     io.sockets.emit('listing', getUsers()); // Update user listing
+    // Balance updater
+    rclient.get(myName, function(err, reply) {
+    if (reply && reply != null && reply != 'NaN') {
+    userbalance[myName] = reply;
+    } else {
+    userbalance[myName] = 0;
+    }
+    });
+  // Get the user's bitcoin address
+    User.find({ username: myName }, function(err, docs) {
+      //console.log(docs)
+      docs = docs[0];
+      useraddress[myName] = docs.btc;
+      socket.emit('wallet', {address: useraddress[myName], balance: userbalance[myName]}); // Update useraddress
+    });
 
-
-
-
+    listtx(myName, function (err, data) {
+      if (err) throw (err);
+      socket.emit('wallettx', data); 
+    });
   },750); // Run every second
+
 
 
 // User functions
@@ -767,6 +802,7 @@ io.sockets.on('connection', function (socket) {
     //   });
     // }
     clearInterval(updater);
+    //if (slowupdater) clearInterval(slowupdater);
     io.sockets.emit('listing', getUsers());
   });
 
@@ -828,8 +864,7 @@ app.get('/nexttrade', function(req, res, next){
 });app.get('/tradeevery', function(req, res, next){
   res.send(tradeevery);
 });app.get('/secs', function(req, res, next){
-  var secs = ((+nexttrade[0]*60)+nexttrade[1]);
-  res.send(secs);
+  res.send(nexttradesecs);
 });app.get('/progress', function(req, res, next){
   var secs = ((+nexttrade[0]*60)+nexttrade[1]);
   var every = (+tradeevery * 60);
@@ -1015,15 +1050,7 @@ var result = null;
     } // if cookie
 }
 
-function processTrade(trades) {
-  console.log('Processed trades '+date.toString());
-  console.log(trades);
-  var index; //Loop the trades
-  for (index = 0; index < trades.length; ++index) {
-    //console.log(trades[index]);
-  }
 
-}
 
 // Proto
 
@@ -1081,6 +1108,36 @@ function symbolswitch(symbol){
       break;
     }
   return symbol;
+}
+
+function processTrade(trades) {
+  console.log('Processed trades '+date.toString());
+  //console.log(trades);
+
+  var processedusers = new Array();
+  for (var index = 0; index < trades.length; ++index) {
+    var trade = trades[index];
+    console.log(trade.user)
+
+    processedusers.push(trade.user);
+
+    if (!x[trade.user]) x[trade.user] = 0;
+    if (!y[trade.user]) y[trade.user] = 0;
+    if (!z[trade.user]) z[trade.user] = 0;
+
+    if (trade.outcome == 'Win') x[trade.user] = (+x[trade.user] + (+trade.amount+(trade.amount*trade.offer)));
+    if (trade.outcome == 'Tie') y[trade.user] = (+y[trade.user] + trade.amount);
+    if (trade.outcome == 'Lose') z[trade.user] = (+z[trade.user] + (+trade.amount+(trade.amount*trade.offer)));
+    // socket.emit('tradeoutcome', { 
+    //   x: x[trade.user],
+    //   y: y[trade.user],
+    //   z: z[trade.user]
+    // });
+  }
+  for (var index = 0; index < processedusers.length; ++index) {
+    var user = processedusers[index];
+    console.log('Trade outcome for ' + user + ' Won:' + x[user] + ' Tied:' + y[user] + ' Lost:' + z[user]);
+  }
 }
 
 var lastdata;
@@ -1321,6 +1378,21 @@ function chainuserbalance(username, cb) {
     });
     }
   });
+
+}
+
+function listtx(username, cb) {
+  User.findOne({ username: username }, function(err, user) {
+    if (err) throw err;
+    if (user != null) {
+    gclient.cmd('listtransactions', user.username, 1000, function(err, data, resHeaders) {
+      if (err) throw (err);
+      //console.log(resHeaders);
+      //console.log(data);
+      if (data) cb(err, data);
+    });
+    }
+  });
 }
 
 function createAddress(label, cb) {
@@ -1333,9 +1405,11 @@ function createAddress(label, cb) {
 function listreceivedbyaddress(cb) {
   gclient.cmd('listreceivedbyaddress', function(err, result, resHeaders) {
     if (err) throw (err);
+      //console.log(result);
       cb(err, result);
   });
 }
+
 
 function sendfrom(from, to, amount, cb) {
   amount = (+amount / 1000);
@@ -1391,6 +1465,10 @@ function syncRemote(cb){
       });
 
 }
+
+var clock = setInterval(function() {
+  var directions = ['Up','Down']
+}, 1000);
 
 function randomString(length, chars) {
     var result = '';

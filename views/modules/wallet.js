@@ -1,73 +1,96 @@
-var option = new Array();
-function displayOptions(displaysymbols) {
+function showWallet(add, bal) {
 
-  //$(".trading").html('<div style="text-align:center;">Loading '+displaysymbols+'</div>');
-  if (displaysymbols) {
-    $.each(displaysymbols, function( index, symbol ) {
-    symbol = symbolSwitch(symbol);
-    console.log('displayOptions: '+symbol);
-    var show = '<div class="controls" id="'+symbol+'">'+
-        '<div class="progress progress'+symbol+' vertical">'+
-            '<div class="progress-bar progress-bar-success" role="progressbar" aria-valuetransitiongoal="0"></div>'+
-        '</div>'+
-            '<div class="btn-group-vertical callputcontainer">'+
-            '<button type="button" class="btn btn-success callbtn call'+symbol+'">'+
-             ' <span class="glyphicon glyphicon-arrow-up"></span>'+
-              '<span data-translate="call">Call</span>'+
-            '</button>'+
-             '<button type="button" class="keystone btn btn-default keystone'+symbol+'" style="font-weight: bold;">'+
-              '--.--'+
-            '</button>'+
-            '<button type="button" class="btn btn-danger putbtn put'+symbol+'">'+
-              '<span data-translate="put">Put</span>'+
-              '<span class="glyphicon glyphicon-arrow-down"></span>'+
-            '</button>'+
-          '</div>'+
-          '<div class="info">'+
-          '<div class="details">'+
-            '<h1>75%</h1>'+
-            '<span class="hide rawoffer">0.75</span>'+
-           '<!--  <span class="bold rate">Payout if</span><br /> -->'+
-            '<span class="direction bold"><span class="action">If</span>: <span class="option">'+symbol+'</span> <span class="tradeicon glyphicon icon'+symbol+' green glyphicon-arrow-up"></span></span><br />'+
-            '<span class="price">From: <span class="keystone keystone'+symbol+'"> --.--</span> <span class="lock"></span></span><br />'+
-            '<span class="expires bold">In: <span class="expiretime"></span></span>'+
-          '</div><div class="trader">' +
-            '<div class="input-group amount">'+
-                  '<span class="input-group-addon">m฿</span>'+
-                  '<input type="number" class="form-control amountfield" placeholder="">'+
-            '</div></div>'+
-            '<button type="button" class="btn btn-default applytrade apply'+symbol+'">Apply</button>'+
-          '</div>'+
-         '</div>'+
-        '<span class="tradewarning">You cannot cancel a trade.</span>';
-    var lock = '<div class="nooffer"><i class="fa fa-lock" style="font-size: 25px;"></i><br />Trading is Closed <br />'+symbol+':<span class="keystone'+symbol+'"></span></div>';
+  if (add) {
+  var html = '';
+  $(".wallet").html(html);
+    html = html + '<div class="alert alert-info" style="margin-top: 20px;min-height: 133px;">';
+    //html = html + '<div class="header" data-translate="bitcoinwallet">Bitcoin Wallet</div>';
+    html = html + '<div class="btcqr"></div>';
+    html = html + '<div class="btcwallet" data-translate="yourbtcaddress">Your Bitcoin Address:</div>';
+    html = html + '<div class="btcaddress id="btcaddress" data-clipboard-text='+add+'>'+add+'</div>';
+    //html = html + '<a class="btcqr btn btn-default" taget="_blank" href="https://blockchain.info/qr?data='+add+'&size=150"><i class="fa fa-qrcode"></i> QR</a>';
+    if (bal > 0) html = html + '<div class="btcbal"><i class="fa fa-bitcoin"></i> <strong>'+(bal/1000)+'</strong></div>';
+    if (bal == 0) html = html + '<div class="btcbal"><i class="fa fa-bitcoin"></i> <strong>'+bal+'</strong></div>';
+    if (dualfactor == true) html = html + '<div class="btcsecure"><i class="fa fa-lock"></i><span data-translate="dualfactorenabled"><strong>Dual-Factor</strong> protection Enabled</span></div>';
+    if (dualfactor == false) html = html + '<div class="btcsecure"><i class="fa fa-key"></i><a class="btn btn-xs btn-blue" href="#" data-translate="enabledualfactor">Enable Dual-Factor</a></div>';
+    html = html + '</div>';
+    if (bal == 0) html = html + '<div class="alert alert-warning" style="margin-top: 20px;text-align: center;"><strong data-translate="justaddbitcoin"><i class="fa fa-flag" style="margin: 0px 5px 0px 5px;"></i> Add some Bitcoin to your account to get started.</stong></div>';
 
-    //if trading is allowed on this symbol
-    if (tradingopen) {
-    var renderoffer = show;
-    } else {
-    var renderoffer = lock;
-    }
-
-    if (index > 0){
-      var header = '<div class="header" style="border-top: 1px solid #eee;">'+symbol+'</div>';
-    } else {
-      var header = '<div class="header">'+symbol+'</div>';
-    }
-
-    option = header+'<div class="panel'+symbol+'">'+
-      // '<div class="header">'+symbol+'</div>'+
-      '<div class="numbotron" id="'+symbol+'_container">'+
-      '</div>'+
-      '<div class="controls" id="'+symbol+'">'+
-        renderoffer +
-         '</div>'+
-         '<div style="clear:both;"></div>'+
-        '</div>';
-       //$(".trading").html(symbol);
-       $(".trading").append(option);
-
-    $(".trading").addClass('symbols');
+  $(".wallet").html(html);
+  $(".btcqr").qrcode({
+    render: 'canvas',
+    size: 100,
+    radius: 100,
+    fill: '#31708f',
+    text: add
   });
+
+  } else {
+    $('.notif').html('<div class="alert alert-danger"><strong data-translate="nobtcwalletfound">No Bitcoin wallet found.</strong></div>');
   }
 }
+
+function showTx(data) {
+  //console.log(data);
+  var html = '';
+  $(".wallettx").html(html);
+  var index = 0;
+  var tdata;
+  while (index < data.length) { 
+    tdata = data[index];
+    console.log(tdata);
+  html = html + '<div class="alert alert-info lastbtctxs" style="margin-top: 20px;">';
+    var entrytime = new Date(0);
+    var entrydate = new Date(0);
+    var iodate = new Date(0);
+    entrytime.setUTCSeconds(tdata.time);
+    entrydate.setUTCSeconds(tdata.time);
+    iodate.setUTCSeconds(tdata.time);
+    entrytime = entrytime.customFormat( "#hhh#:#mm#:#ss# " );
+    entrydate = entrydate.customFormat( "#DD#/#MM#/#YYYY#" );
+    iodate = iodate.toISOString();
+
+    //html = html + '<div class="header" data-translate="wallettx">Last Transactions</div>';
+    if (tdata) {
+      if (tdata.confirmations > 3) var confirms = '<i class="fa fa-check green" style="margin: 0px 10px 0px 10px;"></i> <span data-translate="confirmations">No Confirmations</span>';
+      if (tdata.confirmations < 3) var confirms = '<i class="fa fa-certificate orange" style="margin: 0px 10px 0px 10px;"></i> '+tdata.confirmations+' <span data-translate="confirmations">Confirmations</span>';
+      if (tdata.confirmations == 0) var confirms = '<i class="fa fa-certificate" style="color: #777;margin: 0px 10px 0px 10px;"></i> <span data-translate="justnow">Awaiting Confirmation</span>';
+      if (tdata.category == 'receive') html = html + '<div class="received"><i class="fa fa-download green" style="margin-right: 10px;"></i> <span data-translate="received">Received</span> <i class="fa fa-btc" style="margin: 0px 2px 0px 5px;"></i>'+tdata.amount+' <span style="float: right" class="timeago">'+entrydate+' '+entrytime+' <a href="https://www.biteasy.com/blockchain/transactions/'+tdata.txid+'" target="_blank"><i style="margin: 0px 5px 0px 5px;" class="fa fa-info-circle"></i></a></span>'+confirms+'</div>';
+      if (tdata.category == 'sent') html = html + '<div class="sent"><i class="fa fa-upload red" style="margin-right: 10px;"></i> <span data-translate="sent">Sent</span> <i class="fa fa-btc" style="margin: 0px 2px 0px 5px;"></i>'+tdata.amount+' <span style="float: right" class="timeago">'+entrydate+' '+entrytime+' <a href="https://www.biteasy.com/blockchain/transactions/'+tdata.txid+'" target="_blank"><i style="margin: 0px 5px 0px 5px;" class="fa fa-info-circle"></i></a></span>'+confirms+'</div>';
+      //if (data.category == 'send') html = html + '<div class="sent"><i class="fa fa-upload red"></i> Sent '+data.amount+'</div>';
+    } 
+  html = html + '</div>';
+  index++;
+  }
+  $(".wallettx").html(html);
+}
+
+$(document).ready(function()
+{
+    
+
+var clientText = new ZeroClipboard( $(".btcaddress"), {
+    moviePath: "https://vbit.io/assets/img/ZeroClipboard.swf",
+    debug: false
+} );
+$(".hook").on("click",".btcaddress",function(e) {    
+  select_all(this);
+  var add = $(this).html();
+  clientText.setText( add );
+});
+
+});
+
+function select_all(el) {
+        if (typeof window.getSelection != "undefined" && typeof document.createRange != "undefined") {
+            var range = document.createRange();
+            range.selectNodeContents(el);
+            var sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+        } else if (typeof document.selection != "undefined" && typeof document.body.createTextRange != "undefined") {
+            var textRange = document.body.createTextRange();
+            textRange.moveToElementText(el);
+            textRange.select();
+        }
+    }

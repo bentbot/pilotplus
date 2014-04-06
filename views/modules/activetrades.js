@@ -46,9 +46,9 @@ function showactive(data, nexttrade) {
         tradehtml = tradehtml + '<tr class="bgtransition usertrade" id="trade'+index+'">' +
                     '<td class="symbol">'+entry[0]+':<span class="keystone keystone'+entry[0]+'">'+price[entry[0]]+'</span></td>'+
                     '<td>'+arrowhtml+' <span class="direction">'+entry[4]+'</span> from <span class="tradeprice">'+entry[1]+'</span></td>'+
-                    '<td>m฿'+entry[3]+'</td>'+
+                    '<td>m<i class="fa fa-btc"></i>'+entry[3]+'</td>'+
                     //'<td title="Expires: '+thisdate+' '+thistime+'">'+thistime+'</td>'+
-                    '<td>m฿'+possiblewin+'</td>';
+                    '<td>m<i class="fa fa-btc"></i>'+possiblewin+'</td>';
                     // if (nexttrade[0] == 0 && nexttrade[1] < 60) {
                     // tradehtml = tradehtml + '<td><i class="fa fa-lock"></i></td>';
                     // } else {

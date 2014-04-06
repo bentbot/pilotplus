@@ -17,5 +17,14 @@
 	"signup": "Enregistrer",
 	"inviteonly": "Sur invitation seulement",
 	"registrationsdisabled": "Nouveaux utilisateurs anonymes ne sont pas autorisés.",
-	"haveaninvite": "Invité"
+	"haveaninvite": "Invité",
+	"bitcoinwallet": "Bitcoin Wallet",
+	"yourbtcaddress": "Votre adresse Bitcoin",
+	"dualfactorenabled": "<strong>Authentification</strong> à Deux Facteurs",
+	"enabledualfactor": "Augmenter la sécurité",
+	"nobtcwalletfound": "Aucune monnaie Trouvé",
+	"wallettx": "Transactions récentes",
+	"confirmations": "Confirmations",
+	"received": "Reçu",
+	"sent": "Expédié"
 }
