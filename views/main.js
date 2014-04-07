@@ -37,8 +37,10 @@ function showloginfield(username, bal) {
 if (username) {
   var login = '<div class="btn-group accountinfo" style="padding: 0px;">';
         login = login + '<button type="button" style="height: 31px;" class="btn btn-success btnuser username">'+username+'</button>';
-        if (bal) login = login + '<button type="button" style="height: 31px;" class="btn btn-blue userbal btnfinance" value="m<i class="fa fa-btc"></i> '+bal+'"></button>';
-        if (!bal) login = login + '<button type="button" style="height: 31px;" class="btn btn-blue userbal btnfinance" value="m<i class="fa fa-btc"></i> 0"></button>';
+        if (bal) {
+          login = login + '<button type="button" style="height: 31px;" class="btn btn-blue userbal btnfinance" value="m<i class="fa fa-btc" style="margin: 0px 5px 0px 0px;"></i> '+bal+'"></button>';
+        } else { login = login + '<button type="button" style="height: 31px;" class="btn btn-blue userbal btnfinance" value="m<i class="fa fa-btc" style="margin: 0px 5px 0px 0px;"></i> 0"></button>';
+        }
       login = login + '</div>';
 } else {
   var login = '<div class="btn-group accountinfo" style="padding: 0px; ">' +

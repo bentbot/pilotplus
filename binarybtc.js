@@ -15,6 +15,8 @@ var port = 8080
   , async = require('async')
   , LocalStrategy = require('passport-local').Strategy
   , StringDecoder = require('string_decoder').StringDecoder
+  , mailer = require('mailer')
+  , authy = require('authy-node');
 
 // Global clock
 var date = 0;
@@ -41,9 +43,6 @@ fs.readFile('/home/node/keys/mongo.key', 'utf8', function (err,data) {
     console.log('Database connected on port 27017');
   });
 });
-
-
-
 // Setup database schemas and models
 var schema = new mongoose.Schema({ key: 'string', user: 'string', createdAt: { type: Date, expires: '1h' }});
 var Activeusers = mongoose.model('activeusers', schema);
@@ -61,8 +60,6 @@ var schema = new mongoose.Schema({ from: 'string', to: 'string', amount: 'string
 var Sentpayments = mongoose.model('sentpayments', schema);
 var schema = new mongoose.Schema({ option: 'string', setting: 'string'});
 var Globalvars = mongoose.model('globalvars', schema);
-
-
 // Empty temporary database
 Pageviews.remove({}, function(err) {
   if (err) console.log(err);
@@ -117,12 +114,13 @@ function pay(amount, tradeuser) {
   });
 }
 
-// Bitcoin layer
-
-
-// var bitcoinsync = setInterval(function() {
-//   syncLocal();
-// }, 1000)
+// 2 Factor
+fs.readFile('/home/node/keys/authy.key', 'utf8', function (err,data) {
+  if (err) throw (err)
+  var key = data.replace("\n", "").replace("\r", "");
+  authy.api.mode = 'production'
+  authy.api.token = key;
+});
 
 
 // Webserver
@@ -759,10 +757,13 @@ io.sockets.on('connection', function (socket) {
     });
   // Get the user's bitcoin address
     User.find({ username: myName }, function(err, docs) {
-      //console.log(docs)
+      if (err) throw (err)
       docs = docs[0];
       useraddress[myName] = docs.btc;
-      socket.emit('wallet', {address: useraddress[myName], balance: userbalance[myName]}); // Update useraddress
+      addressbalance(myName, function (err, bal) {
+        if (err) throw (err)
+        socket.emit('wallet', {address: useraddress[myName], balance: bal}); // Update useraddress
+      });
     });
 
     listtx(myName, function (err, data) {
@@ -826,6 +827,55 @@ app.get('/', function(req,res) {
 
 app.get('/btcstatus', function(req, res, next){
 loginfo();
+});
+
+app.get('/2f/add/:email/:phone/:country', function(req, res, next){
+  var em = req.params.email;
+  var ph = req.params.phone;
+  var ca = req.params.country;
+  authy.register( em, ph, ca, function (err, data) {
+    if (err) res.send(err);
+    res.send(data);
+  });
+});
+
+app.get('/2f/remove/:user', function(req, res, next){
+  var user = req.params.user;
+  authy.app.delete(user, function (err, data) {
+    if (err) res.send(err);
+    res.send(data);
+  });
+});
+
+app.get('/2f/sms/:user', function(req, res, next){
+  var user = req.params.user;
+  authy.sms( user, function (err, data) {
+    if (err) res.send(err);
+    res.send(data);
+  });
+});
+
+app.get('/2f/auth/:user/:code', function(req, res, next){
+  var user = req.params.user;
+  var code = req.params.code;
+  authy.verify( user, code, function (err, data) {
+    if (err) res.send(err);
+    res.send(data);
+  });
+});
+
+app.get('/2f/details', function(req, res, next){
+  authy.app.details(function (err, data) {
+    if (err) res.send(err);
+    res.send(data);
+  });
+});
+
+app.get('/2f/stats', function(req, res, next){
+  authy.app.stats(function (err, data) {
+    if (err) res.send(err);
+    res.send(data);
+  });
 });
 
 app.get('/checkusername/:data', function(req, res, next){
@@ -1264,7 +1314,7 @@ function getPrice(symbol, force, callback) {
   }// jump over third-party gates
 }
 
-
+// bitcoin layer
 var  bitcoin = require('bitcoin')
   ,fs = require('fs')
   ,mongoose = require('mongoose')
@@ -1308,15 +1358,7 @@ Bitcoinconnect(function(client) {
 // sendfrom('myaccount', '1A5BWZULifJVtfomBtFKRWzDxg9MVSWkjG', '1', function(err, txid) {
 //   console.log(txid);
 // });
-  // addressbalance('liam');
-  // createAddress('liam', function(address){
-  //  console.log('new address: liam '+address);
-  // });
-  //balance('liam');
-  //ßconsole.log(loginfo());
-  // createAddress('bent',function(a) {
-  //   console.log(a);
-  // });
+
 });
 // dump(1, 'liam');
 //console.log(balances);
@@ -1359,11 +1401,10 @@ function syncLocal(cb) {
   });
 }
 
-function addressbalance(account, confirmations) {
-  if (!confirmations) confirmations = 1;
+function addressbalance(account, cb) {
+  var confirmations = 1;
   gclient.cmd('getbalance', account, confirmations, function(err, balance, resHeaders) {
-    if (err) throw (err);
-    return balance;
+    cb(err, balance);
   });
 }
 
