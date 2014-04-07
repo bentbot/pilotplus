@@ -33,12 +33,13 @@ require(['modules/wallet']);
               $('.expiretime').html(data[0] + ':' + data[1]);
             }
           });
-function showloginfield(username) {
+function showloginfield(username, bal) {
 if (username) {
-  var login = '<div class="btn-group accountinfo" style="padding: 0px;">'+
-        '<button type="button" style="height: 31px;" class="btn btn-success btnuser username">'+username+'</button>'+
-        '<button type="button" style="height: 31px;" class="btn btn-blue userbal btnfinance"></button>'+
-      '</div>';
+  var login = '<div class="btn-group accountinfo" style="padding: 0px;">';
+        login = login + '<button type="button" style="height: 31px;" class="btn btn-success btnuser username">'+username+'</button>';
+        if (bal) login = login + '<button type="button" style="height: 31px;" class="btn btn-blue userbal btnfinance" value="m<i class="fa fa-btc"></i> '+bal+'"></button>';
+        if (!bal) login = login + '<button type="button" style="height: 31px;" class="btn btn-blue userbal btnfinance" value="m<i class="fa fa-btc"></i> 0"></button>';
+      login = login + '</div>';
 } else {
   var login = '<div class="btn-group accountinfo" style="padding: 0px; ">' +
         '<div class="input-group input-group-sm loginform">' +
@@ -51,7 +52,7 @@ if (username) {
 $('.topcontainer .right').html(login);
 }
 var displaysymbols;
-function loadtrades(displaysymbols, guest) {
+function loadTrades(displaysymbols, guest) {
 
   $('.hook').html('');
   var page = '<div class="container" style="padding: 4px 0px;">'+
@@ -76,7 +77,7 @@ function loadtrades(displaysymbols, guest) {
   if (guest) showloginfield();
 }
 
-function loadbalsync() {
+function loadBalsync() {
   $('.hook').html('');
   var page = '<div class="container" style="padding: 4px 0px;">'+
     '<div class="notif"></div>'+
@@ -105,14 +106,10 @@ function loadDeposit() {
   $('.hook').html('');
   var page = '<div class="container" style="padding: 4px 0px;">'+
     '<div class="notif"></div>'+
-    //'<div class="col1">'+
     '<div class="wallet">'+
     '</div>'+
-    ///'</div>'+
-    //'<div class="col2">'+
     '<div class="wallettx">'+
     '</div>'+
-    //'</div>'+
     '</div>';
   $('.hook').html(page);
 
@@ -123,7 +120,36 @@ function loadDeposit() {
   socket.on('wallettx', function (data) { // raw json tx
     showTx(data);
   });
+}
+function loadSend() {
+  $('.hook').html('');
+  var page = '<div class="container" style="padding: 4px 0px;">'+
+    '<div class="notif"></div>'+
+    '<div class="walletsend">'+
+    '</div>'+
+    '<div class="wallettx">'+
+    '</div>'+
+    '</div>';
+  $('.hook').html(page);
 
+  showWalletSend();
+  
+  socket.on('wallet', function (data){
+    walletSendUpdate(data.address, data.balance);
+  })
+  socket.on('wallettx', function (data) { // raw json tx
+    showTx(data);
+  });
+}
+
+function loadHistory() {
+  $('.hook').html('');
+  var page = '<div class="container" style="padding: 4px 0px;">'+
+    '<div class="notif"></div>'+
+    '<div class="allhistorictrades">'+
+    '</div>'+
+    '</div>';
+  $('.hook').html(page);
 }
               //Bitcoin             Euro      Pound    China      Dow     Oil           Gold        Silver      S&P 500   Nasdaq
 var symbols = ['BTCUSD', 'BTCCNY', 'EURUSD', 'GBPUSD', 'USDCNY', '^DJI', 'CLK14.NYM', 'GCJ14.CMX', 'SIJ14.CMX', '^GSPC', '^IXIC'];
@@ -139,16 +165,22 @@ var symbols = ['BTCUSD', 'BTCCNY', 'EURUSD', 'GBPUSD', 'USDCNY', '^DJI', 'CLK14.
       //console.log('loadpage ' + data.page);
       switch (data.page) {
         case 'trade':
-          loadtrades(data.symbol,data.guest);
+          loadTrades(data.symbol,data.guest);
         break;
         case 'account':
-          loadaccount(data.user);
+          loadAccount(data.user);
         break;
       case 'deposit':
           loadDeposit();
         break;
+      case 'send':
+          loadSend();
+        break;
+      case 'history':
+          loadHistory();
+        break;
         case 'admin':
-          loadbalsync();
+          loadBalsync();
         break;
       }
     });
@@ -158,6 +190,7 @@ var symbols = ['BTCUSD', 'BTCCNY', 'EURUSD', 'GBPUSD', 'USDCNY', '^DJI', 'CLK14.
       if (user) socket.emit('page', {page: name, symbol: symbol});
       if (!user) socket.emit('page', {page: name, symbol: symbol, guest: true});
     }
+
 
     socket.on('hello', function (data) {
       $('.username').html(data.hello);
@@ -174,18 +207,19 @@ var symbols = ['BTCUSD', 'BTCCNY', 'EURUSD', 'GBPUSD', 'USDCNY', '^DJI', 'CLK14.
 
    var autopage = 0;
    socket.on('userbal', function (data) {
-    if (data < 1000) $('.userbal').html('m<i class="fa fa-btc"></i>'+data+'');
-    if (data > 1000) $('.userbal').html('<i class="fa fa-btc"></i>'+data/1000+'');
-    if (data == 0 && autopage < 2) { page('deposit'); autopage++; }
-      if (lastbal < data) {
+    showloginfield(data.name, data.balance);
+    if (data.balance < 1000) $('.userbal').html('m<i class="fa fa-btc"></i>'+data.balance+'');
+    if (data.balance > 1000) $('.userbal').html('<i class="fa fa-btc"></i>'+data.balance/1000+'');
+    if (data.balance == 0 && autopage < 2) { page('deposit'); autopage++; }
+      if (lastbal < data.balance) {
         $('.userbal').addClass("btn-success").removeClass('btn-danger').removeClass('btn-blue');
-      } else if (lastbal > data) {
+      } else if (lastbal > data.balance) {
         $('.userbal').addClass("btn-danger").removeClass('btn-success').removeClass('btn-blue');
       } else {
         $('.userbal').addClass("btn-blue").removeClass('btn-success').removeClass('btn-danger');
       }
 
-      lastbal = data;
+      lastbal = data.balance;
     });
 
 
@@ -361,6 +395,7 @@ function updateOption(symbol) {
 
   socket.on('historictrades', function (data) {
     showhistoric(data, user, 5);
+    showallhistoric(data, user);
   });
 
   socket.on(symbol+'_updatedchart', function (data) {

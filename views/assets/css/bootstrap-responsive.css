@@ -898,6 +898,8 @@ height: 88px;
   }
   .btcsecure {
     display: none;
+  }.sendtitle {
+    display: none;
   }
   .row-fluid {
     width: 100%;

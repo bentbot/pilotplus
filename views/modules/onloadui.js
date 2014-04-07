@@ -26,6 +26,12 @@ $(".globalheader").on("click",".keystones li a",function(e) {
 });
 
 //console.log('loaded ui jquery');
+  $(".right").on("keyup","#username",function(e) {
+    if(e.keyCode == 13) {
+      $('.loginbtn').html('Working');
+      login();
+    }
+  });
   $(".right").on("keyup","#password",function(e) {
     if(e.keyCode == 13) {
       $('.loginbtn').html('Working');
@@ -49,14 +55,15 @@ $(".globalheader").on("click",".keystones li a",function(e) {
   });
   var showfin = false;
   $(".right").on("click",".userbal",function(e) {
-    if (showfin == false) {
-      showFinances();
-      showfin = true;
-    } else {
-      showSymbols();
-      showfin = false;
-    }
     page('deposit');
+    //if (showfin == false) {
+      showFinances();
+      //showfin = true;
+    //} else {
+      //showSymbols();
+      //showfin = false;
+    //}
+    
   });
 
   function login () {
@@ -157,6 +164,13 @@ $(".globalheader").on("click",".keystones li a",function(e) {
 
   $(".globalheader").on("click","#deposit",function() {
     page('deposit');
+  });  
+
+  $(".globalheader").on("click","#send",function() {
+    page('send');
+  });  
+  $(".globalheader").on("click","#history",function() {
+    page('history');
   });
 // UI Stuff
 // Animated header strip

@@ -666,7 +666,7 @@ io.sockets.on('connection', function (socket) {
   // Say hello
   console.log('hello ' + myName + ' id' + myNumber)
   socket.emit('hello', { hello: myName, id: myNumber });
-  socket.emit('userbal', userbalance[myName]); // Update userbalance
+  socket.emit('userbal', { name: myName, balance: userbalance[myName] }); // Update userbalance
   //Send user current data on connect
   for (index = 0; index < symbols.length; ++index) {
       io.sockets.emit(symbols[index]+'_price', price[symbols[index]]);
@@ -740,8 +740,7 @@ io.sockets.on('connection', function (socket) {
 
   // Create a general script updater
   var updater = setInterval(function() {
-    socket.emit('userbal', userbalance[myName]); // Update userbalance
-
+    socket.emit('userbal', { name: myName, balance: userbalance[myName] }); // Update userbalance
     socket.emit('username', myName); // Update userbalance
     if (trades) socket.emit('activetrades', trades); // Update active trades
     Historictrades.find({ user: myName }).sort({time:-1}).find(function(err, historictrades) {
