@@ -1,0 +1,24 @@
+Bitcoin Notes
+
+Add confirmations row to incoming transactions in the database.
+ - After x confirmations move funds to internal wallet, update key-value database
+
+Create a way to automatically update new transactions/payments added to the database
+ - function starts a timer, checks for confirmations every few seconds until a tx is confirmed, destroys itself
+ - update confirmation count in the db
+ - internal location / status of the payment if automatically moving funds to another internal wallet
+
+Create secure external payment function
+ - implement security
+    - 2 factor
+    - email
+    - admin confirm
+
+
+
+Funds are added via an account's address. A new transaction is created by bitcoind to the endpoint /addtx/:id
+The transaction id is stored in the database usertxes collection along with the username. 
+When the funds clear, after three confirmations, the redis database is updated with the added funds.
+
+Withdrawals are processed from the global balance.
+
