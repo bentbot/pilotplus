@@ -20,11 +20,13 @@
 	"haveaninvite": "Invité",
 	"bitcoinwallet": "Bitcoin Wallet",
 	"yourbtcaddress": "Votre adresse Bitcoin",
-	"dualfactorenabled": "<strong>Authentification</strong> à Deux Facteurs",
+	"dualfactorenabled": "Protégé",
 	"enabledualfactor": "Augmenter la sécurité",
 	"nobtcwalletfound": "Aucune monnaie Trouvé",
 	"wallettx": "Transactions récentes",
 	"confirmations": "Confirmations",
 	"received": "Reçu",
-	"sent": "Expédié"
+	"sent": "Expédié",
+	"justaddbitcoin": "Votre compte est d'argent. Ajoutez un peu.",
+	"justnow": "Nouveau"
 }

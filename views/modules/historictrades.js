@@ -44,7 +44,7 @@ function showhistoric(data, user, trim){
 
         if (tid <= trim) {
         tradehtml = tradehtml + '<tr class="historictrade" id="'+entry._id+'">' +
-                    '<td class="symbol">'+entry.symbol+'</td>'+
+                    '<td class="symbol keystonelink" id="'+entry.symbol+'">'+entry.symbol+'</td>'+
                     '<td><time class="timeago" datetime="'+iodate+'">'+entrytime+'</time></td>'+
                     '<td>'+arrowhtml+' <span class="tradeprice">'+entry.price+'</span></td>'+
                     //'<td title="Expires: '+thisdate+' '+thistime+'">'+thistime+'</td>'+

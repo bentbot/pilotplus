@@ -44,7 +44,7 @@ function showactive(data, nexttrade) {
         }
 
         tradehtml = tradehtml + '<tr class="bgtransition usertrade" id="trade'+index+'">' +
-                    '<td class="symbol">'+entry[0]+':<span class="keystone keystone'+entry[0]+'">'+price[entry[0]]+'</span></td>'+
+                    '<td class="symbol"><a class="keystonelink" id="'+entry[0]+'">'+entry[0]+':<span class="keystone keystone'+entry[0]+'">'+price[entry[0]]+'</span></a></td>'+
                     '<td>'+arrowhtml+' <span class="direction">'+entry[4]+'</span> from <span class="tradeprice">'+entry[1]+'</span></td>'+
                     '<td>m<i class="fa fa-btc"></i>'+entry[3]+'</td>'+
                     //'<td title="Expires: '+thisdate+' '+thistime+'">'+thistime+'</td>'+

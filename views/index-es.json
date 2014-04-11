@@ -20,11 +20,14 @@
 	"haveaninvite": "Invitado",
 	"bitcoinwallet": "Monedero Bitcoin",
 	"yourbtcaddress": "El Bitcoin Dirección",
-	"dualfactorenabled": "<strong>Protección</strong> de Dos Factores activada",
+	"dualfactorenabled": "Protegido",
 	"enabledualfactor": "Aumentar la seguridad",
 	"nobtcwalletfound": "Sin billetera Bitcoin encontrado",
 	"wallettx": "Transacciones recientes",
 	"confirmations": "Confirmaciones",
 	"received": "Recibido",
-	"sent": "Enviado"
+	"sent": "Enviado",
+	"justaddbitcoin": "Debe añadir Bitcoin a su cuenta antes de negociar",
+	"justnow": "Nuevo"
+
 }

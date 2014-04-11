@@ -96,7 +96,7 @@ $.ajax({
           },1500);
           //login();
         } else {
-          $('.signupbtn').removeClass('btn-blue').addClass('btn-warning').html('<i class="fa fa-times"></i> '+resp[0]);
+          $('.signupbtn').removeClass('btn-blue').addClass('btn-warning').html('<i class="fa fa-times"></i> '+resp);
           setTimeout(function(){$('.signupbtn').addClass('btn-blue').removeClass('btn-warning').html('Sign Up');},3550);
         }
       });

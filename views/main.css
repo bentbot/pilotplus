@@ -23,6 +23,13 @@ background:hsl(28, 99%, 46%);
 color:#fff;
 
 }
+.georgia {
+  font-family: museo-slab,Georgia,"Times New Roman",Times,serif;
+  }.alertico {
+    opacity: 0.75;
+    margin-right:15px;
+  }
+
       .input-group-addon {
 padding: 6px 12px;
 font-size: 14px;
@@ -181,6 +188,14 @@ display: table-cell;
           margin: 0px !important;
           font-size: 26px;
         }
+        .keystonelink {
+          color: black;
+          text-decoration: none;
+        }.keystonelink:hover {
+          color: black;
+          text-decoration: none;
+          cursor: default;
+        }
         .input-group {
         position: relative;
         display: table;
@@ -305,20 +320,39 @@ margin-right: 15px;
   color: white;
   text-decoration: none;
 }
-
-.wallet {
+#send{
+float: left;
+border-radius: 0px 4px 4px 0px;
+height:35px;
+}
+#auth {
+border: 1px solid;
+width: 98px;
+font-size: 22px;
+text-align: center;
+font-family: monospace;
+}
+.csec {
+  position: relative;
+}.wallet {
   position: relative;
 }.walletsend {
   position: relative;
 }.btcsend {
 margin: auto;
-width: 475px;
+width: 550px;
 padding-top: 10px;
+height: 44px;
 }.btcsend .amount {
 float: left;
-  width: 100px;
+width: 100px;
+height: 35px;
 }.btcsend .address {
-  width: 300px;
+float: left;
+width: 312px;
+height: 35px;
+}.btcsend #auth {
+  float:left;
 }
 .sendtitle {
 position: absolute;
@@ -330,8 +364,115 @@ top: 24px;
 left: 15px;
 font-size: 101px;
 opacity: 0.6;
-}
+}.authtitle {
+position: absolute;
+top: 0px;
+left: 0px;
+}.authtitle i {
+position: absolute;
+top: 24px;
+left: 15px;
+font-size: 101px;
+opacity: 0.6;
+}.authtitle .apple {
+position: absolute;
+left: 15px;
+top: 110px;
+}.authtitle .google {
+position: absolute;
+left: 80px;
+top: 110px;
+}.authylogo {
+  width: 100px;
+position: absolute;
+left: 22px;
+top: -20px;
+opacity: 0;
 
+}.authsign {
+width: 395px;
+margin: auto;
+margin-top: 15px;
+}.authsign input {
+  font-size: 16px;
+}.authsign button {
+font-size: 14px;
+background: #3c763d;
+color: white;
+padding: 7px 13px;
+}.authsign #country {
+ width: 53px;
+float: left;
+height: 36px;
+font-family: monospace;
+letter-spacing: 2px;
+}.authsign #phone {
+width: 200px;
+border-left: 0px;
+border-radius: 0px;
+height: 36px;
+font-family: monospace;
+letter-spacing: 2px;
+}.authsign #auth {
+width: 133px;
+float: left;
+height: 36px;
+font-family: monospace;
+letter-spacing: 2px;
+border: 1px solid;
+}
+.authh {
+/* padding-top: 5px; */
+font-size: 19px;
+/*color: #31708f;*/
+text-align: center;
+margin: auto;
+font-family: museo-slab,Georgia,"Times New Roman",Times,serif;
+cursor: default;
+}.authsub {
+  text-align: center;
+font-family: museo-slab,Georgia,"Times New Roman",Times,serif;
+font-size: 15px;
+}.authsub .leftline {
+width: 90px;
+margin: auto;
+position: relative;
+top: 11px;
+left: -72px;
+  }.authsub .rightline {
+width: 90px;
+margin: auto;
+position: relative;
+top: -10px;
+left: 72px;
+  }
+
+
+.authsign .input-group .input-group-addon {
+  width: 52px;
+  padding: 6px 12px;
+font-size: 14px;
+font-weight: 400;
+line-height: 1;
+text-align: center;
+background-color: hsl(28, 0%, 94%) !important;
+background-repeat: repeat-x;
+filter: progid:DXImageTransform.Microsoft.gradient(startColorstr="#3c763d", endColorstr="#3c763d");
+background-image: -khtml-gradient(linear, left top, left bottom, from(#3c763d), to(#3c763d));
+background-image: -moz-linear-gradient(top, #3c763d, #3c763d);
+background-image: -ms-linear-gradient(top, #3c763d, #3c763d);
+background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #3c763d), color-stop(100%, #3c763d));
+background-image: -webkit-linear-gradient(top, #3c763d, #3c763d);
+background-image: -o-linear-gradient(top, #3c763d, #3c763d);
+background-image: linear-gradient(#3c763d, #3c763d);
+border-color: #3c763d;
+color: #FFF !important;
+text-shadow: 0 1px 1px rgba(255, 255, 255, 0.00);
+-webkit-font-smoothing: antialiased;
+border-radius: 4px 0px 0px 4px;
+}.authsign .input-group input {
+  border-color: #3c763d;
+}
 .btcsend .input-group-addon {
   padding: 6px 12px;
 font-size: 14px;
@@ -366,6 +507,16 @@ text-align: center;
 padding-top: 5px;
 color: black;
 cursor: default;
+height: 35px;
+}.btcaddress::selection {
+background:rgba(49, 112, 143, 0.75);
+color:#fff;
+}#country::selection {
+background:rgba(205, 235, 193, 0.5) !important;
+
+}#phone::selection {
+background:rgba(205, 235, 193, 0.5) !important;
+
 }
 .btcqr {
   position: absolute;
@@ -393,17 +544,78 @@ right: 0px;
 }.btcsecure i {
 position: absolute;
 top: 15px;
-right: 43px;
+right: 15px;
 font-size: 75px;
 opacity: 0.6;
+width: 140px;
+text-align: center;
 }.btcsecure span {
+font-size: 13px;
+font-family: monospace;
+position: absolute;
+top: 85px;
+right: 15px;
+width: 140px;
+text-align: center;
+}.btcsecure a {
+position: absolute;
+top: 95px;
+right: 15px;
+width: 136px;
+font-size: 12px;
+text-align: center;
+}
+
+.btcsendsecure {
+position: absolute;
+top: 0px;
+right: 0px;
+}.btcsendsecure i {
+position: absolute;
+top: -1px;
+right: 3px;
+font-size: 150px;
+opacity: 0.6;
+width: 95px;
+text-align: center;
+}.btcsendsecure span {
 position: absolute;
 top: 85px;
 right: 15px;
 width: 110px;
 font-size: 12px;
 text-align: center;
-}.btcsecure a {
+}.btcsendsecure a {
+position: absolute;
+top: 95px;
+right: 15px;
+width: 136px;
+font-size: 12px;
+text-align: center;
+}
+
+.csecsecure {
+position: absolute;
+top: 0px;
+right: 0px;
+}.csecsecure i {
+position: absolute;
+top: -1px;
+right: 60px;
+font-size: 150px;
+opacity: 0.6;
+width: 95px;
+text-align: center;
+}.csecsecure .fa-mobile {
+right: 2px;
+}.csecsecure span {
+position: absolute;
+top: 85px;
+right: 15px;
+width: 110px;
+font-size: 12px;
+text-align: center;
+}.csecsecure a {
 position: absolute;
 top: 95px;
 right: 15px;

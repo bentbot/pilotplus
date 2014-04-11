@@ -7,14 +7,15 @@ require(['modules/remote']);
 require(['modules/local']);
 require(['modules/guest']);
 require(['modules/wallet']);
+require(['modules/security']);
 
   // $.each(symbols, function( index, symbol ) {
     // each something          index, current
   // });
 
-  var dualfactor = false;
+
     var socket = io.connect('https://vbit.io:3000', {secure: true});
-    var user, userid, option, price, expires, direction, userdeposit;
+    var user, email, dualfactor, verified, userid, option, price, expires, direction, userdeposit;
     var $users = $('#users ul');
     var $chatOutput = $('.messages');
     var $chatInput = $('#chat input');
@@ -38,8 +39,8 @@ if (username) {
   var login = '<div class="btn-group accountinfo" style="padding: 0px;">';
         login = login + '<button type="button" style="height: 31px;" class="btn btn-success btnuser username">'+username+'</button>';
         if (bal) {
-          login = login + '<button type="button" style="height: 31px;" class="btn btn-blue userbal btnfinance" value="m<i class="fa fa-btc" style="margin: 0px 5px 0px 0px;"></i> '+bal+'"></button>';
-        } else { login = login + '<button type="button" style="height: 31px;" class="btn btn-blue userbal btnfinance" value="m<i class="fa fa-btc" style="margin: 0px 5px 0px 0px;"></i> 0"></button>';
+          login = login + '<button type="button" style="height: 31px;" class="btn btn-blue userbal btnfinance">m<i class="fa fa-btc" style="margin: 0px 5px 0px 0px;"></i> '+bal+'</button>';
+        } else { login = login + '<button type="button" style="height: 31px;" class="btn btn-blue userbal btnfinance" value="m<i class="fa fa-btc" style="margin: 0px 5px 0px 0px;"></i> 0</button>';
         }
       login = login + '</div>';
 } else {
@@ -114,13 +115,28 @@ function loadDeposit() {
     '</div>'+
     '</div>';
   $('.hook').html(page);
-
+  showWallet();
   socket.on('wallet', function (data) { // btc address
-    showWallet(data.address, data.balance);
+    walletUpdate(data.address, data.balance);
   });
 
   socket.on('wallettx', function (data) { // raw json tx
     showTx(data);
+  });
+}function loadSecurity() {
+  $('.hook').html('');
+  var page = '<div class="container" style="padding: 4px 0px;">'+
+    '<div class="notif"></div>'+
+    '<div class="csec">'+
+    '</div>'+
+    '<div class="loginattempts">'+
+    '</div>'+
+    '</div>';
+  $('.hook').html(page);
+  showSecurity();
+
+  socket.on('logins', function (data) {
+    showLoginattempts(data);
   });
 }
 function loadSend() {
@@ -140,6 +156,7 @@ function loadSend() {
     walletSendUpdate(data.address, data.balance);
   })
   socket.on('wallettx', function (data) { // raw json tx
+    data.reverse();
     showTx(data);
   });
 }
@@ -181,6 +198,9 @@ var symbols = ['BTCUSD', 'BTCCNY', 'EURUSD', 'GBPUSD', 'USDCNY', '^DJI', 'CLK14.
       case 'history':
           loadHistory();
         break;
+      case 'security':
+          loadSecurity();
+        break;
         case 'admin':
           loadBalsync();
         break;
@@ -200,7 +220,10 @@ var symbols = ['BTCUSD', 'BTCCNY', 'EURUSD', 'GBPUSD', 'USDCNY', '^DJI', 'CLK14.
       console.log('hello:', data.hello+':id'+data.id);
       user = data.hello;
       userid = data.id; //
+      email = data.email; //
       userdeposit = data.btc;
+      dualfactor = true;
+      verified = false;
     });
   var lastbal = 0;
    socket.on('bankbal', function (data) {
@@ -210,6 +233,7 @@ var symbols = ['BTCUSD', 'BTCCNY', 'EURUSD', 'GBPUSD', 'USDCNY', '^DJI', 'CLK14.
    var autopage = 0;
    socket.on('userbal', function (data) {
     showloginfield(data.name, data.balance);
+    if (data.name) $('.guest').remove();
     if (data.balance < 1000) $('.userbal').html('m<i class="fa fa-btc"></i>'+data.balance+'');
     if (data.balance > 1000) $('.userbal').html('<i class="fa fa-btc"></i>'+data.balance/1000+'');
     if (data.balance == 0 && autopage < 2) { page('deposit'); autopage++; }

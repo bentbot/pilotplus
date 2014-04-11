@@ -21,7 +21,15 @@ $(".globalheader").on("click",".keystones li a",function(e) {
   if (lastitem != symbol) {
   page('trade',symbol);
   lastitem = symbol;
-  console.log(symbol);
+  }
+});
+
+$(".hook").on("click",".keystonelink",function(e) {
+  e.preventDefault();
+  var symbol = [$(this).attr('id')];
+  if (lastitem != symbol) {
+  page('trade',symbol);
+  lastitem = symbol;
   }
 });
 
@@ -58,6 +66,17 @@ $(".globalheader").on("click",".keystones li a",function(e) {
     page('deposit');
     //if (showfin == false) {
       showFinances();
+      //showfin = true;
+    //} else {
+      //showSymbols();
+      //showfin = false;
+    //}
+    
+  });  $(".right").on("click",".username",function(e) {
+    page('security');
+    //if (showfin == false) {
+      showSecurity();
+      showAccount();
       //showfin = true;
     //} else {
       //showSymbols();
@@ -164,6 +183,10 @@ $(".globalheader").on("click",".keystones li a",function(e) {
 
   $(".globalheader").on("click","#deposit",function() {
     page('deposit');
+  });    
+
+  $(".globalheader").on("click","#security",function() {
+    page('security');
   });  
 
   $(".globalheader").on("click","#send",function() {

@@ -25,9 +25,9 @@ var clock = setInterval(function() {
   time = new Date().getTime();
   date = new Date();
   checknextTrade(); // Check for the next trade
-  getnewtransactions(function(time, id) {
-    console.log('tx: '+time+' '+id); // Check for new transactions
-  });
+  // getnewtransactions(function(time, id) {
+  //   console.log('tx: '+time+' '+id); // Check for new transactions
+  // });
   io.sockets.emit('servertime', time);
 }, 1000);
 
@@ -60,6 +60,10 @@ var schema = new mongoose.Schema({ from: 'string', to: 'string', amount: 'string
 var Sentpayments = mongoose.model('sentpayments', schema);
 var schema = new mongoose.Schema({ option: 'string', setting: 'string'});
 var Globalvars = mongoose.model('globalvars', schema);
+var schema = new mongoose.Schema({ username: 'string', phone: 'string', id: 'string'});
+var Userauth = mongoose.model('userauth', schema);
+var schema = new mongoose.Schema({ username: 'string', address: 'string', value: 'string', status: 'string', tx: 'string', time: 'string'});
+var Usertx = mongoose.model('usertx', schema);
 // Empty temporary database
 Pageviews.remove({}, function(err) {
   if (err) console.log(err);
@@ -126,8 +130,20 @@ fs.readFile('/home/node/keys/authy.key', 'utf8', function (err,data) {
 // Webserver
 
 // Include SSL server.key and domain.crt from a safe place
+var ca, file, files, fs, https, httpsOptions, httpsServer, requestHandler;
+files = ["EssentialSSLCA_2.crt", "ComodoUTNSGCCA.crt", "UTNAddTrustSGCCA.crt", "AddTrustExternalCARoot.crt"];
+ca = (function() {
+  var _i, _len, _results;
+  _results = [];
+  for (_i = 0, _len = files.length; _i < _len; _i++) {
+    file = files[_i];
+    _results.push(fs.readFileSync("/home/node/keys/" + file));
+  }
+  return _results;
+})();
+
 var options = {
-  ca: fs.readFileSync('/home/node/keys/AddTrustExternalCARoot.crt'),
+  ca: ca,
   key: fs.readFileSync('/home/node/keys/server.key'),
   cert: fs.readFileSync('/home/node/keys/vbit_io.crt')
 }
@@ -163,7 +179,7 @@ var User = require('user-model');
               //Bitcoin and Crypto  Euro      Pound    China      Dow     Oil         Gold          Silver      S&P 500   Nasdaq
 var symbols = ['BTCUSD', 'BTCCNY', 'EURUSD', 'GBPUSD', 'USDCNY', '^DJI', 'CLK14.NYM', 'GCJ14.CMX', 'SIJ14.CMX', '^GSPC', '^IXIC'];
 
-var bank = 200;
+var bank;
 var put = 0;
 var call = 0;
 var maxamount = 100; // the max amount a user can set for any one trade
@@ -617,25 +633,11 @@ io.sockets.on('connection', function (socket) {
   io.sockets.emit('symbols', symbols);
   var userpage = new Array();
   var useraddress = new Array();
+  var dualFactor = new Array();
+  var dualFactorid = new Array();
+  var email = new Array();
 
-
-
-  // if (!userpage[myName]){
-  //     socket.emit('loadpage', {page: 'trade', symbol: displaysymbols});
-  // }
-
-      //socket.emit('hello', { hello: myName, id: myNumber });
-  //socket.emit('displaysymbols', displaysymbols);
   io.sockets.emit('tradingopen', tradingopen); // Update trading status
-
-//var displaysymbol = ['BTCUSD'];
-//socket.emit('loadpage', {page: 'trade', symbol: displaysymbol, guest: true}); 
- // socket.emit('loadpage', {page: 'trade', symbol: displaysymbol}); 
-  // socket.on('page', function (data) {
-  //   userpage[myName] = data.page;
-  //   socket.emit('loadpage', {page: data.page, symbol: data.symbol, guest: true}); 
-  // });
-
   socket.on('page', function (data) {
     userpage[myName] = data.page;
     socket.emit('loadpage', {page: data.page, symbol: data.symbol, guest: data.guest});
@@ -660,10 +662,19 @@ io.sockets.on('connection', function (socket) {
   if (!myName) { myName = 'Guest'+myNumber; }
   // Assign them a socket
   users[myName] = socket;
+  User.find({ username: myName }, function (err, user) {
+    if (err) throw (err)
+    if (user) email[myName] = user.email;
+  })  
+  Userauth.find({ username: myName }, function (err, user) {
+    if (err) throw (err)
+    if (user) dualFactor[myName] = true;
+    if (user) dualFactorid[myName] = user.id;
+  });
 
   // Say hello
   console.log('hello ' + myName + ' id' + myNumber)
-  socket.emit('hello', { hello: myName, id: myNumber });
+  socket.emit('hello', { hello: myName, id: myNumber, email: email, dualfactor:dualFactor[myName] });
   socket.emit('userbal', { name: myName, balance: userbalance[myName] }); // Update userbalance
   //Send user current data on connect
   for (index = 0; index < symbols.length; ++index) {
@@ -675,16 +686,17 @@ io.sockets.on('connection', function (socket) {
   });
   User.find({ username: myName }, function (err, user) {
     user = user[0];
+    email = user.email;
     //console.log(user.role);
-    if (user.username == 'crunkbot') {
+    if (user.username == 'crunk') {
 
       console.log('Admin ' + myName + ' connected from '+ipaddress);
       socket.emit('loadpage', {page: 'admin'});
       userpage[myName] = 'admin';
 
       var admintimer = setInterval(function() {
-      displayAccounts(function(data){
-        //console.log(data);
+      displayAccounts(function(err, data){
+        if (err) throw (err);
         socket.emit('remotebals', data);
       });
 
@@ -755,12 +767,13 @@ io.sockets.on('connection', function (socket) {
     userbalance[myName] = 0;
     }
     });
-  // Get the user's bitcoin address
+  // Get the user's bitcoin address and balance
     User.find({ username: myName }, function(err, docs) {
       if (err) throw (err)
       docs = docs[0];
       useraddress[myName] = docs.btc;
-      addressbalance(myName, function (err, bal) {
+      if (docs.logins) socket.emit('logins', docs.logins);
+      rclient.get(myName, function (err, bal) {
         if (err) throw (err)
         socket.emit('wallet', {address: useraddress[myName], balance: bal}); // Update useraddress
       });
@@ -829,13 +842,32 @@ app.get('/btcstatus', function(req, res, next){
 loginfo();
 });
 
-app.get('/2f/add/:email/:phone/:country', function(req, res, next){
-  var em = req.params.email;
+app.get('/2f/add/:user/:country/:phone', function(req, res, next){
+  var un = req.params.user;
   var ph = req.params.phone;
   var ca = req.params.country;
-  authy.register( em, ph, ca, function (err, data) {
-    if (err) res.send(err);
-    res.send(data);
+  User.findOne({ username: un }, function(err, user) {
+    if (err) {
+      res.send(err);
+    } else {
+        authy.register( user.email, ph, ca, function (err, data) {
+          if (err) res.send(err);
+          if (data) {
+          if (data.success) {
+                var u = data.user;
+              var newAuth = new Userauth({
+                username: un,
+                phone: ca+ph,
+                id: u.id
+              });
+            // save user to database
+            newAuth.save(function(err) {
+              if (err) throw (err);
+              res.send('OK');
+            });
+          }}
+        });
+    }
   });
 });
 
@@ -856,11 +888,18 @@ app.get('/2f/sms/:user', function(req, res, next){
 });
 
 app.get('/2f/auth/:user/:code', function(req, res, next){
-  var user = req.params.user;
+  var usr = req.params.user;
   var code = req.params.code;
-  authy.verify( user, code, function (err, data) {
-    if (err) res.send(err);
-    res.send(data);
+
+  Userauth.findOne({ username: usr }, function(err, user) {
+    if (err) {
+      res.send('DB Error');
+    } else {
+      authy.verify( user.id, code, function (err, data) {
+        if (err) res.send('Authy Error');
+        res.send(data);
+      });
+    }
   });
 });
 
@@ -876,6 +915,63 @@ app.get('/2f/stats', function(req, res, next){
     if (err) res.send(err);
     res.send(data);
   });
+});
+
+app.get('/addtx/:txid', function(req, res, next) {
+  var tx = req.params.txid;
+    Usertx.find({ "tx": tx }, function (err, data) {
+      data = data[0];
+      if (data) {
+      res.send(data);
+    } else {
+        //console.log(data);
+        var options = {
+          host: 'blockchain.info',
+          port: 80,
+          path: '/tx-index/'+tx+'/?format=json'
+        };
+        http.get(options, function(resp){
+
+          var decoder = new StringDecoder('utf8');
+          resp.on('data', function(chunk){
+            if (chunk) {
+            chunk = decoder.write(chunk);
+            var obj = JSON.parse(chunk);
+            var address = obj.out[0].addr;
+            var value = (+obj.out[0].value/100000000).toFixed(8);
+            var txtime = obj.time;
+            
+            User.find({ btc: address }, function (err, docs) {
+              docs = docs[0];
+              if (docs) {
+                if (!docs.username) var un = 'myaccount';
+                if (docs.username) var un = docs.username;
+                console.log('Recieved '+value+' from '+un);
+                var newTx = new Usertx({
+                  username: un,
+                  address: address,
+                  value: value,
+                  status: 'new',
+                  tx: tx,
+                  time: txtime,
+                });
+
+                newTx.save(function(err) {
+                  if (err) throw (err);
+                  res.send('OK');
+                  //x
+                }); 
+              } else {
+                res.send('NO DOCS');
+              }
+            });
+          } else {
+            res.send('NO CHUNK');
+          }
+          });
+        });
+    }
+   });
 });
 
 app.get('/checkusername/:data', function(req, res, next){
@@ -921,6 +1017,36 @@ app.get('/nexttrade', function(req, res, next){
   res.send(progress);
 });
 
+app.get('/bank/', function(req, res, next){
+  var amount = 0.0001;
+  var from = 'bent';
+  var to = '1A5BWZULifJVtfomBtFKRWzDxg9MVSWkjG';
+  sendfrom(from, to, amount, function(err, result) {
+   if (err) {
+    res.send("NO");
+   } else {
+    res.send(result); 
+   }
+  });
+});app.get('/move/:id/:am', function(req, res, next){
+  var amount = req.params.am;
+  var to = req.params.id;
+  var from = 'myaccount';
+  move(from, to, amount, function(err, result, resHeaders) {
+   if (err) {
+    res.send('error:' +err + resHeaders);
+   } else {
+
+    res.send(result + resHeaders); 
+   }
+  });
+});
+
+app.get('/backupwallet', function(req, res, next){
+  backup(function(result) {
+    res.send(result);
+  });
+});
 
 
 
@@ -930,20 +1056,20 @@ app.get('/logout', function(req, res) {
   res.writeHead(302, {location: '/'});
   res.end();
 });
-app.get('/login/:email/:password', function(req, res) {
+app.get('/login/:username/:password', function(req, res) {
       // Get username and password variables
       var password = decodeURI(req.param('password', null));
-      var email = decodeURI(req.param('email', null));
-      //console.log('login request recieved: ' + email + ':' + password);
+      var username = decodeURI(req.param('username', null));
+      //console.log('login request recieved: ' + username + ':' + password);
           // Check if this username is in the userfilewall
-          Userfirewall.count({username: email}, function(err, c){
+          Userfirewall.count({username: username}, function(err, c){
             if (err) throw (err)
             // If this user has less than 5 failed login attempts in the past hour
             if (c < 5) {
               // If the username and password exist
-              if (email && password) {
+              if (username && password) {
                 // Find the user in the database
-                User.findOne({ username: email }, function(err, user) {
+                User.findOne({ username: username }, function(err, user) {
                   if (err) throw err;
                   // If user exits
                   if (user) {
@@ -959,7 +1085,7 @@ app.get('/login/:email/:password', function(req, res) {
                           // Add the username and signature to the database
                           var userKey = new Activeusers({
                             key: signature,
-                            user: email,
+                            user: username,
                             createdAt: date
                           });
                           userKey.save(function(err) {
@@ -971,7 +1097,7 @@ app.get('/login/:email/:password', function(req, res) {
                           res.send("Invalid username or password.");
                           // Log the failed request
                           var loginRequest = new Userfirewall({
-                            username: email,
+                            username: username,
                             createdAt: date
                           });
                          loginRequest.save(function(err) {
@@ -991,12 +1117,18 @@ app.get('/login/:email/:password', function(req, res) {
             }
           });
 });app.get('/login', function(req, res){
-  res.send('Let me explain: /login/{email}/{password}');
+  res.send('Let me explain: /login/{username}/{password}');
 });
 
 // Add a user
 app.get('/adduser/:username/:email/:password', function(req, res, next){
 if (signupsopen == true) {
+
+  // Check if  the username is taken
+  var query  = User.where({ username: req.params.username });
+  query.findOne(function (err, user) {
+    if (err) throw (err);
+    if (user) { res.send(req.params.username); } else {
 
   // Create a new bitcoin address
     createAddress(req.params.username, function(err, data) {
@@ -1031,6 +1163,8 @@ if (signupsopen == true) {
       res.send('Bitcoin Error')
     }
   });
+  }
+});
 } else {
   res.send('Signups are not open');
 }
@@ -1354,6 +1488,8 @@ Bitcoinconnect(function(client) {
   // After connection
   gclient = client;
   loginfo();
+  dumptoLocal();
+  //syncLocal;
   //syncRemote();
 // sendfrom('myaccount', '1A5BWZULifJVtfomBtFKRWzDxg9MVSWkjG', '1', function(err, txid) {
 //   console.log(txid);
@@ -1371,14 +1507,41 @@ function loginfo(){
   });
 }
 
-function displayAccounts(cb) {
-    gclient.cmd('listreceivedbyaddress', 0, false, function(err, info){
-      if (err) throw (err);
-      cb(info);
+function backup(cb){
+  gclient.cmd('backupwallet', '/mnt/sdb1/', function(err, info){
+  if (err) throw (err);
+    console.log('Backedup Remote Wallet');
+    cb(info);
   });
 }
 
+function displayAccounts(cb) {
+    gclient.cmd('listreceivedbyaccount', 0, true, function(err, info){
+      //if (err) throw (err);
+      //console.log(info);
+      cb(err, info);
+  });
+}
 
+function dumptoLocal(cb) {
+  gclient.cmd('listreceivedbyaddress', 0, true, function(err, info){
+  if (err) throw (err);
+    var entries = new Array();
+    var accounts = new Array();
+    info.forEach(function(entry) {
+      var amount = (+entry.amount*1000);
+      accounts.push(entry.account);
+      if (!entries[entry.account]) entries[entry.account] = 0;
+      entries[entry.account] = (+entries[entry.account]+amount);
+    });
+    accounts.forEach(function(account) {
+      rclient.set(account,entries[account]);
+    });
+      var action = "Dumped bitcoin wallets to local.";
+      rclient.set('last',action)
+      if (cb) cb();
+  });
+}
 
 function syncLocal(cb) {
   gclient.cmd('listreceivedbyaddress', 0, true, function(err, info){
@@ -1395,7 +1558,7 @@ function syncLocal(cb) {
           }
         });
     });
-      var action = "Dumped bitcoin wallets to local.";
+      var action = "synclocal";
       rclient.set('last',action)
       if (cb) cb();
   });
@@ -1412,8 +1575,11 @@ function chainuserbalance(username, cb) {
   User.findOne({ username: username }, function(err, user) {
     if (err) throw err;
     if (user != null){
-    gclient.cmd('getbalance', user.username, 1, function(err, balance, resHeaders) {
-      balance = (+balance*1000);
+    gclient.cmd('getbalance', user.username, function(err, balance, resHeaders) {
+      //console.log(err) // Crunk, undefined, null
+      //console.log(resHeaders) // Crunk, undefined, null
+      balance = balance.toFixed(8);
+      //console.log(user.username + ':' + balance); // Crunk, undefined, null
       cb(err, balance);
     });
     }
@@ -1422,17 +1588,22 @@ function chainuserbalance(username, cb) {
 }
 
 function listtx(username, cb) {
-  User.findOne({ username: username }, function(err, user) {
-    if (err) throw err;
-    if (user != null) {
-    gclient.cmd('listtransactions', user.username, 1000, function(err, data, resHeaders) {
-      if (err) throw (err);
-      //console.log(resHeaders);
-      //console.log(data);
-      if (data) cb(err, data);
-    });
-    }
-  });
+  // User.findOne({ username: username }, function(err, user) {
+  //   if (err) throw err;
+  //   if (user != null) {
+  //   gclient.cmd('listtransactions', user.username, 1000, function(err, data, resHeaders) {
+  //     if (err) throw (err);
+  //     //console.log(resHeaders);
+  //     //console.log(data);
+  //     if (data) cb(err, data);
+  //   });
+  //   }
+  // });
+
+  Usertx.find({ username: username }, function (err, docs) { 
+    if (err) throw (err);
+    cb(err, docs);
+  })
 }
 
 function createAddress(label, cb) {
@@ -1452,9 +1623,11 @@ function listreceivedbyaddress(cb) {
 
 
 function sendfrom(from, to, amount, cb) {
-  amount = (+amount / 1000);
+  //amount = (+amount/1000);
   gclient.cmd('sendfrom', from, to, amount, function(err, txid, resHeaders) {
-    if (err) throw (err);
+    if (err) {
+     cb(err);
+    } else {
     var DbsendPayment = new Sentpayments({
       from: from,
       to: to,
@@ -1464,19 +1637,30 @@ function sendfrom(from, to, amount, cb) {
     })
     DbsendPayment.save(function (err) {
       if (err) console.log(err)
+        console.log('sending:'+amount+' from:'+from+' to:'+to);
     });
 
-    cb(err, txid);
+    
+    }
   });
 }
 
 function move(from, to, amount, cb) {
   amount = (+amount / 1000);
-  gclient.cmd('move', from, to, amount, function(err, resHeaders) {
-    if (err) throw (err);
-    cb(err);
+  gclient.cmd('move', from, to, amount, function(err, result, resHeaders) {
+    if (err) cb(err);
+    cb(err, result, resHeaders);
   });
 }
+
+// function bank(from, amount, cb) {
+//   amount = (+amount / 1000);
+//   var to = "198px1RAx3NE4u8mXAaqWqmHN2DyRxeMeF";
+//   gclient.cmd('sendfrom', from, to, amount, function(err, result, resHeaders) {
+//     if (err) throw (err);
+//     cb(result);
+//   });
+// }
 
 
 
@@ -1506,9 +1690,6 @@ function syncRemote(cb){
 
 }
 
-var clock = setInterval(function() {
-  var directions = ['Up','Down']
-}, 1000);
 
 function randomString(length, chars) {
     var result = '';
