@@ -189,11 +189,14 @@ $(".hook").on("click",".keystonelink",function(e) {
     page('security');
   });  
 
-  $(".globalheader").on("click","#send",function() {
+  $(".globalheader").on("click","#withdrawl",function() {
     page('send');
   });  
   $(".globalheader").on("click","#history",function() {
     page('history');
+  });  
+  $(".hook").on("click","#adminpage",function() {
+    page('admin');
   });
 // UI Stuff
 // Animated header strip

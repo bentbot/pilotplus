@@ -25,8 +25,8 @@ function displayOptions(displaysymbols) {
           '</div>'+
           '<div class="info">'+
           '<div class="details">'+
-            '<h1>75%</h1>'+
-            '<span class="hide rawoffer">0.75</span>'+
+            '<h1>70%</h1>'+
+            '<span class="hide rawoffer">0.7</span>'+
            '<!--  <span class="bold rate">Payout if</span><br /> -->'+
             '<span class="direction bold"><span class="action" data-translate="if">If</span>: <span class="option">'+symbol+'</span> <span class="tradeicon glyphicon icon'+symbol+' green glyphicon-arrow-up"></span></span><br />'+
             '<span class="price"><span data-translate="from">From:</span> <span class="keystone keystone'+symbol+'"> --.--</span> <span class="lock"></span></span><br />'+

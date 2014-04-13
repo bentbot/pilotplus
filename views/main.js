@@ -101,7 +101,7 @@ function loadBalsync() {
 
   socket.on('remotebals', function (data) {
     showRemoteBals(data);
-  });
+  });  
 
 }
 
@@ -217,13 +217,13 @@ var symbols = ['BTCUSD', 'BTCCNY', 'EURUSD', 'GBPUSD', 'USDCNY', '^DJI', 'CLK14.
     socket.on('hello', function (data) {
       $('.username').html(data.hello);
       showloginfield(data.hello);
-      console.log('hello:', data.hello+':id'+data.id);
+      console.log('hello:', data.hello+' id'+data.id+' 2f:'+data.dualfactor);
       user = data.hello;
       userid = data.id; //
       email = data.email; //
       userdeposit = data.btc;
-      dualfactor = true;
-      verified = false;
+      dualfactor = data.dualfactor;
+      verified = data.verified;
     });
   var lastbal = 0;
    socket.on('bankbal', function (data) {

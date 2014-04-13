@@ -102,7 +102,9 @@ display: table-cell;
       .marketing p + h4 {
         margin-top: 28px;
       }
-
+      .btcsecure {
+        cursor: default;
+      }
 
       /* Customize the navbar links to be fill the entire space of the .navbar */
       .navbar {
@@ -324,6 +326,7 @@ margin-right: 15px;
 float: left;
 border-radius: 0px 4px 4px 0px;
 height:35px;
+width: 59px;
 }
 #auth {
 border: 1px solid;
@@ -537,7 +540,10 @@ background:rgba(205, 235, 193, 0.5) !important;
   margin: auto;
   font-family: museo-slab,Georgia,"Times New Roman",Times,serif;
   cursor: default;
-}.btcsecure {
+}.securestatus{
+  width: 14px;
+}
+.btcsecure {
 position: absolute;
 top: 0px;
 right: 0px;

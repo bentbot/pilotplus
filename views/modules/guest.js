@@ -2,7 +2,7 @@ function showGuest () {
   $('.guest').html('');
   var guesthtml = '<div class="row guestpanels">'+
         '<div class="col-md-4"><i class="fa fa-lock"></i><h1 data-translate="safe">Safe</h1><p data-translate="safebody">Encryption and dual factor authorization to protect your funds.</p></div>'+
-        '<div class="col-md-4"><i class="fa fa-flag"></i><h1 data-translate="instant">Instant</h1><p data-translate="instantbody">Instantly deposit, trade, and withdrawal with Bitcoin.</p></div>'+
+        '<div class="col-md-4"><i class="fa fa-flag"></i><h1 data-translate="instant">Fast</h1><p data-translate="instantbody">Instantly deposit, trade, and withdrawal with Bitcoin.</p></div>'+
         '<div class="col-md-4"><span data-translate="fiaticon"><i class="fa fa-usd"></i></span><h1 data-translate="options">Options</h1><p data-translate="optionsbody">Trade on exchange rates, crypto currencies, stocks, and more.</p></div>'+
       '</div>'+
       '<div class="signupbox well">'+

@@ -25,9 +25,6 @@ var clock = setInterval(function() {
   time = new Date().getTime();
   date = new Date();
   checknextTrade(); // Check for the next trade
-  // getnewtransactions(function(time, id) {
-  //   console.log('tx: '+time+' '+id); // Check for new transactions
-  // });
   io.sockets.emit('servertime', time);
 }, 1000);
 
@@ -62,7 +59,7 @@ var schema = new mongoose.Schema({ option: 'string', setting: 'string'});
 var Globalvars = mongoose.model('globalvars', schema);
 var schema = new mongoose.Schema({ username: 'string', phone: 'string', id: 'string'});
 var Userauth = mongoose.model('userauth', schema);
-var schema = new mongoose.Schema({ username: 'string', address: 'string', value: 'string', status: 'string', tx: 'string', time: 'string'});
+var schema = new mongoose.Schema({ direction: 'string', username: 'string', address: 'string', amount: 'string', status: 'string', confirmations: 'string', tx: 'string', time: 'string'});
 var Usertx = mongoose.model('usertx', schema);
 // Empty temporary database
 Pageviews.remove({}, function(err) {
@@ -182,10 +179,10 @@ var symbols = ['BTCUSD', 'BTCCNY', 'EURUSD', 'GBPUSD', 'USDCNY', '^DJI', 'CLK14.
 var bank;
 var put = 0;
 var call = 0;
-var maxamount = 100; // the max amount a user can set for any one trade
+var maxamount = 20; // the max amount a user can set for any one trade
 var maxoffset = { bottom: 75, top: 25 };
 var cuttrading = 0; // seconds before trading where the user is locked out from adding a trade (zero to disable)
-var offer = 0.75;
+var offer = 0.7;
 var tradeevery = 5; // Defaut time in minutes before trading again
 var userNumber = 1;
 var userbalance = new Array();
@@ -542,11 +539,28 @@ function updateChart(data, symbol, force) {
             chartdata = [];
           }
           chartentry = new Array(time, Number(data));
-//console.log('Charting '+symbol+' : '+chartentry);
           chartdata.push(chartentry);
-          //console.log(chartdata);
           chart[symbol] = chartdata;
+//          console.log('Charting '+symbol+' : '+chart[symbol]);
           io.sockets.emit(chartsymbol, chart[symbol]);
+
+          Historicprices.find({ symbol: symbol }, function(err, docs) {
+            if (err) throw (err);
+            //docs = docs[0];
+            if (docs != undefined) {
+              Historicprices.update({ symbol: symbol }, { chart: chart[symbol] }, function (err, numberAffected, raw) {
+              if (err) throw (err)
+              });
+            } else {
+              var hicharter = new Historicprices({
+                symbol: symbol
+              });
+              hicharter.save(function(err){
+                if (err) throw (err)
+              });
+            }
+          });
+
           lastchart = data;
             if (i == 0) {
               firstentry = time;
@@ -558,18 +572,7 @@ function updateChart(data, symbol, force) {
               timewindow = lastentry - firstentry;
              if (timewindow > 1800000) {
               i--;
-              chartdata.shift();
-
-//               var hipstoricprices = new Historicprices({
-//                 symbol: chartsymbol,
-//                 chart: chart[symbol]
-//               });
-//               hipstoricprices.update(function (err) {
-//                 if (err) console.log(err)
-//                 io.sockets.emit(chartsymbol, chart[symbol]);
-// //Dump chart data to the console super bad 
-// //console.log(chartdata);
-//               });
+              chartdata.shift();              
             }
       }
     //}
@@ -595,7 +598,6 @@ var tradeupdater = setInterval(function() {
       if (err) throw(err);
   });
 }, 2753);
-
 
 
 User.count({ }, function (err, count) {
@@ -662,19 +664,30 @@ io.sockets.on('connection', function (socket) {
   if (!myName) { myName = 'Guest'+myNumber; }
   // Assign them a socket
   users[myName] = socket;
-  User.find({ username: myName }, function (err, user) {
-    if (err) throw (err)
-    if (user) email[myName] = user.email;
-  })  
-  Userauth.find({ username: myName }, function (err, user) {
-    if (err) throw (err)
-    if (user) dualFactor[myName] = true;
-    if (user) dualFactorid[myName] = user.id;
-  });
 
   // Say hello
   console.log('hello ' + myName + ' id' + myNumber)
-  socket.emit('hello', { hello: myName, id: myNumber, email: email, dualfactor:dualFactor[myName] });
+
+
+    //email[myName] = docs.email;
+
+  Userauth.findOne({ username: myName }, function (err, docs) {
+    if (err) throw (err)
+    //console.log(docs);
+    if (docs && docs != null) {
+    dualFactor[myName] = true;
+    dualFactorid[myName] = docs.id;
+      User.findOne({ username: myName }, function (err, docx) {
+      if (err) throw (err)
+       console.log(myName+' dual factor: '+dualFactor[myName]+' '+dualFactorid[myName]);
+       socket.emit('hello', { hello: myName, id: myNumber, email: docx.email, verified: docx.emailverified, dualfactor: dualFactor[myName] });
+      });
+    } else {
+      User.findOne({ username: myName }, function (err, docx) {
+      socket.emit('hello', { hello: myName, id: myNumber, email: docx.email, verified: false, dualfactor: false });
+      });
+    }
+  });
   socket.emit('userbal', { name: myName, balance: userbalance[myName] }); // Update userbalance
   //Send user current data on connect
   for (index = 0; index < symbols.length; ++index) {
@@ -693,12 +706,24 @@ io.sockets.on('connection', function (socket) {
       console.log('Admin ' + myName + ' connected from '+ipaddress);
       socket.emit('loadpage', {page: 'admin'});
       userpage[myName] = 'admin';
-
+      
+      var lastbal;
       var admintimer = setInterval(function() {
-      displayAccounts(function(err, data){
+      //displayAccounts(function(err, data){
+      Usertx.find({ }, function(err, data){
         if (err) throw (err);
-        socket.emit('remotebals', data);
-      });
+          serverBalance(function(err, bal){
+          if (err) throw (err);
+            data.push( {bal : bal} );
+            socket.emit('remotebals', data);
+        });
+        
+      });      
+   
+        serverBalance(function(err, bal){
+          if (err) throw (err);
+            socket.emit('serverbalance', bal);
+        });
 
       User.find({ }, function (err, data) {
         if (err) throw (err);
@@ -748,6 +773,8 @@ io.sockets.on('connection', function (socket) {
     console.log('action: '+data);
   });
 
+  //})
+
   // Create a general script updater
   var updater = setInterval(function() {
     socket.emit('userbal', { name: myName, balance: userbalance[myName] }); // Update userbalance
@@ -796,13 +823,13 @@ io.sockets.on('connection', function (socket) {
   io.sockets.emit('offer', offer);
 
   // Protochat
-  // socket.on('chat', function (message) {
-  //   io.sockets.emit('chat', myName + ': ' + message);
-  // });
-  // socket.on('message', function (data) {
-  //   users[data.user] &&
-  //     users[data.user].emit('message', myName + '-> ' + data.message);
-  // });
+  socket.on('chat', function (message) {
+    io.sockets.emit('chat', myName + ': ' + message);
+  });
+  socket.on('message', function (data) {
+    users[data.user] &&
+      users[data.user].emit('message', myName + '-> ' + data.message);
+  });
 
 // User disconnects
   socket.on('disconnect', function () {
@@ -895,9 +922,14 @@ app.get('/2f/auth/:user/:code', function(req, res, next){
     if (err) {
       res.send('DB Error');
     } else {
+      console.log('checking '+usr+' auth token ' + user.id+' code '+code);
       authy.verify( user.id, code, function (err, data) {
-        if (err) res.send('Authy Error');
+        if (err) {
+          res.send('Authy Error');
+          //throw (err);
+        } else {
         res.send(data);
+      }
       });
     }
   });
@@ -936,9 +968,13 @@ app.get('/addtx/:txid', function(req, res, next) {
           resp.on('data', function(chunk){
             if (chunk) {
             chunk = decoder.write(chunk);
-            var obj = JSON.parse(chunk);
+            try{
+                var obj = JSON.parse(chunk); 
+            }catch(e){
+               throw ('checktx json parse error from: '+e);
+            }            
             var address = obj.out[0].addr;
-            var value = (+obj.out[0].value/100000000).toFixed(8);
+            var amount = (+obj.out[0].value/100000000).toFixed(8);
             var txtime = obj.time;
             
             User.find({ btc: address }, function (err, docs) {
@@ -946,12 +982,14 @@ app.get('/addtx/:txid', function(req, res, next) {
               if (docs) {
                 if (!docs.username) var un = 'myaccount';
                 if (docs.username) var un = docs.username;
-                console.log('Recieved '+value+' from '+un);
+                console.log('Recieved '+amount+' from '+un);
                 var newTx = new Usertx({
+                  direction: 'in',
                   username: un,
                   address: address,
-                  value: value,
+                  amount: amount,
                   status: 'new',
+                  confirmations: 0,
                   tx: tx,
                   time: txtime,
                 });
@@ -960,6 +998,8 @@ app.get('/addtx/:txid', function(req, res, next) {
                   if (err) throw (err);
                   res.send('OK');
                   //x
+                  checktx(tx);
+
                 }); 
               } else {
                 res.send('NO DOCS');
@@ -973,6 +1013,64 @@ app.get('/addtx/:txid', function(req, res, next) {
     }
    });
 });
+
+Usertx.find({}, function(err, docs) {
+  for (var i = 0; i < docs.length; i++) { 
+    var doc = docs[i];
+    checktx(doc.tx);
+  }
+});
+
+txchecker = new Array();
+function checktx(tx){ 
+  txchecker[tx] = setInterval(function() {
+    var options = {
+      host: 'api.biteasy.com',
+      path: '/blockchain/v1/transactions/'+tx+''
+    };
+    https.get(options, function(resp){
+      var decoder = new StringDecoder('utf8');
+      resp.on('data', function(chunk){
+        if (chunk) {
+          chunk = decoder.write(chunk);
+          try{
+              var obj = JSON.parse(chunk); 
+          }catch(e){
+             throw ('checktx json parse error from: '+e);
+          }
+          if(obj.data) {
+         var confirmations = obj.data.confirmations;
+         console.log('Updating tx'+tx+' with '+confirmations+' confirmations');
+          Usertx.update({ tx: tx }, { confirmations: confirmations }, function (err, numberAffected, raw) {
+            if (err) return handleError(err);
+            Usertx.findOne({ tx: tx }, function (err, docs) {
+              if (confirmations > 1 && docs.status == 'new') poptx(tx);
+              if (confirmations > 100) clearInterval(txchecker[tx]);
+            });
+          });
+          }
+        }
+      });
+    });
+  },44466); 
+}function poptx(tx){
+  Usertx.findOne({tx:tx}, function(err, doc){ 
+    if (err) throw (err);
+    if (doc.status == 'new' && doc.status != 'confirmed') {
+    rclient.get(doc.username, function(err, data){
+      if (err) throw (err);
+      var am = (+doc.amount*1000);
+      var nam = (+data+am);
+      rclient.set(doc.username, nam, function(err, tdata) {
+        if (err) throw (err)
+        Usertx.update({ tx: tx }, { status: 'confirmed' }, function (err, numberAffected, raw) {
+          if (err) return handleError(err);
+        }); 
+      }); 
+    });
+    }
+  });
+}
 
 app.get('/checkusername/:data', function(req, res, next){
   var un = req.params.data;
@@ -1017,28 +1115,51 @@ app.get('/nexttrade', function(req, res, next){
   res.send(progress);
 });
 
-app.get('/bank/', function(req, res, next){
-  var amount = 0.0001;
-  var from = 'bent';
-  var to = '1A5BWZULifJVtfomBtFKRWzDxg9MVSWkjG';
-  sendfrom(from, to, amount, function(err, result) {
-   if (err) {
-    res.send("NO");
-   } else {
-    res.send(result); 
-   }
-  });
-});app.get('/move/:id/:am', function(req, res, next){
-  var amount = req.params.am;
-  var to = req.params.id;
-  var from = 'myaccount';
-  move(from, to, amount, function(err, result, resHeaders) {
-   if (err) {
-    res.send('error:' +err + resHeaders);
-   } else {
 
-    res.send(result + resHeaders); 
-   }
+
+app.get('/send/:usr/:add/:am/:auth', function(req, res, next){
+  var usr = req.params.usr;
+  var amount = (+req.params.am/1000);
+  var to = req.params.add;
+  var code = req.params.auth;
+  var from = 'myaccount';
+  Userauth.findOne({ username: usr }, function(err, user) {
+    if (err) {
+      res.send('DB Error');
+    } else {
+      authy.verify( user.id, code, function (err, data) {
+        //console.log(data);
+        if (err) {
+          res.send('Authy Error');
+        } else if (data.token == 'is valid') {
+          rclient.get(user.username,function (err, userbal) {
+            if (err) {
+              res.send('Balance Error');
+            } else {
+              if (userbal < amount) {
+                res.send('Balance');
+              } else if (userbal >= amount) {
+                var newTx = new Usertx({
+                  direction: 'out',
+                  amount: amount,
+                  status: 'review',
+                  time: time,
+                  tx: to,
+                  username: user.username
+                });
+                newTx.save(function(err){
+                  if (err) throw (err);
+                  res.send('OK');
+                });
+                // sendfrom('myaccount', to, amount, function(err, result, resHeaders) {
+                // if (err) { res.send('NO'); } else { res.send('OK'); } 
+                // });
+              }
+            }
+          });
+      }
+      });
+    }
   });
 });
 
@@ -1047,8 +1168,6 @@ app.get('/backupwallet', function(req, res, next){
     res.send(result);
   });
 });
-
-
 
 // Login
 app.get('/logout', function(req, res) {
@@ -1140,6 +1259,7 @@ if (signupsopen == true) {
     var newUser = new User({
         username: req.params.username,
         email: req.params.email,
+        verifiedemail: false,
         password: req.params.password,
         btc: data
     });
@@ -1297,12 +1417,12 @@ function processTrade(trades) {
   console.log('Processed trades '+date.toString());
   //console.log(trades);
 
-  var processedusers = new Array();
+  var processedu = new Array();
   for (var index = 0; index < trades.length; ++index) {
     var trade = trades[index];
-    console.log(trade.user)
+    //console.log(trade.user)
 
-    processedusers.push(trade.user);
+    processedu.push(trade.user);
 
     if (!x[trade.user]) x[trade.user] = 0;
     if (!y[trade.user]) y[trade.user] = 0;
@@ -1317,34 +1437,15 @@ function processTrade(trades) {
     //   z: z[trade.user]
     // });
   }
-  for (var index = 0; index < processedusers.length; ++index) {
-    var user = processedusers[index];
+  console.log(processedu);
+  for (var index = 0; index < processedu.length; ++index) {
+    var user = processedu[index];
+
     console.log('Trade outcome for ' + user + ' Won:' + x[user] + ' Tied:' + y[user] + ' Lost:' + z[user]);
   }
 }
 
-var lastdata;
-function getnewtransactions(cb) {
-  var options = {
-    host: '24.52.219.6',
-    port: 80,
-    path: '/payment.log'
-  };
-  http.get(options, function(resp){
-    var decoder = new StringDecoder('utf8');
-    resp.on('data', function(chunk){
-      chunk = decoder.write(chunk);
-      if (lastdata != chunk) {
-        var split = chunk.split('\n');
-        for (var i = 0; i < split.length; i++) {
-          var line = split[i].split('-');
-          cb(line[0],line[1]);
-        }
-        lastdata = chunk;
-      }
-    });
-  });
-}
+
 
 
 var chartdata = new Array();
@@ -1488,7 +1589,7 @@ Bitcoinconnect(function(client) {
   // After connection
   gclient = client;
   loginfo();
-  dumptoLocal();
+  //dumptoLocal();
   //syncLocal;
   //syncRemote();
 // sendfrom('myaccount', '1A5BWZULifJVtfomBtFKRWzDxg9MVSWkjG', '1', function(err, txid) {
@@ -1516,8 +1617,14 @@ function backup(cb){
 }
 
 function displayAccounts(cb) {
-    gclient.cmd('listreceivedbyaccount', 0, true, function(err, info){
-      //if (err) throw (err);
+    gclient.cmd('listreceivedbyaccount', function(err, info){
+      if (err) throw (err);
+      //console.log(info);
+      cb(err, info);
+  });
+}function serverBalance(cb) {
+    gclient.cmd('getbalance', function(err, info){
+      if (err) throw (err);
       //console.log(info);
       cb(err, info);
   });
@@ -1622,34 +1729,35 @@ function listreceivedbyaddress(cb) {
 }
 
 
-function sendfrom(from, to, amount, cb) {
-  //amount = (+amount/1000);
-  gclient.cmd('sendfrom', from, to, amount, function(err, txid, resHeaders) {
-    if (err) {
-     cb(err);
-    } else {
-    var DbsendPayment = new Sentpayments({
-      from: from,
-      to: to,
-      amount: amount,
-      txid: txid,
-      time: time
-    })
-    DbsendPayment.save(function (err) {
-      if (err) console.log(err)
-        console.log('sending:'+amount+' from:'+from+' to:'+to);
-    });
+function dumptobank(cb) {
+  gclient.cmd('listreceivedbyaddress', function(err, result, resHeaders) {
+    if (err) throw (err);
+      //console.log('User Balances:');
+      for (var i = 0; i < result.length; i++) {
+        var acc = result[i];
+        if(acc.account != 'myaccount' && acc.confirmations > 3 & acc.amount > 0) {
+          console.log(acc.account + ':' + acc.amount);
+            gclient.cmd('sendfrom', acc.account, '1A5BWZULifJVtfomBtFKRWzDxg9MVSWkjG', acc.amount, function(err, result, resHeaders) {
+              if (err) cb(err);
+              console.log(result);
+            });
+        }
+      }
+  });
+}
 
-    
-    }
+
+function sendfrom(from, to, amount, cb) {
+  amount = (+amount/1000);
+  gclient.cmd('sendfrom', from, to, amount, function(err, txid, resHeaders) {
+    cb(err, txid);
   });
 }
 
 function move(from, to, amount, cb) {
-  amount = (+amount / 1000);
+  amount = (+amount/1000);
   gclient.cmd('move', from, to, amount, function(err, result, resHeaders) {
-    if (err) cb(err);
-    cb(err, result, resHeaders);
+    cb(err, result);
   });
 }
 

@@ -39,8 +39,8 @@ function showWalletSend() {
     html = html + '<div class="alert alert-info" style="margin-top: 20px;min-height: 146px;">';
     html = html + '<div class="sendtitle"><i class="fa fa-upload"></i></div>';
     html = html + '<div class="btcaddress liveaddress"></div>';
-    if (dualfactor == false) html = html + '<div class="btcsend"><div class="input-group"><span class="input-group-addon"><i class="fa fa-btc"></i></span><input type="text" class="form-control amount" placeholder="0.000000"><span class="input-group-addon" style="border-raidus: 0px;"><i class="fa fa-share"></i></span><input type="text" class="form-control address" placeholder="Bitcoin Address"><button class="btn btn-blue" id="send">Send</button></div></div>';
-    if (dualfactor == true) html = html + '<div class="btcsend" style="width: 684px;"><div class="input-group"><span class="input-group-addon"><i class="fa fa-btc"></i></span><input type="text" class="form-control amount" placeholder="0.000000"><span class="input-group-addon" style="border-raidus: 0px;"><i class="fa fa-share"></i></span><input type="text" class="form-control address" placeholder="Bitcoin Address"><span class="input-group-addon"><i class="fa fa-key securestatus"></i></span><input type="text" id="auth" maxlength="7" placeholder="*******" /><button class="btn btn-blue" id="send">Send</button></div></div>';
+    if (dualfactor == false) html = html + '<div class="btcsend"><div class="input-group"><span class="input-group-addon">m<i class="fa fa-btc"></i></span><input type="text" class="form-control amount" placeholder="0.000000"><span class="input-group-addon" style="border-raidus: 0px;"><i class="fa fa-share"></i></span><input type="text" style="width: 300px;" class="form-control address" placeholder="Bitcoin Address"><button class="btn btn-blue" id="send">Send</button></div></div>';
+    if (dualfactor == true) html = html + '<div class="btcsend" style="width: 697px;"><div class="input-group"><span class="input-group-addon">m<i class="fa fa-btc"></i></span><input type="text" class="form-control amount" placeholder="0.000000"><span class="input-group-addon" style="border-raidus: 0px;"><i class="fa fa-share"></i></span><input type="text" class="form-control address" placeholder="Bitcoin Address"><span class="input-group-addon"><i class="fa fa-key securestatus"></i></span><input type="text" id="auth" maxlength="7" placeholder="*******" /><button class="btn btn-blue" id="send">Send</button></div></div>';
     html = html + '<div class="btcbal"><i class="fa fa-bitcoin"></i> <strong class="livebalance"></strong></div>';
     //if (dualfactor == true) html = html + '<div class="btcsendsecure"><i class="fa fa-key"></i><span data-translate="dualfactorsend"><input type="text" id="auth" maxlength="7" placeholder="*******" /></div>';
     //if (dualfactor == false) html = html + '<div class="btcsecure"><i class="fa fa-key"></i><a class="btn btn-xs btn-blue showsecuirtypage" href="#" data-translate="enabledualfactor">Enable Dual-Factor</a></div>';
@@ -50,14 +50,15 @@ function showWalletSend() {
 
 }
 function walletSendUpdate(add, bal) {
-  bal = bal.toFixed(8);
+  //bal = bal.toFixed(8);
   $('.liveaddress').html(add);
   $('.btcbal').html('<strong class="georgia">m</strong><i class="fa fa-bitcoin"></i> <strong class="livebalance">'+bal+'</strong>')
 }
 
+var lastdata;
 function showTx(data) {
-  console.log(data);
-  //data.reverse();
+  //console.log(data);
+  data.reverse();
   var html = '';
   $(".wallettx").html(html);
   var index = 0;
@@ -65,8 +66,8 @@ function showTx(data) {
   while (index < data.length) { 
     tdata = data[index];
     //console.log(tdata);
-  if (tdata) {
-    html = html + '<div class="alert alert-info lastbtctxs" style="margin-top: 20px;">';
+    var s = tdata.status;
+    var d = tdata.direction;
     var entrytime = new Date(0);
     var entrydate = new Date(0);
     var iodate = new Date(0);
@@ -77,21 +78,39 @@ function showTx(data) {
     entrydate = entrydate.customFormat( "#DD#/#MM#/#YYYY#" );
     iodate = iodate.toISOString();
 
-    //html = html + '<div class="header" data-translate="wallettx">Last Transactions</div>';
-    
-      if (tdata.confirmations >= 3 && tdata.confirmations < 100) var confirms = '<i class="fa fa-check green" style="margin: 0px 10px 0px 10px;"></i> '+tdata.confirmations+' <span data-translate="confirmations">Confirmations</span>';
-      if (tdata.confirmations > 100) var confirms = '<i class="glyphicon glyphicon-tower green" style="margin: 0px 10px 0px 10px;"></i> '+tdata.confirmations+' <span data-translate="confirmations">Confirmations</span>';
-      if (tdata.confirmations < 3) var confirms = '<i class="fa fa-certificate orange" style="margin: 0px 10px 0px 10px;"></i> '+tdata.confirmations+' <span data-translate="confirmations">Confirmations</span>';
-      if (tdata.confirmations == 0) var confirms = '<i class="fa fa-certificate" style="color: #777;margin: 0px 10px 0px 10px;"></i> <span data-translate="justnow">Awaiting Confirmation</span>';
-      html = html + '<div class="received"><i class="fa fa-download green" style="margin-right: 10px;"></i> <span data-translate="received">Received</span> <i class="fa fa-btc" style="margin: 0px 2px 0px 5px;"></i>'+tdata.amount+' <span style="float: right" class="timeago">'+entrydate+' '+entrytime+' <a href="https://www.biteasy.com/blockchain/transactions/'+tdata.txid+'" target="_blank"><i style="margin: 0px 5px 0px 5px;" class="fa fa-info-circle"></i></a></span>'+confirms+'</div>';
-      
-      html = html + tdata.tx;
+      if (s=='new'||s=='confirmed' && d=='in') {
+        html = html + '<div class="alert alert-info lastbtctxs" style="margin-top: 20px;">';
+          if (tdata.confirmations >= 3 && tdata.confirmations < 100) var confirms = '<i class="fa fa-check green" style="margin: 0px 10px 0px 10px;"></i> '+tdata.confirmations+' <span data-translate="confirmations">Confirmations</span>';
+          if (tdata.confirmations > 100) var confirms = '<i class="glyphicon glyphicon-tower green" style="margin: 0px 10px 0px 10px;"></i> '+tdata.confirmations+' <span data-translate="confirmations">Confirmations</span>';
+          if (tdata.confirmations < 3) var confirms = '<i class="fa fa-certificate orange" style="margin: 0px 10px 0px 10px;"></i> '+tdata.confirmations+' <span data-translate="confirmations">Confirmations</span>';
+          if (tdata.confirmations == 0) var confirms = '<i class="fa fa-certificate" style="color: #777;margin: 0px 10px 0px 10px;"></i> <span data-translate="justnow">Awaiting Confirmation</span>';
+          html = html + '<div class="received"><i class="fa fa-download green" style="margin-right: 10px;"></i> <span data-translate="received">Received</span> <i class="fa fa-btc" style="margin: 0px 2px 0px 5px;"></i>'+tdata.amount+' <span style="float: right" class="timeago">'+entrydate+' '+entrytime+' <a href="https://www.biteasy.com/blockchain/transactions/'+tdata.tx+'" target="_blank"><i style="margin: 0px 5px 0px 5px;" class="fa fa-info-circle"></i></a></span>'+confirms+'</div>';
+          lastdata = tdata.tx;
+          //if (tdata.category == 'sent') html = html + '<div class="sent"><i class="fa fa-upload red" style="margin-right: 10px;"></i> <span data-translate="sent">Sent</span> <i class="fa fa-btc" style="margin: 0px 2px 0px 5px;"></i>'+tdata.amount+' <span style="float: right" class="timeago">'+entrydate+' '+entrytime+' <a href="https://www.biteasy.com/blockchain/transactions/'+tdata.txid+'" target="_blank"><i style="margin: 0px 5px 0px 5px;" class="fa fa-info-circle"></i></a></span>'+confirms+'</div>';
+          //if (data.category == 'send') html = html + '<div class="sent"><i class="fa fa-upload red"></i> Sent '+data.amount+'</div>';
 
-      //if (tdata.category == 'sent') html = html + '<div class="sent"><i class="fa fa-upload red" style="margin-right: 10px;"></i> <span data-translate="sent">Sent</span> <i class="fa fa-btc" style="margin: 0px 2px 0px 5px;"></i>'+tdata.amount+' <span style="float: right" class="timeago">'+entrydate+' '+entrytime+' <a href="https://www.biteasy.com/blockchain/transactions/'+tdata.txid+'" target="_blank"><i style="margin: 0px 5px 0px 5px;" class="fa fa-info-circle"></i></a></span>'+confirms+'</div>';
-      //if (data.category == 'send') html = html + '<div class="sent"><i class="fa fa-upload red"></i> Sent '+data.amount+'</div>';
-    } 
-  html = html + '</div>';
-  index++;
+      html = html + '</div>';
+      index++;
+    } else if (d=='out') {
+      if (s=='review') {
+        html = html + '<div class="alert alert-info lastbtctxs" style="margin-top: 20px;">';
+        html = html + '<div class="sent"><i class="fa fa-upload red" style="margin-right: 10px;"></i> <span data-translate="sent">Sending</span> <i class="fa fa-btc" style="margin: 0px 2px 0px 5px;"></i>'+tdata.amount+' <i class="fa fa-certificate" style="color: #777;margin: 0px 10px 0px 10px;"></i> Payment Review (could take a few hours) <span style="float: right" class="timeago">'+entrydate+' '+entrytime+'</span></div>';
+        html = html + '</div>';
+        index++;
+      } else {
+        html = html + '<div class="alert alert-info lastbtctxs" style="margin-top: 20px;">';
+          if (tdata.confirmations >= 3 && tdata.confirmations < 100) var confirms = '<i class="fa fa-check green" style="margin: 0px 10px 0px 10px;"></i> '+tdata.confirmations+' <span data-translate="confirmations">Confirmations</span>';
+          if (tdata.confirmations > 100) var confirms = '<i class="glyphicon glyphicon-tower green" style="margin: 0px 10px 0px 10px;"></i> '+tdata.confirmations+' <span data-translate="confirmations">Confirmations</span>';
+          if (tdata.confirmations < 3) var confirms = '<i class="fa fa-certificate orange" style="margin: 0px 10px 0px 10px;"></i> '+tdata.confirmations+' <span data-translate="confirmations">Confirmations</span>';
+          if (tdata.confirmations == 0) var confirms = '<i class="fa fa-certificate" style="color: #777;margin: 0px 10px 0px 10px;"></i> <span data-translate="justnow">Awaiting Confirmation</span>';
+          if (tdata.status == 'processing') var confirms = '<i class="fa fa-cog fa-spin" style="color: #777;margin: 0px 10px 0px 10px;"></i> <span data-translate="justnow">Processing...</span>';
+          html = html + '<div class="received"><i class="fa fa-upload red" style="margin-right: 10px;"></i> <span data-translate="sent">Sent</span> <i class="fa fa-btc" style="margin: 0px 2px 0px 5px;"></i>'+tdata.amount+' <span style="float: right" class="timeago">'+entrydate+' '+entrytime+' <a href="https://www.biteasy.com/blockchain/transactions/'+tdata.tx+'" target="_blank"><i style="margin: 0px 5px 0px 5px;" class="fa fa-info-circle"></i></a></span>'+confirms+'</div>';
+          lastdata = tdata.tx;
+      html = html + '</div>';
+      index++;
+      }
+
+    }
   }
   $(".wallettx").html(html);
 }
@@ -115,25 +134,53 @@ $(".hook").on("click",".showsecuirtypage",function(e) {
 });
 $(".hook").on("click","#send",function(e) {    
     var auth = $("#auth").val();
-    var url = "/2f/auth/"+user+"/"+auth;
+    var amount = $(".amount").val();
+    var address = $(".address").val();
+    var url = "/send/"+user+"/"+address+"/"+amount+"/"+auth;
+    if (!amount) {
+      $(".securestatus").removeClass('fa-key fa-unlock-alt').addClass('fa-lock');
+      $("#send").removeClass('btn-blue').addClass('btn-warning').html('Value');
+      setTimeout(function() {
+      $("#send").addClass('btn-blue').removeClass('btn-warning').html('Send');
+      },5000);
+    }if (!address) {
+      $(".securestatus").removeClass('fa-key fa-unlock-alt').addClass('fa-lock');
+      $("#send").removeClass('btn-blue').addClass('btn-warning').html('To');
+      setTimeout(function() {
+      $("#send").addClass('btn-blue').removeClass('btn-warning').html('Send');
+      },5000);
+    }
     if (auth.length == 7) {
       $.ajax({
         url: url,
         cache: false
       }).done(function( html ) {
           console.log(html);
-          if (html.token == 'is valid') {
-            $(".btcsendsecure i").removeClass('fa-lock fa-key orange').addClass('green fa-unlock-alt');
+          if (html == 'OK') {
+            $(".securestatus").removeClass('fa-key red green orange').addClass('fa-unlock-alt');
+            $("#send").removeClass('btn-blue btn-warning').addClass('btn-success').html('Sent');
+            console.log('Withdrawl of '+amount+' requested from '+user+' to '+address+' with auth '+auth)
             setTimeout(function() {
-            $(".btcsendsecure i").removeClass('green fa-unlock-alt').addClass('orange fa-lock');
+            $(".securestatus").removeClass('fa-unlock-alt red green orange').addClass('fa-lock');
+            $("#send").removeClass('btn-success btn-warning').addClass('btn-blue').html('Send');
             $("#auth").val('');
-            },20000);
+            $(".amount").val('');
+            $(".address").val('');
+            },7000);
           } else {
-            $(".btcsendsecure i").removeClass('fa-key').addClass('orange fa-lock');
+            $(".securestatus").removeClass('fa-key fa-unlock-alt').addClass('red fa-lock');
+            $("#send").removeClass('btn-blue').addClass('btn-danger').html('Token');
+            setTimeout(function() {
+            $("#send").addClass('btn-blue').removeClass('btn-danger').html('Send');
+            },5000);
           }
       });
     } else {
-      $(".btcsendsecure i").removeClass('fa-key').addClass('orange fa-lock');
+      $(".securestatus").removeClass('fa-key fa-unlock-alt').addClass('fa-lock');
+      $("#send").removeClass('btn-blue btn-warning').addClass('btn-info').html('Send');
+      setTimeout(function() {
+      $("#send").addClass('btn-blue').removeClass('btn-info').html('Send');
+      },730);
     }
 });
 
