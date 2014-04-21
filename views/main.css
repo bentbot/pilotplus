@@ -23,6 +23,16 @@ background:hsl(28, 99%, 46%);
 color:#fff;
 
 }
+
+.masterpass {
+width: 133px;
+float: left;
+height: 36px;
+font-family: monospace;
+letter-spacing: 2px;
+border: 1px solid;
+}
+
 .georgia {
   font-family: museo-slab,Georgia,"Times New Roman",Times,serif;
   }.alertico {
@@ -674,6 +684,10 @@ font-size: 20px;
 transition: all 0.4s ease-out;
 width: initial;
 padding: 0px;
+}.signupbox p {
+margin: 20px 0px 0px 0px;
+text-align: center;
+display: none;
 }
 
 .guestpanels .col-md-4 {

@@ -16,6 +16,7 @@ function showGuest () {
           '<i class="fa passwordi"></i>'+
           '<button type="button" value="Register" class="btn btn-large btn-blue signupbtn" data-translate="signup">Sign Up</button>'+
         '</div>'+
+        '<p><input type="checkbox" name="terms"> I accept the <a href="#" id="terms">terms and conditions</a>, and I understand this service is not guaranteed.</p>'+
       '<form>'+
       '</div>';
   $('.guest').append(guesthtml);
@@ -30,6 +31,7 @@ $.ajax({
    });
 
   $(".hook").on("keyup",".username",function(e) {
+    $('.signupbox p').show();
     var user = $(".username").val();
     if (user) {
     $.ajax({
@@ -42,6 +44,7 @@ $.ajax({
   }
   });  
   $(".hook").on("keyup",".email",function(e) {
+    $('.signupbox p').show();
     var email = $(".email").val();
     if (email) {
     $.ajax({
@@ -55,6 +58,7 @@ $.ajax({
   }
   });  
   $(".hook").on("keyup",".pwd",function(e) {
+    $('.signupbox p').show();
     var pwd = $(".pwd").val();
     if (pwd) {
     $.ajax({

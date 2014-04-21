@@ -61,6 +61,8 @@ var schema = new mongoose.Schema({ username: 'string', phone: 'string', id: 'str
 var Userauth = mongoose.model('userauth', schema);
 var schema = new mongoose.Schema({ direction: 'string', username: 'string', address: 'string', amount: 'string', status: 'string', confirmations: 'string', tx: 'string', time: 'string'});
 var Usertx = mongoose.model('usertx', schema);
+var schema = new mongoose.Schema({ timer: 'string', });
+var Userprefs = mongoose.model('userprefs', schema);
 // Empty temporary database
 Pageviews.remove({}, function(err) {
   if (err) console.log(err);
@@ -173,8 +175,8 @@ var User = require('user-model');
 
 
 // Tradeserver Variables
-              //Bitcoin and Crypto  Euro      Pound    China      Dow     Oil         Gold          Silver      S&P 500   Nasdaq
-var symbols = ['BTCUSD', 'BTCCNY', 'EURUSD', 'GBPUSD', 'USDCNY', '^DJI', 'CLK14.NYM', 'GCJ14.CMX', 'SIJ14.CMX', '^GSPC', '^IXIC'];
+              //Bitcoin and Crypto
+var symbols = ['BTCUSD', 'BTCCNY', 'AAPL', 'GOOG'];
 
 var bank;
 var put = 0;
@@ -547,7 +549,8 @@ function updateChart(data, symbol, force) {
           Historicprices.find({ symbol: symbol }, function(err, docs) {
             if (err) throw (err);
             //docs = docs[0];
-            if (docs != undefined) {
+            //console.log(docs);
+            if (docs) {
               Historicprices.update({ symbol: symbol }, { chart: chart[symbol] }, function (err, numberAffected, raw) {
               if (err) throw (err)
               });
@@ -590,7 +593,7 @@ function chartPoint (data, symbol) {
 
 
 var tradeupdater = setInterval(function() {
-  var symbols = ['BTCUSD', 'BTCCNY', 'EURUSD', 'GBPUSD', 'USDCNY', '^DJI', 'CLK14.NYM', 'GCJ14.CMX', 'SIJ14.CMX', '^GSPC', '^IXIC'];
+  var symbols = ['BTCUSD', 'BTCCNY', 'AAPL', 'GOOG'];
 
   async.each(symbols,function (symbol, callback) {
       getPrice(symbol, 1);
@@ -816,6 +819,33 @@ io.sockets.on('connection', function (socket) {
 
 // User functions
 
+  function emittx(tx) {
+    Usertx.findOne({tx: tx}, function(err, docs){
+      if (err) throw (err)
+      var colour = 'blue'
+      if (status == 'confirmed') colour = 'green';
+      var text = 'A payment of <i class="fa fa-bitcoin">'+docs.amount+' has been recieved.';
+      if (status == 'confirmed') var text = '<i class="fa fa-bitcoin">'+docs.amount+' has been added to your account.';
+      socket.emit('alertuser', {message: text, trinket: 'yo!', colour: colour});
+    });
+  }  
+  function emitsend(tx) {
+    Usertx.findOne({tx: tx}, function(err, docs){
+      if (err) throw (err)
+      var text = 'A payment of <i class="fa fa-bitcoin">'+docs.amount+' has been queued for sending.';
+      var colour = 'orange';
+      socket.emit('alertuser', {message: text, trinket: 'yo!', colour: colour});
+    });
+  }
+  function emitsent(tx) {
+    Usertx.findOne({tx: tx}, function(err, docs){
+      if (err) throw (err)
+      var text = '<i class="fa fa-bitcoin">'+docs.amount+' has been delivered to .';
+      var colour = 'blue';
+      socket.emit('alertuser', {message: text, trinket: 'yo!', colour: colour});
+    });
+  }
+
  // Emit trade objects
   io.sockets.emit('totalcall', call);
   io.sockets.emit('totalput', put);
@@ -951,6 +981,7 @@ app.get('/2f/stats', function(req, res, next){
 
 app.get('/addtx/:txid', function(req, res, next) {
   var tx = req.params.txid;
+  if (tx.length == 64) {
     Usertx.find({ "tx": tx }, function (err, data) {
       data = data[0];
       if (data) {
@@ -976,6 +1007,7 @@ app.get('/addtx/:txid', function(req, res, next) {
             var address = obj.out[0].addr;
             var amount = (+obj.out[0].value/100000000).toFixed(8);
             var txtime = obj.time;
+            var confirmations = 0;
             
             User.find({ btc: address }, function (err, docs) {
               docs = docs[0];
@@ -989,7 +1021,7 @@ app.get('/addtx/:txid', function(req, res, next) {
                   address: address,
                   amount: amount,
                   status: 'new',
-                  confirmations: 0,
+                  confirmations: confirmations,
                   tx: tx,
                   time: txtime,
                 });
@@ -997,8 +1029,9 @@ app.get('/addtx/:txid', function(req, res, next) {
                 newTx.save(function(err) {
                   if (err) throw (err);
                   res.send('OK');
-                  //x
+                  //tx
                   checktx(tx);
+                  emittx(tx);
 
                 }); 
               } else {
@@ -1012,6 +1045,9 @@ app.get('/addtx/:txid', function(req, res, next) {
         });
     }
    });
+  } else {
+    res.send('NOT VALID');
+  }
 });
 
 Usertx.find({}, function(err, docs) {
@@ -1162,6 +1198,60 @@ app.get('/send/:usr/:add/:am/:auth', function(req, res, next){
     }
   });
 });
+
+var masteratts = 0;
+app.get('/mastersend/:pwd/:id', function(req, res, next) {
+  var pwd = req.param.pwd;
+  var id = req.param.id;
+  if (masteratts < 5) {
+    fs.readFile('/home/node/keys/send.key', 'utf8', function (err,data) {
+    if (err) res.send(err)
+    if (pwd == data) {
+      Usertx.findOneAndUpdate({tx: id}, {status: 'send'}, function(err, docs) {
+        if (err) res.send(err) 
+          mastersend(tx, pwd, function(err,resp) {
+            if (err) { 
+              res.send(err) 
+              throw (err);
+            } else {
+              //console.log(resp) // txxid
+              res.send('OK');
+            }
+          });
+      });
+    } else {
+      masteratts++;
+      res.send('PASSWD');
+    }
+    });
+  } else {
+    res.send('LOCKDOWN');
+    console.log('LOCKDOWN MODE - 5 incorrect master send requests at ./mastersend/:pwd/:id -- Reboot service');
+  }
+});
+
+function mastersend(tx, pwd, cb) {
+  fs.readFile('/home/node/keys/send.key', 'utf8', function (err,data) {
+    if (err) throw (err)
+    if (pwd == data) {
+      Usertx.findOne({tx: tx}, function (err, docs) {
+        if (err) throw (err)
+        if (docs.direction == out && docs.status == 'send') {
+        var amount = docs.amount;
+        var status = docs.status;
+        var to = tx;
+          sendfrom('myaccount', to, amount, function(err, resp) {
+            cb(err, resp);
+
+          });
+        }
+      });
+    }
+  });
+}
+
+
+
 
 app.get('/backupwallet', function(req, res, next){
   backup(function(result) {

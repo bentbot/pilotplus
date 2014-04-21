@@ -8,6 +8,7 @@ require(['modules/local']);
 require(['modules/guest']);
 require(['modules/wallet']);
 require(['modules/security']);
+require(['modules/terms']);
 
   // $.each(symbols, function( index, symbol ) {
     // each something          index, current
@@ -27,11 +28,20 @@ require(['modules/security']);
     var publictrades = true;
     var nexttrade = {};
     var chartinit = new Array();
+    var tradeevery = 5;
+    var minsx;
          socket.on('nexttrade', function (data) {
-           data[1] = ('0' + data[1]).slice(-2);
+          data[1] = ('0' + data[1]).slice(-2);
           nexttrade = data;
             if (data[0] || data[1]) {
+              var minssecs = data[0]*60;
+              minsx = (+data[1]+minssecs);
               $('.expiretime').html(data[0] + ':' + data[1]);
+              var percentage = (+minsx/(tradeevery*60));
+              percentage = percentage*100;
+              //console.log(percentage);
+              if (minsx < 15) $('.tradeprogress').removeClass('progress-bar-warning').addClass('progress-bar-danger').css('width', percentage+'%').html('').attr('aria-valuenow', percentage);
+              if (minsx > 16) $('.tradeprogress').removeClass('progress-bar-danger').addClass('progress-bar-warning').css('width', percentage+'%').html(data[0]+':'+data[1]).attr('aria-valuenow', percentage);
             }
           });
 function showloginfield(username, bal) {
@@ -61,13 +71,18 @@ function loadTrades(displaysymbols, guest) {
   var page = '<div class="container" style="padding: 4px 0px;">'+
     '<div class="notif"></div>'+
     '<div class="trading"></div>'+
-    '<div class="col1">'+
-    '<div class="tradestable">'+
+    '<div class="tradetimer">'+
+    '<div class="progress progress-striped" style="margin:0px;">'+
+      '<div class="progress-bar progress-bar-warning tradeprogress" role="progressbar" aria-valuenow="'+minsx+'" aria-valuemin="0" aria-valuemax="100" style="width: '+minsx+'%;">'+
+      '</div>'+
     '</div>'+
+    '<div class="col1">'+
+      '<div class="tradestable">'+
+      '</div>'+
     '</div>'+
     '<div class="col2">'+
-    '<div class="historictrades">'+
-    '</div>'+
+      '<div class="historictrades">'+
+      '</div>'+
     '</div>'+
     '<div class="guest">'+
     '</div>';
@@ -98,7 +113,7 @@ function loadBalsync() {
   socket.on('localbals', function (data) {
     showLocalBals(data);
   });
-
+  //showRemoteBals(data);
   socket.on('remotebals', function (data) {
     showRemoteBals(data);
   });  
@@ -138,6 +153,19 @@ function loadDeposit() {
   socket.on('logins', function (data) {
     showLoginattempts(data);
   });
+}function loadTerms() {
+  $('.hook').html('');
+  var page = '<div class="container" style="padding: 4px 0px;">'+
+    '<div class="notif"></div>'+
+    '<div class="termstop"></div>'+
+    '<div class="terms">'+
+    '</div>'+
+    '<div class="guest">'+
+    '</div>'
+    '</div>';
+  $('.hook').html(page);
+  showTerms();
+  showGuest();
 }
 function loadSend() {
   $('.hook').html('');
@@ -171,7 +199,10 @@ function loadHistory() {
   $('.hook').html(page);
 }
               //Bitcoin             Euro      Pound    China      Dow     Oil           Gold        Silver      S&P 500   Nasdaq
-var symbols = ['BTCUSD', 'BTCCNY', 'EURUSD', 'GBPUSD', 'USDCNY', '^DJI', 'CLK14.NYM', 'GCJ14.CMX', 'SIJ14.CMX', '^GSPC', '^IXIC'];
+//var symbols = ['BTCUSD', 'BTCCNY', 'EURUSD', 'GBPUSD', 'USDCNY', '^DJI', 'CLK14.NYM', 'GCJ14.CMX', 'SIJ14.CMX', '^GSPC', '^IXIC'];
+
+var symbols = ['BTCUSD', 'BTCCNY', 'AAPL', 'GOOG'];
+
 // var symbols;
 
 // socket.on('symbols', function (data) {
@@ -200,6 +231,9 @@ var symbols = ['BTCUSD', 'BTCCNY', 'EURUSD', 'GBPUSD', 'USDCNY', '^DJI', 'CLK14.
         break;
       case 'security':
           loadSecurity();
+        break;
+      case 'terms':
+          loadTerms();
         break;
         case 'admin':
           loadBalsync();
@@ -366,12 +400,14 @@ var symbols = ['BTCUSD', 'BTCCNY', 'EURUSD', 'GBPUSD', 'USDCNY', '^DJI', 'CLK14.
   });
 
 socket.on('alertuser', function (data) {
-  if (data.color == 'green') {
+  if (data.colour == 'green') {
     showSuccess(data.message, data.trinket, showSymbols);
-  } else if (data.color == 'red') {
+  } else if (data.colour == 'red') {
     showDanger(data.message, data.trinket, showSymbols);
   }
 });
+
+
 
 socket.on('tradeoutcome', function (data) {
   showSplit(data.x,data.y,data.z,showSymbols);

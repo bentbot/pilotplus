@@ -1,0 +1,37 @@
+Notice:
+No element of this service is guaranteed to you, the user. 
+This website and it's resouces are availble on a best-effort basis.
+Funds deposited to this website are not insured, and are done so at your own risk.
+Outgoing transactions may undergo a screening process.
+
+ 
+Framework:
+A user speculates on the price of an option and the expiry time of the offer.
+If a trade is applied it can not be deleted, removed, reversed, or refunded.
+A 'trade' is money placed on the direction of the price of a stock option in the next few minutes.
+If the price changes in the users favor, you are in the money, the user wins a scaled reward.
+It is a loss if the price moves in the opposite direction and the trade expires.
+If the final stock price is exactly the same, the user is refunded.
+
+
+Privacy:
+We may keep on record:
+	- Your email address, and if it is valid
+	- Any incoming and outgoing Bitcoin information
+	- Your telephone number used for dual factor security
+	- All of your trades
+	- Your username
+	- Your encrypted password
+	- Your connecting IP address
+
+This site may store a temporary cookie in your browser, used for varification.
+It expires after a short time and you must login again.
+
+
+Security:
+This is an open source project. Please send any bug reports to mail@vbit.io right away.
+Security is a top concern, it is built in at every angle. 
+To date there have been no security breaches.
+
+Referrals: 
+A user is paid a scaled reward for every trade won by any users who signed up with token link.

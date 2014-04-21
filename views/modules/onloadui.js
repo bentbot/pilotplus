@@ -1,10 +1,14 @@
-
+var mySound = new buzz.sound( "/assets/pop.ogg", {
+    formats: [ "ogg" ]
+});
 
 // Trading
 $(function() {
   var defaultsymbol = ['BTCUSD'];
   page('trade', defaultsymbol);
+  
 
+  mySound.play().loop();
 
 // $("[data-translate]").jqTranslate('trans',{defaultLang: 'es'});
 $(".hook").on("mousedown",".reveal",function(e) {
@@ -195,6 +199,9 @@ $(".hook").on("click",".keystonelink",function(e) {
   $(".globalheader").on("click","#history",function() {
     page('history');
   });  
+  $(".hook").on("click","#terms",function() {
+    page('terms');
+  });
   $(".hook").on("click","#adminpage",function() {
     page('admin');
   });
