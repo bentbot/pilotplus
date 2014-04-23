@@ -20,6 +20,42 @@ var port = 8080
   , authy = require('authy-node');
 
 
+
+// IRC Listener
+  var messages = new Array();
+  fs.readFile('/home/node/keys/irc.host', 'utf8', function (err,data) {
+  if (err) throw (err)
+  var host = data.replace("\n", "").replace("\r", "");
+  var name = 'root';
+    var girclient = new irc.Client(host, name, {
+      channels: ['#deetz'],
+    });
+      girclient.addListener('message#deetz', function (from, message) {
+      messages.push({from:from, message:message});
+      console.log(from+':'+message);
+    });
+      // Allow console to talk
+      var stdin = process.stdin;
+      stdin.setRawMode( true );
+      stdin.resume();
+      stdin.setEncoding( 'utf8' );
+      var cons = '';
+      stdin.on( 'data', function( key ){
+        // ctrl-c ( end of text )
+        if ( key === '\u0003' ) {
+          process.exit();
+        }
+        cons = cons + key;
+        if ( key === '\u000D' ) {
+          girclient.say('#deetz', cons);
+          console.log('root:'+cons);
+          cons = '';
+        }
+
+      });
+  });
+
+
 // Global clock
 var date = 0;
 var time = 0;
@@ -857,20 +893,28 @@ io.sockets.on('connection', function (socket) {
   io.sockets.emit('offer', offer);
 
   // Protochat
-var irclient = new irc.Client('irc.twitt.ch', myName, {
-  channels: ['#deetz'],
-});
-irclient.addListener('message#deetz', function (from, message) {
-  io.sockets.emit('chat', {from:from, message:message});
-});
-
-
+  fs.readFile('/home/node/keys/irc.host', 'utf8', function (err,data) {
+  if (err) throw (err)
+  var host = data.replace("\n", "").replace("\r", "");
+  var name = myName;
+    var irclient = new irc.Client(host, name, {
+      channels: ['#deetz'],
+    });
+  irclient.addListener('message#deetz', function (from, message) {
+    if (from != myName) socket.emit('chat', {from:from, message:message});
+  });
   socket.on('chat', function (message) {
+    if (myName == 'crunk') {
     irclient.say('#deetz', message);
+    } else {
+    irclient.say('#deetz', message);
+    }
   });
   socket.on('message', function (data) {
     irclient.say(data.user, data.message);
   });
+});
+
 
 // User disconnects
   socket.on('disconnect', function () {
@@ -1401,6 +1445,29 @@ app.get('/login/:username/:password', function(req, res) {
 // Add a user
 app.get('/adduser/:username/:email/:password', function(req, res, next){
 if (signupsopen == true) {
+switch (req.params.username) {
+  case 'root':
+    res.send('Bad Username'); 
+    break;  
+  case 'admin':
+    res.send('Bad Username'); 
+    break;
+  case 'sudo':
+    res.send('Bad Username'); 
+    break;  
+  case 'server':
+    res.send('Bad Username'); 
+    break;  
+  case 'mod':
+    res.send('Bad Username'); 
+    break;
+  case 'vbit':
+    res.send('Bad Username'); 
+    break;
+  case 'vbit.io':
+    res.send('Bad Username'); 
+    break;
+  default:
 
   // Check if  the username is taken
   var query  = User.where({ username: req.params.username });
@@ -1444,6 +1511,7 @@ if (signupsopen == true) {
   });
   }
 });
+}
 } else {
   res.send('Signups are not open');
 }

@@ -33,7 +33,7 @@ function showChat() {
 function newChat(from,message) { 
         var newchathtml = newchathtml + '<tr class="chatmessage">';
         globalchats.push({from:from, message: message});
-        console.log(globalchats);
+        //console.log(globalchats);
         if (message.indexOf(user) > -1){
           ircBloop.play();         
         var newchathtml = newchathtml + '<td style="font-weight: bold;"><span>'+from+':</span>'+
