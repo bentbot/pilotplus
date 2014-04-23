@@ -32,12 +32,16 @@ function showhistoric(data, user, trim){
         } else if (entry.outcome == 'Tie') {
           var thumbhtml = '<span>Push</span></td><td> m<i class="fa fa-btc"></i>'+entry.amount+'</span></td>';
         }
+        var coeff = 1000 * 60 * 1;
         var entrytime = new Date(0);
         var entrydate = new Date(0);
         var iodate = new Date(0);
         entrytime.setUTCMilliseconds(entry.time);
         entrydate.setUTCMilliseconds(entry.time);
         iodate.setUTCMilliseconds(entry.time);
+        entrytime = new Date(Math.round(entrytime.getTime() / coeff) * coeff);
+        entrydate = new Date(Math.round(entrydate.getTime() / coeff) * coeff);
+        iodate = new Date(Math.round(iodate.getTime() / coeff) * coeff);
         entrytime = entrytime.customFormat( "#hhh#:#mm#:#ss# " );
         entrydate = entrydate.customFormat( "#DD#/#MM#/#YYYY#" );
         iodate = iodate.toISOString();
@@ -105,7 +109,7 @@ function showallhistoric(data, user, trim){
         entrytime = new Date(Math.round(entrytime.getTime() / coeff) * coeff);
         entrydate = new Date(Math.round(entrydate.getTime() / coeff) * coeff);
         iodate = new Date(Math.round(iodate.getTime() / coeff) * coeff);
-        entrytime = entrytime.customFormat( "#hhh#:#mm#:#ss# " );
+        entrytime = entrytime.customFormat( "#hhh#:#mm# " );
         entrydate = entrydate.customFormat( "#DD#/#MM#/#YYYY#" );
         iodate = iodate.toISOString();
 

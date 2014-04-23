@@ -9,6 +9,8 @@ require(['modules/guest']);
 require(['modules/wallet']);
 require(['modules/security']);
 require(['modules/terms']);
+require(['modules/prefs']);
+require(['modules/chat']);
 
   // $.each(symbols, function( index, symbol ) {
     // each something          index, current
@@ -79,6 +81,8 @@ function loadTrades(displaysymbols, guest) {
     '<div class="col1">'+
       '<div class="tradestable">'+
       '</div>'+
+      '<div class="chat">'+
+      '</div>'+
     '</div>'+
     '<div class="col2">'+
       '<div class="historictrades">'+
@@ -88,9 +92,9 @@ function loadTrades(displaysymbols, guest) {
     '</div>';
     var page = page + '</div>';
   $('.hook').html(page);
-
   displayOptions(displaysymbols);
   updateOption(displaysymbols);
+  if (user) showChat();
   if (guest) showGuest();
   if (guest) showloginfield();
 }
@@ -166,6 +170,14 @@ function loadDeposit() {
   $('.hook').html(page);
   showTerms();
   showGuest();
+}function loadPrefs() {
+  $('.hook').html('');
+  var page = '<div class="container" style="padding: 4px 0px;">'+
+    '<div class="notif"></div>'+
+    '<div class="prefs"></div>'+
+    '</div>';
+  $('.hook').html(page);
+  showPrefs();
 }
 function loadSend() {
   $('.hook').html('');
@@ -217,8 +229,8 @@ var symbols = ['BTCUSD', 'BTCCNY', 'AAPL', 'GOOG'];
         case 'trade':
           loadTrades(data.symbol,data.guest);
         break;
-        case 'account':
-          loadAccount(data.user);
+        case 'prefs':
+          loadPrefs();
         break;
       case 'deposit':
           loadDeposit();
@@ -425,15 +437,13 @@ socket.on('tradeoutcome', function (data) {
       });
       $users.find('li:first').addClass('selected');
     });
-    socket.on('chat', function (message) {
-      console.log('chat:', message);
-      $messagesOutput.append('<div>' + message);
-      $(".messages").scrollTop($(".messages")[0].scrollHeight);
+    socket.on('chat', function (data) {
+      //console.log(data.from+':'+data.message);
+      newChat(data.from,data.message);
     });
     socket.on('message', function (message) {
       console.log('message', message);
-      $messagesOutput.append('<div>' + message +'</div>');
-      $(".messages").scrollTop($(".messages")[0].scrollHeight);
+      newChat(data.from, data.message);
     });
 
     function action(i) {

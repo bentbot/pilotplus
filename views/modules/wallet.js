@@ -97,6 +97,16 @@ function showTx(data) {
         html = html + '<div class="sent"><i class="fa fa-upload red" style="margin-right: 10px;"></i> <span data-translate="sent">Sending</span> <i class="fa fa-btc" style="margin: 0px 2px 0px 5px;"></i>'+tdata.amount+' <i class="fa fa-certificate" style="color: #777;margin: 0px 10px 0px 10px;"></i> Payment Review (could take a few hours) <span style="float: right" class="timeago">'+entrydate+' '+entrytime+'</span></div>';
         html = html + '</div>';
         index++;
+      } else if (s=='send') {
+        html = html + '<div class="alert alert-info lastbtctxs" style="margin-top: 20px;">';
+        html = html + '<div class="sent"><i class="fa fa-upload red" style="margin-right: 10px;"></i> <span data-translate="sent">Sending</span> <i class="fa fa-btc" style="margin: 0px 2px 0px 5px;"></i>'+tdata.amount+' <i class="fa fa-refresh fa-spin" style="color: #777;margin: 0px 10px 0px 10px;"></i> Processing <span style="float: right" class="timeago">'+entrydate+' '+entrytime+'</span></div>';
+        html = html + '</div>';
+        index++;
+      } else if (s=='sent') {
+        html = html + '<div class="alert alert-info lastbtctxs" style="margin-top: 20px;">';
+        html = html + '<div class="sent"><i class="fa fa-upload red" style="margin-right: 10px;"></i> <span data-translate="sent">Sending</span> <i class="fa fa-btc" style="margin: 0px 2px 0px 5px;"></i>'+tdata.amount+' <i class="fa fa-certificate" style="color: #777;margin: 0px 10px 0px 10px;"></i> Sent <span style="float: right" class="timeago">'+entrydate+' '+entrytime+'</span></div>';
+        html = html + '</div>';
+        index++;
       } else {
         html = html + '<div class="alert alert-info lastbtctxs" style="margin-top: 20px;">';
           if (tdata.confirmations >= 3 && tdata.confirmations < 100) var confirms = '<i class="fa fa-check green" style="margin: 0px 10px 0px 10px;"></i> '+tdata.confirmations+' <span data-translate="confirmations">Confirmations</span>';

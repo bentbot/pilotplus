@@ -1,47 +1,30 @@
 {
   "name": "binarybtc",
-  "version": "0.0.6",
-  "description": "Bitcoin Binary Options =====================",
+  "version": "0.0.5",
+  "description": "Bitcoin Binary Options",
   "main": "binarybtc.js",
   "dependencies": {
-    "async": "~0.6.2",
-    "authy-node": "~1.0.0",
     "bcrypt": "~0.7.7",
     "bitcoin": "~1.5.0",
-    "blockchain-wallet": "~0.0.3",
-    "bson": "~0.2.7",
-    "connect": "~2.14.2",
-    "cookies": "~0.4.0",
-    "crypto": "~0.0.3",
-    "ejs": "~0.8.5",
     "express": "~3.4.8",
-    "eyes": "~0.1.8",
     "html": "~0.0.7",
-    "keygrip": "~1.0.0",
     "mongodb": "~1.3.23",
     "mongoose": "~3.8.8",
-    "newrelic": "~1.4.0",
-    "nodemailer": "~0.6.1",
     "now": "~0.8.1",
     "passport": "~0.2.0",
     "passport-local": "~0.1.6",
     "redis": "~0.10.1",
-    "response": "~0.11.0",
-    "sesh": "~0.1.0",
     "socket.io": "~0.9.16"
   },
   "devDependencies": {},
   "scripts": {
-    "test": "node binarybtc.js"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/bentbot/binarybtc.git"
   },
-  "keywords": [
-    "bitcoin"
-  ],
-  "author": "",
+  "author": "bentbot",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/bentbot/binarybtc/issues"

@@ -347,6 +347,8 @@ font-family: monospace;
 }
 .csec {
   position: relative;
+}.prefs {
+  margin-top: 20px;
 }.wallet {
   position: relative;
 }.walletsend {
@@ -366,6 +368,17 @@ width: 312px;
 height: 35px;
 }.btcsend #auth {
   float:left;
+}.talk {
+
+
+}.say {
+width: 100%;
+padding: 5px 5px 5px 10px;
+border-top: 1px solid #eee !important;
+border: 0px;
+}.chatcontainer {
+  height: 146px;
+overflow-y: scroll;
 }
 .sendtitle {
 position: absolute;
@@ -993,7 +1006,6 @@ background: whitesmoke;
 }
 #chat {
   position: relative;
-  height: 113px;
 }
 #chat input {
 width: 100%;
@@ -1010,6 +1022,8 @@ padding: 5px !important;
 height: 25px !important;
 font-size: 12px;
 line-height: 13px;
+}.chatmessage td{
+  padding: 5px 5px 5px 10px !important;
 }.messages {
 color: white;
 margin: 5px;

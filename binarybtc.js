@@ -16,7 +16,9 @@ var port = 8080
   , LocalStrategy = require('passport-local').Strategy
   , StringDecoder = require('string_decoder').StringDecoder
   , mailer = require('mailer')
+  , irc = require('irc')
   , authy = require('authy-node');
+
 
 // Global clock
 var date = 0;
@@ -59,9 +61,9 @@ var schema = new mongoose.Schema({ option: 'string', setting: 'string'});
 var Globalvars = mongoose.model('globalvars', schema);
 var schema = new mongoose.Schema({ username: 'string', phone: 'string', id: 'string'});
 var Userauth = mongoose.model('userauth', schema);
-var schema = new mongoose.Schema({ direction: 'string', username: 'string', address: 'string', amount: 'string', status: 'string', confirmations: 'string', tx: 'string', time: 'string'});
+var schema = new mongoose.Schema({ direction: 'string', username: 'string', address: 'string', amount: 'string', status: 'string', confirmations: 'string', tx: 'string', to: 'string', time: 'string'});
 var Usertx = mongoose.model('usertx', schema);
-var schema = new mongoose.Schema({ timer: 'string', });
+var schema = new mongoose.Schema({ timer: 'string',chat: 'string' });
 var Userprefs = mongoose.model('userprefs', schema);
 // Empty temporary database
 Pageviews.remove({}, function(err) {
@@ -635,6 +637,11 @@ io.sockets.on('connection', function (socket) {
   var ipaddress = hs.address; //ipaddress.address/ipaddress.port
   ipaddress = ipaddress.address;
 
+  for (index = 0; index < symbols.length; ++index) {
+      io.sockets.emit(symbols[index]+'_price', price[symbols[index]]);
+      io.sockets.emit(symbols[index]+'_chart', chart[symbols[index]]);
+  }
+
   io.sockets.emit('symbols', symbols);
   var userpage = new Array();
   var useraddress = new Array();
@@ -693,10 +700,7 @@ io.sockets.on('connection', function (socket) {
   });
   socket.emit('userbal', { name: myName, balance: userbalance[myName] }); // Update userbalance
   //Send user current data on connect
-  for (index = 0; index < symbols.length; ++index) {
-      io.sockets.emit(symbols[index]+'_price', price[symbols[index]]);
-      io.sockets.emit(symbols[index]+'_chart', chart[symbols[index]]);
-  }
+
     Historictrades.find({ user: myName }).sort({time:-1}).find(function(err, historictrades) {
     socket.emit('historictrades', historictrades);
   });
@@ -853,16 +857,24 @@ io.sockets.on('connection', function (socket) {
   io.sockets.emit('offer', offer);
 
   // Protochat
+var irclient = new irc.Client('irc.twitt.ch', myName, {
+  channels: ['#deetz'],
+});
+irclient.addListener('message#deetz', function (from, message) {
+  io.sockets.emit('chat', {from:from, message:message});
+});
+
+
   socket.on('chat', function (message) {
-    io.sockets.emit('chat', myName + ': ' + message);
+    irclient.say('#deetz', message);
   });
   socket.on('message', function (data) {
-    users[data.user] &&
-      users[data.user].emit('message', myName + '-> ' + data.message);
+    irclient.say(data.user, data.message);
   });
 
 // User disconnects
   socket.on('disconnect', function () {
+    irclient.disconnect('disconnected');
     console.log(myName+' disconnected');
     //users[myName] = null;
     //userbalance[myName] = null;
@@ -1032,7 +1044,6 @@ app.get('/addtx/:txid', function(req, res, next) {
                   //tx
                   checktx(tx);
                   emittx(tx);
-
                 }); 
               } else {
                 res.send('NO DOCS');
@@ -1078,10 +1089,11 @@ function checktx(tx){
          var confirmations = obj.data.confirmations;
          console.log('Updating tx'+tx+' with '+confirmations+' confirmations');
           Usertx.update({ tx: tx }, { confirmations: confirmations }, function (err, numberAffected, raw) {
-            if (err) return handleError(err);
             Usertx.findOne({ tx: tx }, function (err, docs) {
-              if (confirmations > 1 && docs.status == 'new') poptx(tx);
-              if (confirmations > 100) clearInterval(txchecker[tx]);
+              if (docs) {
+                if (confirmations > 1 && docs.status == 'new') poptx(tx);
+                if (confirmations > 100) clearInterval(txchecker[tx]);
+              }
             });
           });
           }
@@ -1156,6 +1168,7 @@ app.get('/nexttrade', function(req, res, next){
 app.get('/send/:usr/:add/:am/:auth', function(req, res, next){
   var usr = req.params.usr;
   var amount = (+req.params.am/1000);
+  var mamount = req.params.am;
   var to = req.params.add;
   var code = req.params.auth;
   var from = 'myaccount';
@@ -1174,18 +1187,22 @@ app.get('/send/:usr/:add/:am/:auth', function(req, res, next){
             } else {
               if (userbal < amount) {
                 res.send('Balance');
-              } else if (userbal >= amount) {
+              } else if (userbal >= mamount) {
                 var newTx = new Usertx({
                   direction: 'out',
                   amount: amount,
                   status: 'review',
                   time: time,
-                  tx: to,
+                  to: to,
                   username: user.username
                 });
                 newTx.save(function(err){
                   if (err) throw (err);
+                  var newbal = (+userbal - mamount);
+                  rclient.set(user.username, newbal, function (err, userbal) {
+                  if (err) throw (err);
                   res.send('OK');
+                  });
                 });
                 // sendfrom('myaccount', to, amount, function(err, result, resHeaders) {
                 // if (err) { res.send('NO'); } else { res.send('OK'); } 
@@ -1200,29 +1217,48 @@ app.get('/send/:usr/:add/:am/:auth', function(req, res, next){
 });
 
 var masteratts = 0;
-app.get('/mastersend/:pwd/:id', function(req, res, next) {
-  var pwd = req.param.pwd;
-  var id = req.param.id;
+
+app.get('/mastersend/:pwd/:to', function(req, res, next) {
   if (masteratts < 5) {
-    fs.readFile('/home/node/keys/send.key', 'utf8', function (err,data) {
-    if (err) res.send(err)
-    if (pwd == data) {
-      Usertx.findOneAndUpdate({tx: id}, {status: 'send'}, function(err, docs) {
-        if (err) res.send(err) 
-          mastersend(tx, pwd, function(err,resp) {
-            if (err) { 
-              res.send(err) 
-              throw (err);
-            } else {
-              //console.log(resp) // txxid
-              res.send('OK');
-            }
-          });
+    var pwd = req.param('pwd', null);
+    var to = req.param('to', null);
+    fs.readFile('/home/node/keys/send.key', 'utf8', function (err, data) {
+      if (err)  {
+        res.send('KEY ERROR');
+      } else {
+      var key = data.replace("\n", "").replace("\r", "").replace(" ", "");
+      //console.log('trying lock '+key+' with '+pwd);
+      if (pwd && key && to && pwd == key) {
+      Usertx.findOneAndUpdate({to: to, status: 'review'}, {status: 'send'}, function(err, docs) {
+        if (err) {
+          res.send(err);
+        } else {
+          if (docs) {
+           mastersend(docs.to, pwd, function(err,resp) {
+             if (err) { 
+               res.send('MASTER SEND ERR');
+             } else {
+                if (resp.length == 64) {
+                  Usertx.findOneAndUpdate({to: to, status: 'send'}, {status: 'sending', tx: resp}, function(err, docs) {
+                    if (err) {
+                      res.send(err);
+                    } else {
+                    res.send('OK');
+                    }
+                  });
+                }
+             }
+           });
+         } else {
+          res.send('DOCS ERR '+docs);
+         }
+        }
       });
-    } else {
-      masteratts++;
-      res.send('PASSWD');
-    }
+       } else {
+         masteratts++;
+         res.send('PASSWD');
+       }
+     }
     });
   } else {
     res.send('LOCKDOWN');
@@ -1230,26 +1266,59 @@ app.get('/mastersend/:pwd/:id', function(req, res, next) {
   }
 });
 
-function mastersend(tx, pwd, cb) {
-  fs.readFile('/home/node/keys/send.key', 'utf8', function (err,data) {
-    if (err) throw (err)
-    if (pwd == data) {
-      Usertx.findOne({tx: tx}, function (err, docs) {
-        if (err) throw (err)
-        if (docs.direction == out && docs.status == 'send') {
-        var amount = docs.amount;
-        var status = docs.status;
-        var to = tx;
-          sendfrom('myaccount', to, amount, function(err, resp) {
-            cb(err, resp);
+Usertx.find({status: 'send'}, function (err, docs) {
+  for (var i = 0; i < docs.length; i++) {
+    var to = docs[i].to;
+    fs.readFile('/home/node/keys/send.key', 'utf8', function (err, data) {
+      if (err)  {
+          res.send('KEY ERROR '+err);
+      } else {
+        var key = data.replace("\n", "").replace("\r", "").replace(" ", "");
+        mastersend(to, key, function(err, resp) {
+          if (resp.length == 64) {
+          Usertx.findOneAndUpdate({to: to}, {status: 'sending', tx: resp}, function(err, docs) {
+            if (err) throw (err);
 
           });
+        }
+        }); 
+      }
+      });
+    }
+});
+
+function mastersend(to, pwd, cb) {
+  fs.readFile('/home/node/keys/send.key', 'utf8', function (err, data) {
+    if (err) throw (err);
+    var key = data.replace("\n", "").replace("\r", "").replace(" ", "");
+    if (pwd == key) {
+      Usertx.findOne({to: to, status: 'send'}, function (err, docs) {
+        if (err) console.log('MASTERSEND USER TX DB ERR ' + err);
+        if (docs) {
+        var amount = Number(docs.amount);
+        var to = docs.to;
+        console.log('attempting to send '+amount+' to '+to);
+          sendtoaddress(to, amount, function(err, resp) {
+            if (err) {
+              console.log('VAULT ERR: '+ err);
+              cb(err,resp);  
+            } else {
+            console.log('VAULT RESPONCE: ' + resp);
+            checktx(resp);
+            Usertx.findOneAndUpdate({to: to}, {status: 'sent', tx: resp, confirmations: 0}, function(err, docs) {
+                if (err) throw (err);
+                  cb(err,resp);
+
+              });
+            }
+          });
+        } else {
+          console.log('MASTERSEND DOCS ERR ' +docs)
         }
       });
     }
   });
 }
-
 
 
 
@@ -1685,7 +1754,9 @@ Bitcoinconnect(function(client) {
 // sendfrom('myaccount', '1A5BWZULifJVtfomBtFKRWzDxg9MVSWkjG', '1', function(err, txid) {
 //   console.log(txid);
 // });
-
+  displayAccounts(function (err, info) {
+    console.log(info);
+  })
 });
 // dump(1, 'liam');
 //console.log(balances);
@@ -1838,8 +1909,12 @@ function dumptobank(cb) {
 
 
 function sendfrom(from, to, amount, cb) {
-  amount = (+amount/1000);
   gclient.cmd('sendfrom', from, to, amount, function(err, txid, resHeaders) {
+    cb(err, txid);
+  });
+}
+function sendtoaddress(to, amount, cb) {
+  gclient.cmd('sendtoaddress', to, amount, function(err, txid, resHeaders) {
     cb(err, txid);
   });
 }
