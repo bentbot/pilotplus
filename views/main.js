@@ -178,6 +178,14 @@ function loadDeposit() {
     '</div>';
   $('.hook').html(page);
   showPrefs();
+}function loadReferrals() {
+  $('.hook').html('');
+  var page = '<div class="container" style="padding: 4px 0px;">'+
+    '<div class="notif"></div>'+
+    '<div class="referrals"></div>'+
+    '</div>';
+  $('.hook').html(page);
+  showReferrals();
 }
 function loadSend() {
   $('.hook').html('');
@@ -213,7 +221,7 @@ function loadHistory() {
               //Bitcoin             Euro      Pound    China      Dow     Oil           Gold        Silver      S&P 500   Nasdaq
 //var symbols = ['BTCUSD', 'BTCCNY', 'EURUSD', 'GBPUSD', 'USDCNY', '^DJI', 'CLK14.NYM', 'GCJ14.CMX', 'SIJ14.CMX', '^GSPC', '^IXIC'];
 
-var symbols = ['BTCUSD', 'BTCCNY', 'AAPL', 'GOOG'];
+var symbols = ['BTCUSD', 'LTCUSD', 'EURUSD', 'GBPUSD', 'CADUSD', 'AAPL', 'GOOG', 'CLM14.NYM', 'GCM14.CMX', '^SLVSY'];
 
 // var symbols;
 
@@ -240,6 +248,9 @@ var symbols = ['BTCUSD', 'BTCCNY', 'AAPL', 'GOOG'];
         break;
       case 'history':
           loadHistory();
+        break;      
+        case 'referrals':
+          loadReferrals();
         break;
       case 'security':
           loadSecurity();
@@ -263,7 +274,7 @@ var symbols = ['BTCUSD', 'BTCCNY', 'AAPL', 'GOOG'];
     socket.on('hello', function (data) {
       $('.username').html(data.hello);
       showloginfield(data.hello);
-      console.log('hello:', data.hello+' id'+data.id+' 2f:'+data.dualfactor);
+      console.log('hello:', data.hello+' id'+data.id+' 2f:'+data.dualfactor+' verified:'+data.verified);
       user = data.hello;
       userid = data.id; //
       email = data.email; //
@@ -472,10 +483,12 @@ function updateOption(symbol) {
 
   socket.on(symbol+'_updatedchart', function (data) {
     updateChart(symbol, data);
+    //console.log('updating chart : '+symbol + ' : ' + data);
   });
 
   socket.on(symbol+'_chart', function (data) {
     loadChart(symbol, data);
+    //console.log('loading chart : '+symbol + ' : ' + data);
   });
 }
 
@@ -483,4 +496,5 @@ $("[data-translate]").jqTranslate('index');
 $('.keystones').scrollbox();
 
 $(".timeago").timeago();
+require(['modules/symbolswitch']);
 require(['modules/onloadui']);

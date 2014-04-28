@@ -7,7 +7,7 @@ function showTerms() {
     html = html + '<h2>Notice</h2><p>'+
     'No element of this service is guaranteed to you, the user. '+
     'This website and its resouces are availble on a best-effort basis. '+
-    'Funds deposited to this website are <i>mixed together</i> server-side and not insured. Please do so at your own risk. '+
+    'Funds deposited to this website are <i>mixed together</i> server-side and not insured. Please deposit at your own risk. '+
     'Outgoing transactions may undergo a screening process.'+
     '</p>'; 
 

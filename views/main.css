@@ -33,6 +33,8 @@ letter-spacing: 2px;
 border: 1px solid;
 }
 
+
+
 .georgia {
   font-family: museo-slab,Georgia,"Times New Roman",Times,serif;
   }.alertico {
@@ -115,6 +117,22 @@ display: table-cell;
       .btcsecure {
         cursor: default;
       }
+      .newpasswordinput {
+        float: right;
+        display: none;
+      }
+     .newpasswordinput .input-group  {
+        top: -5px;
+        position: relative;      
+      }     
+      .newpasswordinput .input-group input {
+        width: 130px;
+        float: left;        
+      }
+      #currentpass {
+        border-right: 0px;
+      }
+
 
       /* Customize the navbar links to be fill the entire space of the .navbar */
       .navbar {
@@ -754,6 +772,8 @@ position: relative;
 }.announcesplit .container {
 padding: 0px;
 position: relative;
+overflow: hidden;
+height: 30px;
 }.announcesplit .container .x {
 width: 33%;
 height: 30px;
@@ -1023,7 +1043,7 @@ height: 25px !important;
 font-size: 12px;
 line-height: 13px;
 }.chatmessage td{
-  padding: 5px 5px 5px 10px !important;
+  padding: 5px 10px !important;
 }.messages {
 color: white;
 margin: 5px;
@@ -1222,4 +1242,13 @@ border-radius: 3px !important;
 
 .input-group-sm > .form-control, .input-group-sm > .input-group-addon, .input-group-sm > .input-group-btn > .btn {
 padding: 6px 15px !important;
+}
+
+
+.seeall {
+position: absolute;
+bottom: -3px;
+right: 0px;
+-webkit-transition: bottom 0.5s;
+transition: bottom 0.5s;
 }

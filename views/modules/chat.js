@@ -35,12 +35,12 @@ function newChat(from,message) {
         globalchats.push({from:from, message: message});
         //console.log(globalchats);
         if (message.indexOf(user) > -1){
-          ircBloop.play();         
-        var newchathtml = newchathtml + '<td style="font-weight: bold;"><span>'+from+':</span>'+
+        ircBloop.play();         
+        newchathtml = newchathtml + '<td style="font-weight: bold;"><span>'+from+':</span>'+
         ' '+message+'</td>'+
         '</tr>';
         } else {
-        var newchathtml = newchathtml + '<td><span style="font-weight: bold;">'+from+':</span>'+
+        newchathtml = newchathtml + '<td><span style="font-weight: bold;">'+from+':</span>'+
         ' '+message+'</td>'+
         '</tr>';
         }

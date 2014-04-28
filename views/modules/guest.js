@@ -16,7 +16,7 @@ function showGuest () {
           '<i class="fa passwordi"></i>'+
           '<button type="button" value="Register" class="btn btn-large btn-blue signupbtn" data-translate="signup">Sign Up</button>'+
         '</div>'+
-        '<p><input type="checkbox" name="terms"> I accept the <a href="#" id="terms">terms and conditions</a>, and I understand this service is not guaranteed.</p>'+
+        '<p><input type="checkbox" id="termsbox" name="terms"> I accept the <a href="#" id="terms">terms and conditions</a>, and I understand this service is not guaranteed.</p>'+
       '<form>'+
       '</div>';
   $('.guest').append(guesthtml);
@@ -27,7 +27,7 @@ $.ajax({
       url: "signupsopen/",
       cache: false
     }).done(function( resp ) {
-      if (resp != 'OK') $('.signupbox').removeClass('well').html('<div class="alert alert-warning"><strong data-translate="inviteonly">No Goats Allowed:</strong> <span data-translate="registrationsdisabled">New registrations are currently disabled.</span> <a class="btn btn-warning alertbtn" id="invitebtn"href="#" data-translate="haveaninvite">Have an Invite?</a></div>');
+      if (resp != 'OK') $('.signupbox').removeClass('well').html('<div class="alert alert-warning"><strong data-translate="inviteonly">No Goats Allowed:</strong> <span data-translate="registrationsdisabled">New registrations are currently disabled.</span> <a class="btn btn-warning alertbtn" style="display:none;" id="invitebtn"href="#" data-translate="haveaninvite">Have an Invite?</a></div>');
    });
 
   $(".hook").on("keyup",".username",function(e) {
@@ -72,11 +72,13 @@ $.ajax({
   }
   });
 
-  $(".hook").on("click",".signupbtn",function(e) {    
+  $(".hook").on("click",".signupbtn",function(e) {  
+    $('.signupbox p').show();  
+    var term = $("#termsbox").prop('checked');
     var un = $(".username").val();
     var em = $(".email").val();
     var pwd = $(".pwd").val();
-    if (un && em && pwd) {
+    if (un && em && pwd && term) {
     console.log('ajax out:'+un+':'+em+':'+pwd);
     $.ajax({
       url: "adduser/"+un+"/"+em+"/"+pwd,
@@ -104,6 +106,9 @@ $.ajax({
           setTimeout(function(){$('.signupbtn').addClass('btn-blue').removeClass('btn-warning').html('Sign Up');},3550);
         }
       });
-      }
+      } else {
+          $('.signupbtn').removeClass('btn-blue').addClass('btn-warning').html('<i class="fa fa-check-square"></i> Please Read Our Terms');
+          setTimeout(function(){$('.signupbtn').addClass('btn-blue').removeClass('btn-warning').html('Sign Up');},3550);
+        }
     });
 });

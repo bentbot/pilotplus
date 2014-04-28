@@ -2,6 +2,14 @@
 var bottlePop = new buzz.sound( "/assets/ogg/pop.ogg");
 var ircBloop = new buzz.sound( "/assets/ogg/ff.ogg");
 
+var tr;
+function bottlepop(tx) {
+  if (tx != tr) {
+    bottlePop.play();
+    tr = tx;
+  }
+}
+
 // Trading
 $(function() {
   var defaultsymbol = ['BTCUSD'];
@@ -24,6 +32,20 @@ $(".globalheader").on("click",".keystones li a",function(e) {
   if (lastitem != symbol) {
   page('trade',symbol);
   lastitem = symbol;
+  }
+});
+
+var allopen = false;
+$(".globalheader").on("click",".keystones .seeall",function(e) {
+  e.preventDefault();
+  if (allopen == false) {
+  $('.linktray').css('height', '60px');
+  $(this).css('bottom', '-12px').html('Less');
+  allopen = true;
+  } else if (allopen == true) {
+    $('.linktray').css('height', '30px');
+    $(this).css('bottom', '-3px').html('More');
+    allopen = false;
   }
 });
 
@@ -292,9 +314,12 @@ function showSplit(x, y, z, next) {
   $(".announcesplit").css('height', 30);
 
 var total = x+y+z;
-$(".announcesplit .x").css('width', (x/total)*100+'%').html('Won for m฿ '+x);
-$(".announcesplit .y").css('width', (y/total)*100+'%').css('left', (x/total)*100+'%').html('Pushed for m฿ '+y);
-$(".announcesplit .z").css('width', (z/total)*100+'%').html('Lost for m฿'+z);
+$(".announcesplit .x").css('width', (x/total)*100+'%');
+if (((x/total)*100) > 10) { $(".announcesplit .x").html('Won for m฿ '+x); }
+$(".announcesplit .y").css('width', (y/total)*100+'%').css('left', (x/total)*100+'%');
+if (((y/total)*100) > 10) { $(".announcesplit .y").html('Pushed for m฿ '+y); }
+$(".announcesplit .z").css('width', (z/total)*100+'%');
+if (((z/total)*100) > 10) {  $(".announcesplit .z").html('Lost for m฿ '+z); }
 
     if (x>z) { $(".announcesplit .x").addClass('applyspotlight'); $(".announcesplit .z").removeClass('applyspotlight'); }
     if (x<z) { $(".announcesplit .z").addClass('applyspotlight'); $(".announcesplit .x").removeClass('applyspotlight'); }
