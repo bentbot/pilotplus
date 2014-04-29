@@ -73,7 +73,6 @@ function showhistoric(data, user, trim){
     $('.tpush').html(tpush);
     $('.tlosses').html(tlosses);
 }
-
 function showallhistoric(data, user, trim){
     var twins = 0;
     var tpush = 0;

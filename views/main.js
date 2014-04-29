@@ -11,14 +11,14 @@ require(['modules/security']);
 require(['modules/terms']);
 require(['modules/prefs']);
 require(['modules/chat']);
+require(['modules/xp']);
 
   // $.each(symbols, function( index, symbol ) {
     // each something          index, current
   // });
 
-
     var socket = io.connect('https://vbit.io:3000', {secure: true});
-    var user, email, dualfactor, verified, userid, option, price, expires, direction, userdeposit;
+    var user, email, dualfactor, verified, userid, option, price, expires, direction, userdeposit, ratio, percentage, xp, level;
     var $users = $('#users ul');
     var $chatOutput = $('.messages');
     var $chatInput = $('#chat input');
@@ -85,6 +85,8 @@ function loadTrades(displaysymbols, guest) {
       '</div>'+
     '</div>'+
     '<div class="col2">'+
+      //'<div class="xp">'+
+      //'</div>'+
       '<div class="historictrades">'+
       '</div>'+
     '</div>'+
@@ -94,6 +96,7 @@ function loadTrades(displaysymbols, guest) {
   $('.hook').html(page);
   displayOptions(displaysymbols);
   updateOption(displaysymbols);
+  if (user) displayxp();
   if (user) showChat();
   if (guest) showGuest();
   if (guest) showloginfield();
@@ -274,13 +277,17 @@ var symbols = ['BTCUSD', 'LTCUSD', 'EURUSD', 'GBPUSD', 'CADUSD', 'AAPL', 'GOOG',
     socket.on('hello', function (data) {
       $('.username').html(data.hello);
       showloginfield(data.hello);
-      console.log('hello:', data.hello+' id'+data.id+' 2f:'+data.dualfactor+' verified:'+data.verified);
+      console.log('hello:', data.hello+' id'+data.id+' 2f:'+data.dualfactor+' verified:'+data.verified+' xp:'+data.xp+' level:'+data.level);
       user = data.hello;
       userid = data.id; //
       email = data.email; //
       userdeposit = data.btc;
       dualfactor = data.dualfactor;
       verified = data.verified;
+      ratio = data.ratio;
+      percentage = data.percentage;
+      xp = data.xp;
+      level = data.level;
     });
   var lastbal = 0;
    socket.on('bankbal', function (data) {

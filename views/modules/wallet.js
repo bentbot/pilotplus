@@ -84,9 +84,9 @@ function showTx(data) {
 
       if (s=='new'||s=='confirmed' && d=='in') {
         html = html + '<div class="alert alert-info lastbtctxs" style="margin-top: 20px;">';
-          if (tdata.confirmations >= 3 && tdata.confirmations < 100) var confirms = '<i class="fa fa-check green" style="margin: 0px 10px 0px 10px;"></i> '+tdata.confirmations+' <span data-translate="confirmations">Confirmations</span>';
+          if (tdata.confirmations >= 2 && tdata.confirmations < 100) var confirms = '<i class="fa fa-check green" style="margin: 0px 10px 0px 10px;"></i> '+tdata.confirmations+' <span data-translate="confirmations">Confirmations</span>';
           if (tdata.confirmations > 100) var confirms = '<i class="glyphicon glyphicon-tower green" style="margin: 0px 10px 0px 10px;"></i> '+tdata.confirmations+' <span data-translate="confirmations">Confirmations</span>';
-          if (tdata.confirmations == 1) { var confirms = '<i class="fa fa-certificate green" style="margin: 0px 10px 0px 10px;"></i> '+tdata.confirmations+' <span data-translate="confirmations">Confirmations</span>'; bottlepop(tdata.tx); } 
+          if (tdata.confirmations == 1) { var confirms = '<i class="fa fa-certificate green" style="margin: 0px 10px 0px 10px;"></i> '+tdata.confirmations+' <span data-translate="confirmations">Confirmations</span>'; bottlepop(tdata.tx,tdata.amount) } 
           //if (tdata.confirmations == 1) { var confirms = '<i class="fa fa-certificate orange" style="margin: 0px 10px 0px 10px;"></i> '+tdata.confirmations+' <span data-translate="confirmations">Confirmations (one more)</span>';  }
           if (tdata.confirmations == 0) var confirms = '<i class="fa fa-certificate" style="color: #777;margin: 0px 10px 0px 10px;"></i> <span data-translate="justnow">Awaiting Confirmation</span>';
           html = html + '<div class="received"><i class="fa fa-download green" style="margin-right: 10px;"></i> <span data-translate="received">Received</span> <i class="fa fa-btc" style="margin: 0px 2px 0px 5px;"></i>'+tdata.amount+' <span style="float: right" class="timeago">'+entrydate+' '+entrytime+' <a href="https://www.biteasy.com/blockchain/transactions/'+tdata.tx+'" target="_blank"><i style="margin: 0px 5px 0px 5px;" class="fa fa-info-circle"></i></a></span>'+confirms+'</div>';
@@ -102,29 +102,29 @@ function showTx(data) {
         html = html + '<div class="sent"><i class="fa fa-upload red" style="margin-right: 10px;"></i> <span data-translate="sent">Sending</span> <i class="fa fa-btc" style="margin: 0px 2px 0px 5px;"></i>'+tdata.amount+' <i class="fa fa-certificate" style="color: #777;margin: 0px 10px 0px 10px;"></i> Payment Review (could take a few hours) <span style="float: right" class="timeago">'+entrydate+' '+entrytime+'</span></div>';
         html = html + '</div>';
         index++;
-      } else if (s=='send') {
+      } else if (s=='sending') {
         html = html + '<div class="alert alert-info lastbtctxs" style="margin-top: 20px;">';
-        html = html + '<div class="sent"><i class="fa fa-upload red" style="margin-right: 10px;"></i> <span data-translate="sent">Sending</span> <i class="fa fa-btc" style="margin: 0px 2px 0px 5px;"></i>'+tdata.amount+' <i class="fa fa-refresh fa-spin" style="color: #777;margin: 0px 10px 0px 10px;"></i> Processing <span style="float: right" class="timeago">'+entrydate+' '+entrytime+'</span></div>';
+        html = html + '<div class="sent"><i class="fa fa-upload red" style="margin-right: 10px;"></i> <span data-translate="sent">Sending</span> <i class="fa fa-btc" style="margin: 0px 2px 0px 5px;"></i>'+tdata.amount+' <i class="fa fa-certificate" style="margin: 0px 10px 0px 10px;"></i> '+tdata.to+' <span style="float: right" class="timeago">'+entrydate+' '+entrytime+'<a href="https://www.biteasy.com/blockchain/transactions/'+tdata.tx+'" target="_blank"><i style="margin: 0px 5px 0px 5px;" class="fa fa-info-circle"></i></a></span></div>';
         html = html + '</div>';
         index++;
       } else if (s=='sent') {
         html = html + '<div class="alert alert-info lastbtctxs" style="margin-top: 20px;">';
-        html = html + '<div class="sent"><i class="fa fa-upload red" style="margin-right: 10px;"></i> <span data-translate="sent">Sent</span> <i class="fa fa-btc" style="margin: 0px 2px 0px 5px;"></i>'+tdata.amount+' <i class="fa fa-certificate orange" style="margin: 0px 10px 0px 10px;"></i> Sent <span style="float: right" class="timeago">'+entrydate+' '+entrytime+' <a href="https://www.biteasy.com/blockchain/transactions/'+tdata.tx+'" target="_blank"><i style="margin: 0px 5px 0px 5px;" class="fa fa-info-circle"></i></a></span></div>';
+        html = html + '<div class="sent"><i class="fa fa-upload red" style="margin-right: 10px;"></i> <span data-translate="sent">Sent</span> <i class="fa fa-btc" style="margin: 0px 2px 0px 5px;"></i>'+tdata.amount+' <i class="fa fa-certificate orange" style="margin: 0px 10px 0px 10px;"></i> '+tdata.to+' <span style="float: right" class="timeago">'+entrydate+' '+entrytime+' <a href="https://www.biteasy.com/blockchain/transactions/'+tdata.tx+'" target="_blank"><i style="margin: 0px 5px 0px 5px;" class="fa fa-info-circle"></i></a></span></div>';
         html = html + '</div>';
         index++;
       } else {
         html = html + '<div class="alert alert-info lastbtctxs" style="margin-top: 20px;">';
-          if (tdata.confirmations >= 3 && tdata.confirmations < 100) var confirms = '<i class="fa fa-check green" style="margin: 0px 10px 0px 10px;"></i> '+tdata.confirmations+' <span data-translate="confirmations">Confirmations</span>';
-          if (tdata.confirmations > 100) var confirms = '<i class="glyphicon glyphicon-tower green" style="margin: 0px 10px 0px 10px;"></i> '+tdata.confirmations+' <span data-translate="confirmations">Confirmations</span>';
-          if (tdata.confirmations < 3) var confirms = '<i class="fa fa-certificate orange" style="margin: 0px 10px 0px 10px;"></i> '+tdata.confirmations+' <span data-translate="confirmations">Confirmations</span>';
-          if (tdata.confirmations == 0) var confirms = '<i class="fa fa-certificate" style="color: #777;margin: 0px 10px 0px 10px;"></i> <span data-translate="justnow">Awaiting Confirmation</span>';
-          if (tdata.status == 'processing') var confirms = '<i class="fa fa-cog fa-spin" style="color: #777;margin: 0px 10px 0px 10px;"></i> <span data-translate="justnow">Processing...</span>';
+        var confirms = '';
+          if (tdata.confirmations >= 3 && tdata.confirmations < 100) confirms = confirms + '<i class="fa fa-check green" style="margin: 0px 10px 0px 10px;"></i> '+tdata.confirmations+' <span data-translate="confirmations">Confirmations</span>';
+          if (tdata.confirmations > 100) confirms = confirms + '<i class="glyphicon glyphicon-tower green" style="margin: 0px 10px 0px 10px;"></i> '+tdata.confirmations+' <span data-translate="confirmations">Confirmations</span>';
+          if (tdata.confirmations < 3 && tdata.confirmations > 0) confirms = confirms + '<i class="fa fa-certificate orange" style="margin: 0px 10px 0px 10px;"></i> '+tdata.confirmations+' <span data-translate="confirmations">Confirmations</span>';
+          if (tdata.confirmations == 0) confirms = confirms + '<i class="fa fa-certificate" style="color: #777;margin: 0px 10px 0px 10px;"></i> <span data-translate="justnow">Just Sent...</span>';
+          if (tdata.status == 'processing') confirms = confirms + '<i class="fa fa-cog fa-spin" style="color: #777;margin: 0px 10px 0px 10px;"></i> <span data-translate="justnow">Processing...</span>';
           html = html + '<div class="received"><i class="fa fa-upload red" style="margin-right: 10px;"></i> <span data-translate="sent">Sent</span> <i class="fa fa-btc" style="margin: 0px 2px 0px 5px;"></i>'+tdata.amount+' <span style="float: right" class="timeago">'+entrydate+' '+entrytime+' <a href="https://www.biteasy.com/blockchain/transactions/'+tdata.tx+'" target="_blank"><i style="margin: 0px 5px 0px 5px;" class="fa fa-info-circle"></i></a></span>'+confirms+'</div>';
           lastdata = tdata.tx;
       html = html + '</div>';
       index++;
       }
-
     }
   }
   $(".wallettx").html(html);
@@ -184,7 +184,8 @@ $(".hook").on("click","#send",function(e) {
             },7000);
           } else {
             $(".securestatus").removeClass('fa-key fa-unlock-alt').addClass('red fa-lock');
-            $("#send").removeClass('btn-blue').addClass('btn-danger').html('Token');
+            if (html == 'Authy Error') { $("#send").removeClass('btn-blue').addClass('btn-danger').html('Token'); }
+            else if (html == 'Balance') { $("#send").removeClass('btn-blue').addClass('btn-danger').html('Funds'); }
             setTimeout(function() {
             $("#send").addClass('btn-blue').removeClass('btn-danger').html('Send');
             },5000);

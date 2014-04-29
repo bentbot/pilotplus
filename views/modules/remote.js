@@ -1,6 +1,6 @@
 var remoteinitstate = true;
 function showRemoteBals(data){
-    //data.reverse();
+    data.reverse();
     $('.remote').html('');
       var reviewTx = '';
       var remotehtml = '<div class="userblock"><div class="header remoteheader">Blockchain <span style="float:right;" class="btn btn-xs btn-warning totalremote">'+entry.bal+'</span></div>';

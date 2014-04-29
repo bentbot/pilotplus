@@ -49,9 +49,13 @@ var port = 8080
         }
         cons = cons + key;
         if ( key === '\u000D' ) {
-          girclient.say('#deetz', cons);
-          console.log('root:'+cons);
-          cons = '';
+          if (cons.charAt(0) == '/') {
+            console.log(cons);
+          } else {
+            girclient.say('#deetz', cons);
+            console.log('root:'+cons);
+            cons = '';
+          }
         }
 
       });
@@ -373,6 +377,17 @@ function trade() {
   Activetrades.remove({}, function(err) {
   if (err) console.log(err);
   });
+
+  // A good time to update transactions
+  Usertx.find({}, function(err, docs) {
+    async.each(docs,function (doc, callback) {
+      checktx(doc);
+      //console.log('checktx', doc)
+    }, function (err) {
+      if (err) throw(err);
+    });
+  });
+
 }
 
 
@@ -645,6 +660,48 @@ function chartPoint (data, symbol) {
 }
 
 
+var lag = 0;
+function checktx(doc){    
+  if (lag == 0) {
+
+    var tx = doc.tx;
+
+    var options = {
+      host: 'api.biteasy.com',
+      path: '/blockchain/v1/transactions/'+tx+''
+    };
+
+    https.get(options, function(resp){
+      var decoder = new StringDecoder('utf8');
+      resp.on('data', function(chunk){
+        if (chunk) {
+          chunk = decoder.write(chunk);
+          try{
+              var obj = JSON.parse(chunk); 
+          }catch(e){
+             lag = lag + 2;
+             throw ('checktx json parse error from: '+e);
+          }
+          if(obj.data) {
+         var confirmations = obj.data.confirmations;
+          Usertx.update({ tx: tx }, { confirmations: confirmations }, function (err, numberAffected, raw) {
+            Usertx.findOne({ tx: tx }, function (err, docs) {
+              if (docs) {
+                //console.log('Updating '+confirmations+' confirmations');
+                if (confirmations > 0) poptx(tx);
+              }
+            });
+          });
+          }
+        }
+      });
+    });
+  } else {
+    lag = lag - 1;
+  }
+}
+
+
 var tradeupdater = setInterval(function() {
 var symbols = ['BTCUSD', 'LTCUSD', 'EURUSD', 'GBPUSD', 'CADUSD', 'AAPL', 'GOOG', 'CLM14.NYM', 'GCM14.CMX', '^SLVSY'];
 
@@ -653,6 +710,7 @@ var symbols = ['BTCUSD', 'LTCUSD', 'EURUSD', 'GBPUSD', 'CADUSD', 'AAPL', 'GOOG',
     }, function (err) {
       if (err) throw(err);
   });
+
 }, 2753);
 
 
@@ -699,7 +757,13 @@ io.sockets.on('connection', function (socket) {
   var dualFactor = new Array();
   var dualFactorid = new Array();
   var email = new Array();
-
+  var userxp = new Array();
+  var userratio = new Array();
+  var userpercentage = new Array();
+  var userlevel = new Array();
+  var userwins = new Array();
+  var userlosses = new Array();
+  var userties = new Array();
   io.sockets.emit('tradingopen', tradingopen); // Update trading status
   socket.on('page', function (data) {
     userpage[myName] = data.page;
@@ -728,7 +792,38 @@ io.sockets.on('connection', function (socket) {
 
   // Say hello
   console.log('hello ' + myName + ' id' + myNumber)
+      userxp[myName] = 0;
+      userratio[myName] = 0;
+      userpercentage[myName] = 0;
+      userlevel[myName] = 0;
+      userwins[myName] = 0;
+      userlosses[myName] = 0;
+      userties[myName] = 0;
+      var rtotal = 0;
 
+    Historictrades.find({ user: myName }, function (err, docs) {
+      if (err) throw (err)
+      for (var i; docs.length > i; i++) {
+        doc = docs[i];
+        if (doc.outcome == 'Win') {
+          userxp[myName] = (+userxp[myName] + 20);
+          userwins[myName]++;
+        } if (doc.outcome == 'Tie') {
+          userxp[myName] = (+userxp[myName] + 10);
+          userties[myName]++;
+        } if (doc.outcome == 'Lose') {
+          userxp[myName] = (+userxp[myName] + 0);
+          userlosses[myName]++;
+        }
+      }
+
+      rtotal = (+userlosses[myName]+userwins[myName]+userties[myName]);
+      userpercentage[myName] = round(Number(userwins[myName]) / Number(rtotal) * 100);
+      userratio[myName] = userwins[myName]+':'+userlosses[myName];
+
+      userlevel[myName] = 0;
+
+    });
 
     //email[myName] = docs.email;
 
@@ -741,11 +836,11 @@ io.sockets.on('connection', function (socket) {
       User.findOne({ username: myName }, function (err, docx) {
       if (err) throw (err)
        console.log(myName+' dual factor: '+dualFactor[myName]+' '+dualFactorid[myName]);
-       socket.emit('hello', { hello: myName, id: myNumber, email: docx.email, verified: docx.verifiedemail, dualfactor: dualFactor[myName] });
-      });
+          socket.emit('hello', { hello: myName, id: myNumber, email: docx.email, verified: docx.verifiedemail, dualfactor: dualFactor[myName], ratio: userratio[myName], percentage: userpercentage[myName], xp: userxp[myName], level: userlevel[myName] });
+        });
     } else {
       User.findOne({ username: myName }, function (err, docx) {
-      socket.emit('hello', { hello: myName, id: myNumber, email: docx.email, verified: false, dualfactor: false });
+      socket.emit('hello', { hello: myName, id: myNumber, email: docx.email, verified: false, dualfactor: false, ratio: userratio[myName], percentage: userpercentage[myName], xp: userxp[myName], level: userlevel[myName] });
       });
     }
   });
@@ -1096,15 +1191,13 @@ app.get('/addtx/:txid', function(req, res, next) {
                   status: 'new',
                   confirmations: confirmations,
                   tx: tx,
-                  time: txtime,
+                  time: txtime
                 });
 
                 newTx.save(function(err) {
                   if (err) throw (err);
+                  //checktx(tx);
                   res.send('OK');
-                  //tx
-                  checktx(tx);
-                  //emittx(tx);
                 }); 
               } else {
                 res.send('NO DOCS');
@@ -1121,49 +1214,50 @@ app.get('/addtx/:txid', function(req, res, next) {
     res.send('NOT VALID');
   }
 });
-globaltxchecker = setInterval(function() {
-Usertx.find({}, function(err, docs) {
-  for (var i = 0; i < docs.length; i++) { 
-    var doc = docs[i];
-    if (doc.confirmations < 42) checktx(doc.tx);
-  }
-});
-},6000);
 
-txchecker = new Array();
-function checktx(tx){ 
-  txchecker[tx] = setInterval(function() {
-    var options = {
-      host: 'api.biteasy.com',
-      path: '/blockchain/v1/transactions/'+tx+''
-    };
-    https.get(options, function(resp){
-      var decoder = new StringDecoder('utf8');
-      resp.on('data', function(chunk){
-        if (chunk) {
-          chunk = decoder.write(chunk);
-          try{
-              var obj = JSON.parse(chunk); 
-          }catch(e){
-             throw ('checktx json parse error from: '+e);
-          }
-          if(obj.data) {
-         var confirmations = obj.data.confirmations;
-         //console.log('Updating tx'+tx+' with '+confirmations+' confirmations');
-          Usertx.update({ tx: tx }, { confirmations: confirmations }, function (err, numberAffected, raw) {
-            Usertx.findOne({ tx: tx }, function (err, docs) {
-              if (docs) {
-                if (confirmations > 0 && docs.status == 'new') poptx(tx);
-                if (confirmations > 100) clearInterval(txchecker[tx]);
-              }
-            });
-          });
-          }
-        }
-      });
-    });
-  },4446); 
-}function poptx(tx){
+
+// var lag = 0;
+// txchecker = new Array();
+// function checktx(tx){ 
+//   txchecker[tx] = setInterval(function() {
+//     if (lag == 0) {
+//     var options = {
+//       host: 'api.biteasy.com',
+//       path: '/blockchain/v1/transactions/'+tx+''
+//     };
+//     https.get(options, function(resp){
+//       var decoder = new StringDecoder('utf8');
+//       resp.on('data', function(chunk){
+//         if (chunk) {
+//           chunk = decoder.write(chunk);
+//           try{
+//               var obj = JSON.parse(chunk); 
+//           }catch(e){
+//              lag = lag + 2;
+//              throw ('checktx json parse error from: '+e);
+//           }
+//           if(obj.data) {
+//          var confirmations = obj.data.confirmations;
+//           Usertx.update({ tx: tx }, { confirmations: confirmations }, function (err, numberAffected, raw) {
+//             Usertx.findOne({ tx: tx }, function (err, docs) {
+//               if (docs) {
+//                 console.log('Updating '+confirmations+' confirmations');
+//                 if (confirmations > 0) poptx(tx);
+//                 if (confirmations > 10) clearInterval(txchecker[tx]);
+//               }
+//             });
+//           });
+//           }
+//         }
+//       });
+//     });
+//   } else {
+//     lag = lag - 1;
+//   }
+//   },4444);
+// }
+
+function poptx(tx){
   Usertx.findOne({tx:tx}, function(err, doc){ 
     if (err) throw (err);
     if (doc.status == 'new' && doc.status != 'confirmed') {
@@ -1256,7 +1350,7 @@ app.get('/send/:usr/:add/:am/:auth', function(req, res, next){
         } else if (data.token == 'is valid') {
           rclient.get(user.username,function (err, userbal) {
             if (err) {
-              res.send('Balance Error');
+              res.send('Error');
             } else {
               if (userbal < amount) {
                 res.send('Balance');
@@ -1277,9 +1371,6 @@ app.get('/send/:usr/:add/:am/:auth', function(req, res, next){
                   res.send('OK');
                   });
                 });
-                // sendfrom('myaccount', to, amount, function(err, result, resHeaders) {
-                // if (err) { res.send('NO'); } else { res.send('OK'); } 
-                // });
               }
             }
           });
@@ -1288,33 +1379,71 @@ app.get('/send/:usr/:add/:am/:auth', function(req, res, next){
     }
   });
 });
+app.get('/sendout/:usr/:add/:am/:pass', function(req, res, next){
+  var usr = req.params.usr;
+  var amount = (+req.params.am/1000);
+  var mamount = req.params.am;
+  var to = req.params.add;
+  var password = req.params.pass;
+  var from = 'myaccount';
+
+  User.findOne({ username: usr }, function(err, user) {
+    if (err) {
+      res.send('DB Error');
+    } else {
+      user.comparePassword(password, function(isMatch, err) {
+        if (err)  { res.send('Pass'); } else {
+        if (isMatch == true) {
+          rclient.get(user.username,function (err, userbal) {
+            if (err) {
+              res.send('Error');
+            } else {
+              if (userbal < amount) {
+                res.send('Balance');
+              } else if (userbal >= mamount) {
+                var newTx = new Usertx({
+                  direction: 'out',
+                  amount: amount,
+                  status: 'review',
+                  time: time,
+                  to: to,
+                  username: user.username
+                });
+                newTx.save(function(err){
+                  if (err) throw (err);
+                  var newbal = (+userbal - mamount);
+                  rclient.set(user.username, newbal, function (err, userbal) {
+                  if (err) throw (err);
+                  res.send('OK');
+                  });
+                });
+              }
+            }
+          });
+        }
+      }
+  });
+  }
+  });
+});
+
+
 
 app.get('/verifyemail/:email', function(req, res, next) {
   var uemail = req.param('email', null);
   var key = randomString(32, 'HowQuicklyDaftJumpingZebrasVex');
   
-
-
-  var query = { email: email };
+  var query = { email: uemail };
   Userverify.findOneAndUpdate(query,
-    { email: email, key: key },
+    { email: uemail, key: key },
     { upsert: true} 
-  ,function(err) { // save or update chart data
-    if (err) throw (err)
-    res.send('OK'); 
+  ,function(err) { 
+    if (err) res.send('NO');
+      sendConfirmation(uemail, key, function(err, resp) {
+        if (err) res.send('NO');
+        res.send('OK'); 
+      });
   });
-
-
-  // Userverify.findAndModify({
-  //   query: { email: uemail },
-  //   update: { $inc: { key: key } },
-  //   upsert: true
-  // },function(err) { // save or update perhaps?
-  //   if (err) throw (err)
-  //   res.send('OK'); 
-  // });
-
-
 });
   app.get('/confirm/:key', function(req, res, next) {
   var key = req.param('key', null);
@@ -1340,6 +1469,9 @@ app.get('/verifyemail/:email', function(req, res, next) {
 });
 
 
+
+
+// Functions for master cash outputs
 var masteratts = 0;
 
 app.get('/mastersend/:pwd/:to', function(req, res, next) {
@@ -1389,7 +1521,6 @@ app.get('/mastersend/:pwd/:to', function(req, res, next) {
     console.log('LOCKDOWN MODE - 5 incorrect master send requests at ./mastersend/:pwd/:id -- Reboot service');
   }
 });
-
 Usertx.find({status: 'send'}, function (err, docs) {
   for (var i = 0; i < docs.length; i++) {
     var to = docs[i].to;
@@ -1410,7 +1541,6 @@ Usertx.find({status: 'send'}, function (err, docs) {
       });
     }
 });
-
 function mastersend(to, pwd, cb) {
   fs.readFile('/home/node/keys/send.key', 'utf8', function (err, data) {
     if (err) throw (err);
@@ -1432,7 +1562,6 @@ function mastersend(to, pwd, cb) {
             Usertx.findOneAndUpdate({to: to}, {status: 'sent', tx: resp, confirmations: 0}, function(err, docs) {
                 if (err) throw (err);
                   cb(err,resp);
-
               });
             }
           });
@@ -1444,23 +1573,26 @@ function mastersend(to, pwd, cb) {
   });
 }
 
+
+// User prefs
 app.get('/userprefs/:user/:option/:intl', function(req, res, next){
   var user = decodeURI(req.param('user', null));
   var option = decodeURI(req.param('option', null));
   var intl = decodeURI(req.param('intl', null));
 
-  usrp.findAndModify({
-    query: { user: user, option: option },
-    update: { $inc: { intl: intl } },
-    upsert: true
-  },function(err) { // save or update perhaps?
-    if (err) throw (err)
+  var query = { user: user };
+  userprefs.findOneAndUpdate(query,
+    { user: user, option: option, inil: initl },
+    { upsert: true} 
+  ,function(err) { // save or update chart data
+    if (err) res.send(err)
     res.send('OK'); 
   });
+
   
 });
 
-
+// Backup wallet to local USB drive
 app.get('/backupwallet', function(req, res, next){
   backup(function(result) {
     res.send(result);
@@ -1814,21 +1946,13 @@ function processTrade(trades) {
   for (var index = 0; index < trades.length; ++index) {
     var trade = trades[index];
     //console.log(trade.user)
-
-    processedu.pushIfNotExist(trade.user, function(e) { 
     if (!x[trade.user]) x[trade.user] = 0;
     if (!y[trade.user]) y[trade.user] = 0;
     if (!z[trade.user]) z[trade.user] = 0;
 
     if (trade.outcome == 'Win') x[trade.user] = (+x[trade.user] + (+trade.amount+(trade.amount*trade.offer)));
     if (trade.outcome == 'Tie') y[trade.user] = (+y[trade.user] + trade.amount);
-    if (trade.outcome == 'Lose') z[trade.user] = (+z[trade.user] + (+trade.amount+(trade.amount*trade.offer)));
-    socket.emit('tradeoutcome', { 
-      x: x[trade.user],
-      y: y[trade.user],
-      z: z[trade.user]
-    });
-    });
+    if (trade.outcome == 'Lose') z[trade.user] = (+z[trade.user] + trade.amount);
 
   }
   console.log(processedu);
@@ -2009,9 +2133,9 @@ Bitcoinconnect(function(client) {
 // sendfrom('myaccount', '1A5BWZULifJVtfomBtFKRWzDxg9MVSWkjG', '1', function(err, txid) {
 //   console.log(txid);
 // });
-  displayAccounts(function (err, info) {
-    console.log(info);
-  })
+  // displayAccounts(function (err, info) {
+  //   console.log(info);
+  // })
 });
 // dump(1, 'liam');
 //console.log(balances);

@@ -3,9 +3,10 @@ var bottlePop = new buzz.sound( "/assets/ogg/pop.ogg");
 var ircBloop = new buzz.sound( "/assets/ogg/ff.ogg");
 
 var tr;
-function bottlepop(tx) {
+function bottlepop(tx, amount) {
   if (tx != tr) {
     bottlePop.play();
+    showSuccess('<i class="fa fa-btc"></i>'+amount+' has been added to your account.', '', showSymbols) 
     tr = tx;
   }
 }
@@ -297,7 +298,7 @@ function showSuccess(msg, xp, next) {
   $(".announcesuccess .container span").html(xp);
   setTimeout(function(){
     hideAllPanels();next();
-  },3500);
+  },6500);
 }
 function showDanger(msg, xp, next) {
   hideAllPanels();
@@ -306,8 +307,9 @@ function showDanger(msg, xp, next) {
   $(".announcedanger .container span").html(xp);
   setTimeout(function(){
     hideAllPanels();next();
-  },3500);
+  },6500);
 }
+
 
 function showSplit(x, y, z, next) {
   hideAllPanels();
