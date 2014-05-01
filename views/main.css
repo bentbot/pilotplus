@@ -33,7 +33,11 @@ letter-spacing: 2px;
 border: 1px solid;
 }
 
-
+.refs {
+margin-top: 20px;
+min-height: 133px;
+position: relative;
+}
 
 .georgia {
   font-family: museo-slab,Georgia,"Times New Roman",Times,serif;
@@ -398,7 +402,17 @@ border: 0px;
   height: 146px;
 overflow-y: scroll;
 }
-.sendtitle {
+.refstitle {
+position: absolute;
+top: 0px;
+left: 0px;
+}.refstitle i {
+position: absolute;
+top: 24px;
+left: 15px;
+font-size: 101px;
+opacity: 0.6;
+}.sendtitle {
 position: absolute;
 top: 0px;
 left: 0px;
@@ -555,6 +569,18 @@ height: 35px;
 }.btcaddress::selection {
 background:rgba(49, 112, 143, 0.75);
 color:#fff;
+}.refcode {
+font-family: museo-slab,Georgia,"Times New Roman",Times,serif;
+font-weight: 500;
+font-size: 21px;
+text-align: center;
+padding-top: 5px;
+color: black;
+cursor: default;
+height: 35px;
+}.refcode::selection {
+background:rgba(49, 112, 143, 0.75);
+color:#fff;
 }#country::selection {
 background:rgba(205, 235, 193, 0.5) !important;
 
@@ -573,7 +599,21 @@ background:rgba(205, 235, 193, 0.5) !important;
   font-family: museo-slab,Georgia,"Times New Roman",Times,serif;
   padding-top: 5px;
   cursor: default;
+}.refcount {
+  font-size: 21px;
+  text-align: center;
+  font-family: museo-slab,Georgia,"Times New Roman",Times,serif;
+  padding-top: 5px;
+  cursor: default;
 }.btcwallet {
+  /*padding-top: 5px;*/
+  font-size: 19px;
+  color: #31708f;
+  text-align: center;
+  margin: auto;
+  font-family: museo-slab,Georgia,"Times New Roman",Times,serif;
+  cursor: default;
+}.heresyourcode {
   /*padding-top: 5px;*/
   font-size: 19px;
   color: #31708f;

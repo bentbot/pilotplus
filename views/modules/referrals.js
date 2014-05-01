@@ -1,22 +1,26 @@
 
-var tradestatus = false;
+var refs = false;
 var chatstatus = false;
 
 function showReferrals() {
   var html = '';
   $(".referrals").html(html);
 
-    if (tradestatus == true) html = html + '<div class="alert alert-success">';
-    if (tradestatus == false) html = html + '<div class="alert alert-info">';
-    if (tradestatus == true) html = html + '<a href="#" style="margin-right: 10px;"><i class="fa fa-check-circle-o fa-lg tradetimertoggle"></i></a> <strong>Trade Timer</strong> Visually countdown the number of seconds until the next trade.';
-    if (tradestatus == false) html = html + '<a href="#" style="margin-right: 10px;"><i class="fa fa-circle-o fa-lg tradetimertoggle"></i></a> <strong>Trade Timer</strong> Visually countdown the number of seconds until the next trade.';
+    if (refs == true) html = html + '<div class="alert refs alert-success">';
+    if (refs == false) html = html + '<div class="alert refs alert-info">';
+    if (refs == true) html = html + '<div class="refstitle"></div>';
+    if (refs == false) html = html + '<div class="refstitle"><i class="fa fa-user"></i></div>';
+    html = html + '<div class="heresyourcode" data-translate="yourreferralcode">Your Referral Code:</div>';
+    html = html + '<div class="refcode" id="refcode"></div>';
+    html = html + '<div class="refcount"><i class="fa fa-users"></i> <strong class="liverefs"></strong></div>';
     html = html + '</div>';
 
-    if (chatstatus == true) html = html + '<div class="alert alert-success">';
-    if (chatstatus == false) html = html + '<div class="alert alert-info">';
-    if (chatstatus == true) html = html + '<a href="#" style="margin-right: 10px;"><i class="fa fa-check-circle-o fa-lg chatboxtoggle"></i></a> <strong>Chat Box</strong> Show the chat box on the trade page.';
-    if (chatstatus == false) html = html + '<a href="#" style="margin-right: 10px;"><i class="fa fa-circle-o fa-lg chatboxtoggle"></i></a> <strong>Chat Box</strong> Show the chat box on the trade page.';
-    html = html + '</div>';
+    // if (refs == false){
+    //   html = html + '<div class="alert refs alert-warning">';
+    //   html = html + '<strong>You have not refered any users.</strong>';
+    //   html = html + '</div>';
+    // }
+
 
   $(".referrals").html(html);
 }
@@ -33,19 +37,32 @@ $(function() {
 	});	
 
 
-function updateOption(option,intl) {
-    $.ajax({
-        url: '/userReferrals/'+user+'/'+option+'/'+intl,
-        cache: false
-      }).done(function(html) {
-          console.log(html);
-          if (html == 'OK') {
-            
-          } else {
-            
-          }
-      });
+var lastdata;
+function updateRefs(data) {
+  data.reverse();
+  var html = '';
+  $(".refslist").html(html);
+  var index = 0;
+  var tdata;
+  while (index < data.length) { 
+    tdata = data[index];
+    //console.log(tdata);
+    var s = tdata.status;
+    var d = tdata.direction;
+    var entrytime = new Date(0);
+    var entrydate = new Date(0);
+    var iodate = new Date(0);
+    entrytime.setUTCSeconds(tdata.time);
+    entrydate.setUTCSeconds(tdata.time);
+    iodate.setUTCSeconds(tdata.time);
+    entrytime = entrytime.customFormat( "#hhh#:#mm#:#ss# " );
+    entrydate = entrydate.customFormat( "#DD#/#MM#/#YYYY#" );
+    iodate = iodate.toISOString();
+
+        html = html + '<div class="alert alert-info lastbtctxs" style="margin-top: 20px;">';
+        html = html + '<div class="areferral"><i class="fa fa-user" style="margin-right: 10px;"></i> <span data-translate="referred">'+tdata.name'</span> <span style="float:right;"><strong>m</strong><i class="fa fa-btc" style="margin: 0px 2px 0px 5px;"></i>'+tdata.amount+'</span></div>';
+        html = html + '</div>';
+    }
+  $(".refslist").html(html);
 }
-
-
 });

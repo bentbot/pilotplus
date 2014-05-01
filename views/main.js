@@ -12,6 +12,7 @@ require(['modules/terms']);
 require(['modules/prefs']);
 require(['modules/chat']);
 require(['modules/xp']);
+require(['modules/referrals']);
 
   // $.each(symbols, function( index, symbol ) {
     // each something          index, current
@@ -74,10 +75,10 @@ function loadTrades(displaysymbols, guest) {
     '<div class="notif"></div>'+
     '<div class="trading"></div>'+
     '<div class="tradetimer">'+
-    '<div class="progress progress-striped" style="margin:0px;">'+
-      '<div class="progress-bar progress-bar-warning tradeprogress" role="progressbar" aria-valuenow="'+minsx+'" aria-valuemin="0" aria-valuemax="100" style="width: '+minsx+'%;">'+
-      '</div>'+
-    '</div>'+
+    // '<div class="progress progress-striped" style="margin:0px;">'+
+    //   '<div class="progress-bar progress-bar-warning tradeprogress" role="progressbar" aria-valuenow="'+minsx+'" aria-valuemin="0" aria-valuemax="100" style="width: '+minsx+'%;">'+
+    //   '</div>'+
+    // '</div>'+
     '<div class="col1">'+
       '<div class="tradestable">'+
       '</div>'+
@@ -186,6 +187,7 @@ function loadDeposit() {
   var page = '<div class="container" style="padding: 4px 0px;">'+
     '<div class="notif"></div>'+
     '<div class="referrals"></div>'+
+    '<div class="refslist"></div>'+
     '</div>';
   $('.hook').html(page);
   showReferrals();

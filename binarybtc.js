@@ -19,7 +19,8 @@ var port = 8080
   , irc = require('irc')
   , authy = require('authy-node')    
   , bcrypt = require('bcrypt')
-  , mailer = require('mailer');
+  , nodemailer = require("nodemailer")
+  , crypto = require('crypto');
     
   var SALT_WORK_FACTOR = 10;
 
@@ -72,6 +73,44 @@ var clock = setInterval(function() {
   io.sockets.emit('servertime', time);
 }, 1000);
 
+
+// Mailer 
+
+// create reusable transport method (opens pool of SMTP connections)
+var smtpTransport = nodemailer.createTransport("SMTP",{
+    service: "Gmail",
+    auth: {
+        user: fs.readFileSync('/home/node/keys/mail.id'),
+        pass: fs.readFileSync('/home/node/keys/mail.key')
+    }
+});
+
+
+function sendConfirmation(to, key, cb) {
+var rand = Math.random();
+var shasum = crypto.createHash('sha1');
+shasum.update(key);
+var confirm = shasum.digest('hex');
+var contents = "<b style='color:hsl(28, 99%, 46%)'>Confirm your Account</b>" +
+    "<p>"+
+    "To confirm your account with us, please click on the following link: <br />"+
+    "<a href='https://vbit.io/confirm/"+confirm+"/'>https://vbit.io/confirm/"+confirm+"</a>"+
+    "</p>";
+var mailOptions = {
+    from: "vBit <mail@vbit.io>",
+    to: to,
+    subject: "Confirm your Account",
+    text: "Please visit this address to confirm your account with us: http://vbit.io/confirm/"+confirm,
+    html: contents
+}
+smtpTransport.sendMail(mailOptions, function(err, response){
+    if(err){
+        cb(err);
+    }else{
+        cb(err, responce);
+    }
+});
+}
 
 // Database connect
 fs.readFile('/home/node/keys/mongo.key', 'utf8', function (err,data) {
@@ -1436,7 +1475,7 @@ app.get('/verifyemail/:email', function(req, res, next) {
   var query = { email: uemail };
   Userverify.findOneAndUpdate(query,
     { email: uemail, key: key },
-    { upsert: true} 
+    { upsert: true } 
   ,function(err) { 
     if (err) res.send('NO');
       sendConfirmation(uemail, key, function(err, resp) {
@@ -1730,6 +1769,7 @@ switch (req.params.username) {
         }
     } else {
       res.send('OK');
+      console.log('New User '+req.params.username);
     }
     });
     } else {
@@ -1973,22 +2013,21 @@ function getPrice(symbol, force, callback) {
 
   if (symbol == 'BTCUSD') {
   var symb = symbol.match(/.{3}/g);
+  var symb = symbol.toLowerCase();
   symb = symb[0];
   var options = {
-    host: 'www.bitstamp.net',
+    host: 'btc-e.com',
     port: 443,
-    path: '/api/ticker/'
+    path: '/api/2/btc_usd/ticker'
   };
   https.get(options, function(resp){
     var decoder = new StringDecoder('utf8');
     resp.on('data', function(chunk){
-    
       chunk = decoder.write(chunk);
       //console.log(chunk)
       var data = chunk.split(',');
-      var datas = data[1].split(':');
-      data = datas[1].split('"');
-      data = data[1];
+      var datas = data[7].split(':');
+      data = datas[1];
 
       if(isNumber(data)) {
       data = Number(data);
