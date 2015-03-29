@@ -15,7 +15,7 @@ var port = 8080
   , async = require('async')
   , LocalStrategy = require('passport-local').Strategy
   , StringDecoder = require('string_decoder').StringDecoder
-  , mailer = require('mailer')
+  //, mailer = require('mailer')
   , irc = require('irc')
   , authy = require('authy-node')    
   , bcrypt = require('bcrypt')
@@ -26,7 +26,7 @@ var port = 8080
 
 // IRC Listener
   var messages = new Array();
-  fs.readFile('/home/node/keys/irc.host', 'utf8', function (err,data) {
+  fs.readFile('/home/ubuntu/keys/irc.host', 'utf8', function (err,data) {
   if (err) throw (err)
   var host = data.replace("\n", "").replace("\r", "");
   var name = 'root';
@@ -80,8 +80,8 @@ var clock = setInterval(function() {
 var smtpTransport = nodemailer.createTransport("SMTP",{
     service: "Gmail",
     auth: {
-        user: fs.readFileSync('/home/node/keys/mail.id'),
-        pass: fs.readFileSync('/home/node/keys/mail.key')
+        user: fs.readFileSync('/home/ubuntu/keys/mail.id'),
+        pass: fs.readFileSync('/home/ubuntu/keys/mail.key')
     }
 });
 
@@ -113,7 +113,7 @@ smtpTransport.sendMail(mailOptions, function(err, response){
 }
 
 // Database connect
-fs.readFile('/home/node/keys/mongo.key', 'utf8', function (err,data) {
+fs.readFile('/home/ubuntu/keys/mongo.key', 'utf8', function (err,data) {
   if (err) throw (err)
   var key = data.replace("\n", "").replace("\r", "");
   mongoose.connect(key);
@@ -159,7 +159,7 @@ Pageviews.remove({}, function(err) {
 
 
 // Key value connect and money handling
-  fs.readFile('/home/node/keys/redis.key', 'utf8', function (err,data) {
+  fs.readFile('/home/ubuntu/keys/redis.key', 'utf8', function (err,data) {
     if (err) throw (err);
     var key = data.replace("\n", "").replace("\r", "");
     var options = {
@@ -204,7 +204,7 @@ function pay(amount, tradeuser) {
 }
 
 // 2 Factor
-fs.readFile('/home/node/keys/authy.key', 'utf8', function (err,data) {
+fs.readFile('/home/ubuntu/keys/authy.key', 'utf8', function (err,data) {
   if (err) throw (err)
   var key = data.replace("\n", "").replace("\r", "");
   authy.api.mode = 'production'
@@ -216,21 +216,21 @@ fs.readFile('/home/node/keys/authy.key', 'utf8', function (err,data) {
 
 // Include SSL server.key and domain.crt from a safe place
 var ca, file, files, fs, https, httpsOptions, httpsServer, requestHandler;
-files = ["EssentialSSLCA_2.crt", "ComodoUTNSGCCA.crt", "UTNAddTrustSGCCA.crt", "AddTrustExternalCARoot.crt"];
+files = ["intermediate.crt","vbit_io.crt"];
 ca = (function() {
   var _i, _len, _results;
   _results = [];
   for (_i = 0, _len = files.length; _i < _len; _i++) {
     file = files[_i];
-    _results.push(fs.readFileSync("/home/node/keys/" + file));
+    _results.push(fs.readFileSync("/home/ubuntu/keys/" + file));
   }
   return _results;
 })();
 
 var options = {
   ca: ca,
-  key: fs.readFileSync('/home/node/keys/server.key'),
-  cert: fs.readFileSync('/home/node/keys/vbit_io.crt')
+  key: fs.readFileSync('/home/ubuntu/keys/server.key'),
+  cert: fs.readFileSync('/home/ubuntu/keys/vbit_io.crt')
 }
 // Start secure webserver
 //var keys = new Keygrip(["SEKRIT2", "SEKRIT1"]);
@@ -1042,7 +1042,7 @@ io.sockets.on('connection', function (socket) {
   io.sockets.emit('offer', offer);
 
   // Protochat
-  fs.readFile('/home/node/keys/irc.host', 'utf8', function (err,data) {
+  fs.readFile('/home/ubuntu/keys/irc.host', 'utf8', function (err,data) {
   if (err) throw (err)
   var host = data.replace("\n", "").replace("\r", "");
   var name = myName;
@@ -1517,7 +1517,7 @@ app.get('/mastersend/:pwd/:to', function(req, res, next) {
   if (masteratts < 5) {
     var pwd = req.param('pwd', null);
     var to = req.param('to', null);
-    fs.readFile('/home/node/keys/send.key', 'utf8', function (err, data) {
+    fs.readFile('/home/ubuntu/keys/send.key', 'utf8', function (err, data) {
       if (err)  {
         res.send('KEY ERROR');
       } else {
@@ -1563,7 +1563,7 @@ app.get('/mastersend/:pwd/:to', function(req, res, next) {
 Usertx.find({status: 'send'}, function (err, docs) {
   for (var i = 0; i < docs.length; i++) {
     var to = docs[i].to;
-    fs.readFile('/home/node/keys/send.key', 'utf8', function (err, data) {
+    fs.readFile('/home/ubuntu/keys/send.key', 'utf8', function (err, data) {
       if (err)  {
           res.send('KEY ERROR '+err);
       } else {
@@ -1581,7 +1581,7 @@ Usertx.find({status: 'send'}, function (err, docs) {
     }
 });
 function mastersend(to, pwd, cb) {
-  fs.readFile('/home/node/keys/send.key', 'utf8', function (err, data) {
+  fs.readFile('/home/ubuntu/keys/send.key', 'utf8', function (err, data) {
     if (err) throw (err);
     var key = data.replace("\n", "").replace("\r", "").replace(" ", "");
     if (pwd == key) {
@@ -1773,7 +1773,7 @@ switch (req.params.username) {
     }
     });
     } else {
-      res.send('Bitcoin Error')
+      res.send('Bitcoin Error');
     }
   });
   }
@@ -1825,10 +1825,9 @@ app.get('/newpassword/:username/:currentpassword/:newpassword', function(req, re
                                   if (err) throw(err);
                                   // override the cleartext password with the hashed one
                                   password = hash;
-
-                          var updateUser = { username: user.username };
+                                  
                           var update = { password: password, passwordlast: time };
-                          User.update(updateUser, update, function(err) {
+                          User.update({ username: user.username }, update, function(err) {
                              if (err) { throw (err) } else {
                               res.send("OK");
                              }
@@ -2134,17 +2133,17 @@ var  bitcoin = require('bitcoin')
 var client = null;
 var gclient = null;
 function Bitcoinconnect(next) {
-  fs.readFile('/home/node/keys/bitcoin.id', 'utf8', function (err,data) {
+  fs.readFile('/home/ubuntu/keys/bitcoin.id', 'utf8', function (err,data) {
     if (err) throw (err);
     var id = data.replace("\n", "").replace("\r", "");
-      fs.readFile('/home/node/keys/bitcoin.key', 'utf8', function (err,data) {
+      fs.readFile('/home/ubuntu/keys/bitcoin.key', 'utf8', function (err,data) {
         if (err) throw (err);
       var key = data.replace("\n", "").replace("\r", "");
-        fs.readFile('/home/node/keys/bitcoin.host', 'utf8', function (err,data) {
+        fs.readFile('/home/ubuntu/keys/bitcoin.host', 'utf8', function (err,data) {
           if (err) throw (err);
 
           var host = data.replace("\n", "").replace("\r", "");
-          fs.readFile('/home/node/keys/bitcoin.port', 'utf8', function (err,data) {
+          fs.readFile('/home/ubuntu/keys/bitcoin.port', 'utf8', function (err,data) {
             if (err) throw (err);
             var port = data.replace("\n", "").replace("\r", "");
           var client = new bitcoin.Client({
@@ -2176,7 +2175,6 @@ Bitcoinconnect(function(client) {
   //   console.log(info);
   // })
 });
-// dump(1, 'liam');
 //console.log(balances);
 
 function loginfo(){
