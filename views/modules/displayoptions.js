@@ -5,6 +5,7 @@ function displayOptions(displaysymbols) {
   if (displaysymbols) {
     $.each(displaysymbols, function( index, symbol ) {
     symbol = symbolSwitch(symbol);
+    offer = 0.7;
     //console.log('displayOptions: '+symbol);
     var show = '<div class="controls" id="'+symbol+'">'+
         '<div class="progress progress'+symbol+' vertical">'+
@@ -26,7 +27,7 @@ function displayOptions(displaysymbols) {
           '<div class="info">'+
           '<div class="details">'+
             '<h1>70%</h1>'+
-            '<span class="hide rawoffer">0.7</span>'+
+            '<span class="hide rawoffer">'+offer+'</span>'+
            '<!--  <span class="bold rate">Payout if</span><br /> -->'+
             '<span class="direction bold"><span class="action" data-translate="if">If</span>: <span class="option">'+symbol+'</span> <span class="tradeicon glyphicon icon'+symbol+' green glyphicon-arrow-up"></span></span><br />'+
             '<span class="price"><span data-translate="from">From:</span> <span class="keystone keystone'+symbol+'"> --.--</span> <span class="lock"></span></span><br />'+

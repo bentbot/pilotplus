@@ -13,7 +13,7 @@ function bottlepop(tx, amount) {
 
 // Trading
 $(function() {
-  var defaultsymbol = ['GCM14.CMX'];
+  var defaultsymbol = ['BTCUSD'];
   page('trade', defaultsymbol);
 
 

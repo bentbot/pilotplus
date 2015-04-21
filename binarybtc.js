@@ -901,41 +901,41 @@ io.sockets.on('connection', function (socket) {
       
       var lastbal;
       var admintimer = setInterval(function() {
-      //displayAccounts(function(err, data){
-      Usertx.find({ }, function(err, data){
-        if (err) throw (err);
-          serverBalance(function(err, bal){
-          if (err) throw (err);
-            data.push( {bal : bal} );
-            socket.emit('remotebals', data);
-        });
-        
-      });      
-   
-        serverBalance(function(err, bal){
-          if (err) throw (err);
-            socket.emit('serverbalance', bal);
-        });
 
-      User.find({ }, function (err, data) {
-        if (err) throw (err);
-        var accs = new Array();
-        data.forEach(function(user) {
-          rclient.get(user.username, function (err,register) {
+        Usertx.find({ }, function(err, data){
+          if (err) throw (err);
+            serverBalance(function(err, bal){
             if (err) throw (err);
-              accs.push({
-                account: user.username,
-                address: user.btc,
-                bal: register
-              });
-              if (accs.length === data.length) {
-                socket.emit('localbals', accs);
-              }
+              data.push( {bal : bal} );
+              socket.emit('remotebals', data);
+          });
+          
+        });      
+     
+          serverBalance(function(err, bal){
+            if (err) throw (err);
+              socket.emit('serverbalance', bal);
+          });
+
+        User.find({ }, function (err, data) {
+          if (err) throw (err);
+          var accs = new Array();
+          data.forEach(function(user) {
+            rclient.get(user.username, function (err,register) {
+              if (err) throw (err);
+                accs.push({
+                  account: user.username,
+                  address: user.btc,
+                  bal: register
+                });
+                if (accs.length === data.length) {
+                  socket.emit('localbals', accs);
+                }
+            });
           });
         });
-      });
 
-    }, 1000);
+      }, 1000);
 
     }
   });
@@ -1015,7 +1015,7 @@ io.sockets.on('connection', function (socket) {
       if (status == 'confirmed') colour = 'green';
       var text = 'A payment of <i class="fa fa-bitcoin">'+docs.amount+' has been recieved.';
       if (status == 'confirmed') var text = '<i class="fa fa-bitcoin">'+docs.amount+' has been added to your account.';
-      socket.emit('alertuser', {message: text, trinket: 'yo!', colour: colour});
+      socket.emit('alertuser', {message: text, trinket: 'Bitcoin', colour: colour});
     });
   }  
   function emitsend(tx) {
@@ -1023,7 +1023,7 @@ io.sockets.on('connection', function (socket) {
       if (err) throw (err)
       var text = 'A payment of <i class="fa fa-bitcoin">'+docs.amount+' has been queued for sending.';
       var colour = 'orange';
-      socket.emit('alertuser', {message: text, trinket: 'yo!', colour: colour});
+      socket.emit('alertuser', {message: text, trinket: 'Bitcoin', colour: colour});
     });
   }
   function emitsent(tx) {
@@ -1031,7 +1031,7 @@ io.sockets.on('connection', function (socket) {
       if (err) throw (err)
       var text = '<i class="fa fa-bitcoin">'+docs.amount+' has been delivered to .';
       var colour = 'blue';
-      socket.emit('alertuser', {message: text, trinket: 'yo!', colour: colour});
+      socket.emit('alertuser', {message: text, trinket: 'Bitcoin', colour: colour});
     });
   }
 
