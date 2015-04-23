@@ -2190,8 +2190,9 @@ function displayAccounts(cb) {
   } else {
     cb('Coin Connection');
   }
-});
-}function serverBalance(cb) {
+}
+
+function serverBalance(cb) {
   if (coin) {
     coin.emit('getbalance');
     coin.on('getbalance', function (data){
