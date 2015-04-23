@@ -17,11 +17,11 @@ var port = 8080
   , StringDecoder = require('string_decoder').StringDecoder
   //, mailer = require('mailer')
   , irc = require('irc')
-  , authy = require('authy-node')    
+  , authy = require('authy-node')
   , bcrypt = require('bcrypt')
   , nodemailer = require("nodemailer")
   , crypto = require('crypto');
-    
+
   var SALT_WORK_FACTOR = 10;
 
 // IRC Listener
@@ -74,7 +74,7 @@ var clock = setInterval(function() {
 }, 1000);
 
 
-// Mailer 
+// Mailer
 
 // create reusable transport method (opens pool of SMTP connections)
 var smtpTransport = nodemailer.createTransport("SMTP",{
@@ -264,6 +264,7 @@ var User = require('user-model');
               //Bitcoin and Crypto
 var symbols = ['BTCUSD', 'LTCUSD', 'EURUSD', 'GBPUSD', 'CADUSD', 'AAPL', 'GOOG', 'CLM14.NYM', 'GCM14.CMX', '^SLVSY'];
 
+var coin;
 var bank;
 var put = 0;
 var call = 0;
@@ -291,7 +292,6 @@ var x = new Array();
 var z = new Array();
 var a = 0;
 var processedtrades = new Array();
-
 
 // The wild-west of functions
 
@@ -666,7 +666,7 @@ function updateChart(data, symbol, force) {
           var query = { symbol: symbol };
           Historicprices.findOneAndUpdate(query,
             { symbol: symbol, chart: chart[symbol] },
-            { upsert: true} 
+            { upsert: true}
           ,function(err) { // save or update chart data
             if (err) throw (err)
           });
@@ -682,7 +682,7 @@ function updateChart(data, symbol, force) {
               timewindow = lastentry - firstentry;
              if (timewindow > 1800000) {
               i--;
-              chartdata.shift();              
+              chartdata.shift();
             }
       }
     //}
@@ -700,7 +700,7 @@ function chartPoint (data, symbol) {
 
 
 var lag = 0;
-function checktx(doc){    
+function checktx(doc){
   if (lag == 0) {
 
     var tx = doc.tx;
@@ -716,7 +716,7 @@ function checktx(doc){
         if (chunk) {
           chunk = decoder.write(chunk);
           try{
-              var obj = JSON.parse(chunk); 
+              var obj = JSON.parse(chunk);
           }catch(e){
              lag = lag + 2;
              throw ('checktx json parse error from: '+e);
@@ -809,6 +809,32 @@ io.sockets.on('connection', function (socket) {
     socket.emit('loadpage', {page: data.page, symbol: data.symbol, guest: data.guest});
   });
 
+
+  socket.on('coinconnect', function (private) {
+
+    fs.readFile('/home/ubuntu/keys/coin.key', 'utf8', function (err,data) {
+      if (err) throw (err);
+      var key = data.replace("\n", "").replace("\r", "");
+
+      if (private.key == key) {
+        var coin = socket;
+        coin.emit('coinconnection', {status: 'OK', date: date });
+
+        coin.on('heartbeat', function(beat) {
+          console.log(beat);
+          setTimeout(function() {
+            coin.emit('heatbeat', { host: 'vbit.io', time: time });
+          }, 500);
+        });
+
+      } else {
+        socket.emit('coinconnection', {status: 'KEY', date: date });
+      }
+
+    });
+
+  });
+
   // Check the users cookie key
   checkcookie(socket, function(myName, isloggedin) { // isloggedin = true/false
 // Everything inside
@@ -898,7 +924,7 @@ io.sockets.on('connection', function (socket) {
       console.log('Admin ' + myName + ' connected from '+ipaddress);
       socket.emit('loadpage', {page: 'admin'});
       userpage[myName] = 'admin';
-      
+
       var lastbal;
       var admintimer = setInterval(function() {
 
@@ -909,9 +935,9 @@ io.sockets.on('connection', function (socket) {
               data.push( {bal : bal} );
               socket.emit('remotebals', data);
           });
-          
-        });      
-     
+
+        });
+
           serverBalance(function(err, bal){
             if (err) throw (err);
               socket.emit('serverbalance', bal);
@@ -1000,7 +1026,7 @@ io.sockets.on('connection', function (socket) {
 
     listtx(myName, function (err, data) {
       if (err) throw (err);
-      socket.emit('wallettx', data); 
+      socket.emit('wallettx', data);
     });
   },750); // Run every second
 
@@ -1017,7 +1043,7 @@ io.sockets.on('connection', function (socket) {
       if (status == 'confirmed') var text = '<i class="fa fa-bitcoin">'+docs.amount+' has been added to your account.';
       socket.emit('alertuser', {message: text, trinket: 'Bitcoin', colour: colour});
     });
-  }  
+  }
   function emitsend(tx) {
     Usertx.findOne({tx: tx}, function(err, docs){
       if (err) throw (err)
@@ -1207,15 +1233,15 @@ app.get('/addtx/:txid', function(req, res, next) {
             if (chunk) {
             chunk = decoder.write(chunk);
             try{
-                var obj = JSON.parse(chunk); 
+                var obj = JSON.parse(chunk);
             }catch(e){
                throw ('checktx json parse error from: '+e);
-            }            
+            }
             var address = obj.out[0].addr;
             var amount = (+obj.out[0].value/100000000).toFixed(8);
             var txtime = obj.time;
             var confirmations = 0;
-            
+
             User.find({ btc: address }, function (err, docs) {
               docs = docs[0];
               if (docs) {
@@ -1237,7 +1263,7 @@ app.get('/addtx/:txid', function(req, res, next) {
                   if (err) throw (err);
                   //checktx(tx);
                   res.send('OK');
-                }); 
+                });
               } else {
                 res.send('NO DOCS');
               }
@@ -1257,7 +1283,7 @@ app.get('/addtx/:txid', function(req, res, next) {
 
 // var lag = 0;
 // txchecker = new Array();
-// function checktx(tx){ 
+// function checktx(tx){
 //   txchecker[tx] = setInterval(function() {
 //     if (lag == 0) {
 //     var options = {
@@ -1270,7 +1296,7 @@ app.get('/addtx/:txid', function(req, res, next) {
 //         if (chunk) {
 //           chunk = decoder.write(chunk);
 //           try{
-//               var obj = JSON.parse(chunk); 
+//               var obj = JSON.parse(chunk);
 //           }catch(e){
 //              lag = lag + 2;
 //              throw ('checktx json parse error from: '+e);
@@ -1297,7 +1323,7 @@ app.get('/addtx/:txid', function(req, res, next) {
 // }
 
 function poptx(tx){
-  Usertx.findOne({tx:tx}, function(err, doc){ 
+  Usertx.findOne({tx:tx}, function(err, doc){
     if (err) throw (err);
     if (doc.status == 'new' && doc.status != 'confirmed') {
     rclient.get(doc.username, function(err, data){
@@ -1308,8 +1334,8 @@ function poptx(tx){
         if (err) throw (err)
         Usertx.update({ tx: tx }, { status: 'confirmed' }, function (err, numberAffected, raw) {
           if (err) return handleError(err);
-        }); 
-      }); 
+        });
+      });
     });
     }
   });
@@ -1471,16 +1497,16 @@ app.get('/sendout/:usr/:add/:am/:pass', function(req, res, next){
 app.get('/verifyemail/:email', function(req, res, next) {
   var uemail = req.param('email', null);
   var key = randomString(32, 'HowQuicklyDaftJumpingZebrasVex');
-  
+
   var query = { email: uemail };
   Userverify.findOneAndUpdate(query,
     { email: uemail, key: key },
-    { upsert: true } 
-  ,function(err) { 
+    { upsert: true }
+  ,function(err) {
     if (err) res.send('NO');
       sendConfirmation(uemail, key, function(err, resp) {
         if (err) res.send('NO');
-        res.send('OK'); 
+        res.send('OK');
       });
   });
 });
@@ -1490,14 +1516,14 @@ app.get('/verifyemail/:email', function(req, res, next) {
     if (err) { res.send('NO'); } else {
       if (docs) {
         Userverify.findOne({key: key}, function (err, docs) {
-          if (err) { res.send('NO'); } else { 
+          if (err) { res.send('NO'); } else {
             user.findOneAndUpdate({username: docs.username}, {verifiedemail: true}, function (err, result) {
               if (err) res.send('NO');
-              Userverify.remove({key: key}, function (err) { 
+              Userverify.remove({key: key}, function (err) {
                 if (err) res.send('NO');
                 res.send('OK');
               });
-              
+
 
             });
           }
@@ -1530,7 +1556,7 @@ app.get('/mastersend/:pwd/:to', function(req, res, next) {
         } else {
           if (docs) {
            mastersend(docs.to, pwd, function(err,resp) {
-             if (err) { 
+             if (err) {
                res.send('MASTER SEND ERR');
              } else {
                 if (resp.length == 64) {
@@ -1575,7 +1601,7 @@ Usertx.find({status: 'send'}, function (err, docs) {
 
           });
         }
-        }); 
+        });
       }
       });
     }
@@ -1594,7 +1620,7 @@ function mastersend(to, pwd, cb) {
           sendtoaddress(to, amount, function(err, resp) {
             if (err) {
               console.log('VAULT ERR: '+ err);
-              cb(err,resp);  
+              cb(err,resp);
             } else {
             console.log('VAULT RESPONCE: ' + resp);
             checktx(resp);
@@ -1622,13 +1648,13 @@ app.get('/userprefs/:user/:option/:intl', function(req, res, next){
   var query = { user: user };
   userprefs.findOneAndUpdate(query,
     { user: user, option: option, inil: initl },
-    { upsert: true} 
+    { upsert: true}
   ,function(err) { // save or update chart data
     if (err) res.send(err)
-    res.send('OK'); 
+    res.send('OK');
   });
 
-  
+
 });
 
 // Backup wallet to local USB drive
@@ -1713,25 +1739,25 @@ app.get('/adduser/:username/:email/:password', function(req, res, next){
 if (signupsopen == true) {
 switch (req.params.username) {
   case 'root':
-    res.send('Bad Username'); 
-    break;  
+    res.send('Bad Username');
+    break;
   case 'admin':
-    res.send('Bad Username'); 
+    res.send('Bad Username');
     break;
   case 'sudo':
-    res.send('Bad Username'); 
-    break;  
+    res.send('Bad Username');
+    break;
   case 'server':
-    res.send('Bad Username'); 
-    break;  
+    res.send('Bad Username');
+    break;
   case 'mod':
-    res.send('Bad Username'); 
+    res.send('Bad Username');
     break;
   case 'vbit':
-    res.send('Bad Username'); 
+    res.send('Bad Username');
     break;
   case 'vbit.io':
-    res.send('Bad Username'); 
+    res.send('Bad Username');
     break;
   default:
 
@@ -1825,7 +1851,7 @@ app.get('/newpassword/:username/:currentpassword/:newpassword', function(req, re
                                   if (err) throw(err);
                                   // override the cleartext password with the hashed one
                                   password = hash;
-                                  
+
                           var update = { password: password, passwordlast: time };
                           User.update({ username: user.username }, update, function(err) {
                              if (err) { throw (err) } else {
@@ -2178,6 +2204,10 @@ Bitcoinconnect(function(client) {
 //console.log(balances);
 
 function loginfo(){
+
+
+
+
   gclient.cmd('getinfo', function(err, info){
   if (err) throw (err);
     console.log('Bitcoin loaded ', info);
@@ -2284,17 +2314,21 @@ function listtx(username, cb) {
   //   }
   // });
 
-  Usertx.find({ username: username }, function (err, docs) { 
+  Usertx.find({ username: username }, function (err, docs) {
     if (err) throw (err);
     cb(err, docs);
   })
 }
 
 function createAddress(label, cb) {
-  gclient.cmd('getnewaddress', label, function(err, add, resHeaders) {
-    if (err) throw (err);
-    cb(err, add);
-  });
+  if (coin) {
+    coin.emit('getnewaddress', { label: label });
+    coin.on('getnewaddress', function (data) {
+      cb(data.err, data.address);
+    });
+  } else {
+    cb('Coin Connection');
+  }
 }
 
 function listreceivedbyaddress(cb) {
@@ -2391,20 +2425,20 @@ function randomString(length, chars) {
 }
 
 // comparer : function(currentElement)
-Array.prototype.inArray = function(comparer) { 
-    for(var i=0; i < this.length; i++) { 
-        if(comparer(this[i])) return true; 
+Array.prototype.inArray = function(comparer) {
+    for(var i=0; i < this.length; i++) {
+        if(comparer(this[i])) return true;
     }
-    return false; 
-}; 
+    return false;
+};
 
-// adds an element to the array if it does not already exist using a comparer 
+// adds an element to the array if it does not already exist using a comparer
 // function
-Array.prototype.pushIfNotExist = function(element, comparer) { 
+Array.prototype.pushIfNotExist = function(element, comparer) {
     if (!this.inArray(comparer)) {
         this.push(element);
     }
-}; 
+};
 // Function to add custom formats to dates in milliseconds
 Date.prototype.customFormat = function(formatString){
     var YYYY,YY,MMMM,MMM,MM,M,DDDD,DDD,DD,D,hhh,hh,h,mm,m,ss,s,ampm,AMPM,dMod,th;
