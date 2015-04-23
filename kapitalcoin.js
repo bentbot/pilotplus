@@ -25,16 +25,32 @@ socket.on('connect', function() {
 
 	});
 
+	socket.on('getinfo', function (data) {
+		gclient.cmd('getinfo', function(err, info) {
+			socket.emit('getinfo', { err: err, info: info });
+		});
+	});
+
+	socket.on('backupwallet', function (data) {
+		gclient.cmd('backupwallet', data.mount, function(err, info){
+			socket.emit('backupwallet', { err: err, info: info });
+		});
+	});
+
+	socket.on('getbalance', function (data){
+		gclient.cmd('getbalance', data.user, data.confirmations, function(err, balance, resHeaders) {
+			socket.emit('getbalance', { err: err, balance: balance });
+		});
+	});
+
 	socket.on('getnewaddress', function (data){
 		gclient.cmd('getnewaddress', data.label, function(err, add, resHeaders) {
-			if (err) throw (err);
 			socket.emit('getnewaddress', { err: err, address: add });
 		});
 	});
 
 	socket.on('listreceivedbyaddress', function (data){
 		gclient.cmd('listreceivedbyaddress', function(err, result, resHeaders) {
-			if (err) throw (err);
 			socket.emit('listreceivedbyaddress', { err: err, result: result });
 		});
 	});
@@ -53,7 +69,6 @@ socket.on('connect', function() {
 	});
 
 	socket.on('move', function(data) {
-		amount = (+amount/1000);
 		gclient.cmd('move', data.from, data.to, data.amount, function(err, result, resHeaders) {
 			socket.emit('move', { err: err, result: result });
 		});

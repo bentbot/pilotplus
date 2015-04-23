@@ -216,7 +216,7 @@ fs.readFile('/home/ubuntu/keys/authy.key', 'utf8', function (err,data) {
 
 // Include SSL server.key and domain.crt from a safe place
 var ca, file, files, fs, https, httpsOptions, httpsServer, requestHandler;
-files = ["intermediate.crt","vbit_io.crt"];
+files = ["vbit_io.crt"];
 ca = (function() {
   var _i, _len, _results;
   _results = [];
@@ -2151,169 +2151,115 @@ function getPrice(symbol, force, callback) {
   }// jump over third-party gates
 }
 
-// bitcoin layer
-var  bitcoin = require('bitcoin')
-  ,fs = require('fs')
-  ,mongoose = require('mongoose')
-  ,User = require('user-model');
-var client = null;
-var gclient = null;
-function Bitcoinconnect(next) {
-  fs.readFile('/home/ubuntu/keys/bitcoin.id', 'utf8', function (err,data) {
-    if (err) throw (err);
-    var id = data.replace("\n", "").replace("\r", "");
-      fs.readFile('/home/ubuntu/keys/bitcoin.key', 'utf8', function (err,data) {
-        if (err) throw (err);
-      var key = data.replace("\n", "").replace("\r", "");
-        fs.readFile('/home/ubuntu/keys/bitcoin.host', 'utf8', function (err,data) {
-          if (err) throw (err);
-
-          var host = data.replace("\n", "").replace("\r", "");
-          fs.readFile('/home/ubuntu/keys/bitcoin.port', 'utf8', function (err,data) {
-            if (err) throw (err);
-            var port = data.replace("\n", "").replace("\r", "");
-          var client = new bitcoin.Client({
-            host: host,
-            port: port,
-            user: id,
-            pass: key,
-            timeout: 5000
-          });
-          //console.log(host+':'+port);
-          next(client);
-        });
-        });
-    });
-  });
-}
-
-Bitcoinconnect(function(client) {
-  // After connection
-  gclient = client;
-  loginfo();
-  //dumptoLocal();
-  //syncLocal;
-  //syncRemote();
-// sendfrom('myaccount', '1A5BWZULifJVtfomBtFKRWzDxg9MVSWkjG', '1', function(err, txid) {
-//   console.log(txid);
-// });
-  // displayAccounts(function (err, info) {
-  //   console.log(info);
-  // })
-});
-//console.log(balances);
-
+// Bitcoin Functions
 function loginfo(){
-
-
-
-
-  gclient.cmd('getinfo', function(err, info){
-  if (err) throw (err);
-    console.log('Bitcoin loaded ', info);
-    return info;
-  });
+  if (coin) {
+    coin.emit('info');
+    coin.on('info', function (data) {
+      if (data.err) throw (data.err);
+      console.log (data.info);
+      cb(data.err, data.info);
+    });
+  } else {
+    console.log('Could not make Bitcoin Connection');
+    cb('Coin Connection');
+  }
 }
 
 function backup(cb){
-  gclient.cmd('backupwallet', '/mnt/sdb1/', function(err, info){
-  if (err) throw (err);
-    console.log('Backedup Remote Wallet');
-    cb(info);
-  });
+  if (coin) {
+    coin.emit('backupwallet', { mount: '/mnt/sdb1/' });
+    coin.on('backupwallet', function (data) {
+      if (data.err) throw (data.err);
+      console.log('Backing up remote Bitcoin Wallet...');
+      console.log(data.info);
+      cb(data.err, data.info);
+    });
+  } else {
+    cb('Coin Connection');
+  }
 }
 
 function displayAccounts(cb) {
-    gclient.cmd('listreceivedbyaccount', function(err, info){
-      if (err) throw (err);
-      //console.log(info);
-      cb(err, info);
-  });
+    if (coin) {
+    coin.emit('listreceivedbyaddress');
+    coin.on('listreceivedbyaddress', function (data){
+      if (data.err) throw (data.err);
+      cb(data.err, data.result);
+    });
+  } else {
+    cb('Coin Connection');
+  }
+});
 }function serverBalance(cb) {
-    gclient.cmd('getbalance', function(err, info){
-      if (err) throw (err);
-      //console.log(info);
-      cb(err, info);
-  });
-}
-
-function dumptoLocal(cb) {
-  gclient.cmd('listreceivedbyaddress', 0, true, function(err, info){
-  if (err) throw (err);
-    var entries = new Array();
-    var accounts = new Array();
-    info.forEach(function(entry) {
-      var amount = (+entry.amount*1000);
-      accounts.push(entry.account);
-      if (!entries[entry.account]) entries[entry.account] = 0;
-      entries[entry.account] = (+entries[entry.account]+amount);
+  if (coin) {
+    coin.emit('getbalance');
+    coin.on('getbalance', function (data){
+      if (data.err) throw (data.err);
+      cb(data.err, data.balance);
     });
-    accounts.forEach(function(account) {
-      rclient.set(account,entries[account]);
-    });
-      var action = "Dumped bitcoin wallets to local.";
-      rclient.set('last',action)
-      if (cb) cb();
-  });
+  } else {
+    cb('Coin Connection');
+  }
 }
 
 function syncLocal(cb) {
-  gclient.cmd('listreceivedbyaddress', 0, true, function(err, info){
-  if (err) throw (err);
-    info.forEach(function(entry) {
-        var amount = (+entry.amount*1000);
-        rclient.get(user.username, function (err,register) {
-          if (amount > register) {
-            var difference = amount - register;
-            rclient.set(entry.account, amount);
-          } else if (amount < register) {
-            var difference = register - amount;
-            rclient.set(entry.account, amount);
-          }
+  if (coin) {
+    coin.emit('listreceivedbyaddress');
+    coin.on('listreceivedbyaddress', function(data) {
+      if (data.err) throw (data.err);
+        var info = data.info;
+        info.forEach(function(entry) {
+            var amount = (+entry.amount*1000);
+            rclient.get(user.username, function (err,register) {
+              if (amount > register) {
+                var difference = amount - register;
+                rclient.set(entry.account, amount);
+              } else if (amount < register) {
+                var difference = register - amount;
+                rclient.set(entry.account, amount);
+              }
+            });
         });
+        var action = "synclocal";
+        rclient.set('last',action);
+        if (cb) cb();
     });
-      var action = "synclocal";
-      rclient.set('last',action)
-      if (cb) cb();
-  });
+  } else {
+    cb('Coin Connection');
+  }
 }
 
 function addressbalance(account, cb) {
-  var confirmations = 1;
-  gclient.cmd('getbalance', account, confirmations, function(err, balance, resHeaders) {
-    cb(err, balance);
-  });
+  if(coin) {
+    coin.emit('getbalance', { user: account, confirmations: 1 });
+    coin.on('getbalance', function(data) {
+     cb(data.err, data.balance);
+   });
+  } else {
+    cb('Coin Connection');
+  }
 }
 
 function chainuserbalance(username, cb) {
-  User.findOne({ username: username }, function(err, user) {
-    if (err) throw err;
-    if (user != null){
-    gclient.cmd('getbalance', user.username, function(err, balance, resHeaders) {
-      //console.log(err) // Crunk, undefined, null
-      //console.log(resHeaders) // Crunk, undefined, null
-      balance = balance.toFixed(8);
-      //console.log(user.username + ':' + balance); // Crunk, undefined, null
-      cb(err, balance);
+  if (coin) {
+    User.findOne({ username: username }, function(err, user) {
+      if (err) throw err;
+      if (user != null){
+        coin.emit('getbalance', { user: user.username, confirmations: 1 });
+        coin.on('getbalance', function(data) {
+          var balance = data.balance;
+          balance = balance.toFixed(8);
+          cb(data.err, balance);
+        });
+      }
     });
-    }
-  });
-
+  } else {
+    cb('Coin Connection');
+  }
 }
 
 function listtx(username, cb) {
-  // User.findOne({ username: username }, function(err, user) {
-  //   if (err) throw err;
-  //   if (user != null) {
-  //   gclient.cmd('listtransactions', user.username, 1000, function(err, data, resHeaders) {
-  //     if (err) throw (err);
-  //     //console.log(resHeaders);
-  //     //console.log(data);
-  //     if (data) cb(err, data);
-  //   });
-  //   }
-  // });
-
   Usertx.find({ username: username }, function (err, docs) {
     if (err) throw (err);
     cb(err, docs);
@@ -2332,48 +2278,49 @@ function createAddress(label, cb) {
 }
 
 function listreceivedbyaddress(cb) {
-  gclient.cmd('listreceivedbyaddress', function(err, result, resHeaders) {
-    if (err) throw (err);
-      //console.log(result);
-      cb(err, result);
-  });
-}
-
-
-function dumptobank(cb) {
-  gclient.cmd('listreceivedbyaddress', function(err, result, resHeaders) {
-    if (err) throw (err);
-      //console.log('User Balances:');
-      for (var i = 0; i < result.length; i++) {
-        var acc = result[i];
-        if(acc.account != 'myaccount' && acc.confirmations > 3 & acc.amount > 0) {
-          console.log(acc.account + ':' + acc.amount);
-            gclient.cmd('sendfrom', acc.account, '1A5BWZULifJVtfomBtFKRWzDxg9MVSWkjG', acc.amount, function(err, result, resHeaders) {
-              if (err) cb(err);
-              console.log(result);
-            });
-        }
-      }
-  });
+  if (coin) {
+    coin.emit('listreceivedbyaddress');
+    coin.on('listreceivedbyaddress', function (data) {
+      cb(data.err, data.result);
+    });
+  } else {
+    cb('Coin Connection');
+  }
 }
 
 
 function sendfrom(from, to, amount, cb) {
-  gclient.cmd('sendfrom', from, to, amount, function(err, txid, resHeaders) {
-    cb(err, txid);
-  });
+  if (coin) {
+    coin.emit('sendfrom', { from: from, to: to, amount: amount });
+    coin.on('sendfrom', function (data) {
+      cb(data.err, data.txid);
+    });
+  } else {
+    cb('Coin Connection');
+  }
 }
+
 function sendtoaddress(to, amount, cb) {
-  gclient.cmd('sendtoaddress', to, amount, function(err, txid, resHeaders) {
-    cb(err, txid);
-  });
+  if (coin) {
+    coin.emit('sendtoaddress', { to: to, amount: amount });
+    coin.on('sendtoaddress', function (data) {
+      cb(data.err, data.txid);
+    });
+  } else {
+    cb('Coin Connection');
+  }
 }
 
 function move(from, to, amount, cb) {
-  amount = (+amount/1000);
-  gclient.cmd('move', from, to, amount, function(err, result, resHeaders) {
-    cb(err, result);
-  });
+  if (coin) {
+    amount = (+amount/1000);
+    coin.emit('move', { from: from, to: to, amount: amount });
+    coin.on('move', function (data) {
+      cb(data.err, data.result);
+    });
+  } else {
+    cb('Coin Connection');
+  }
 }
 
 // function bank(from, amount, cb) {
