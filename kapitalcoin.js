@@ -1,6 +1,8 @@
-var ioclient   	= require('socket.io-client')('https://vbit.io:3000'),
-	kapitalize 	= require('kapitalize'),
-	status		= false;
+var 	socket   	= require('socket.io-client')('https://vbit.io:3000'),
+	kapitalize 	= require('kapitalize')({
+		user: 'bitcoin',
+		pass: 'bitcoin'
+	});
 
 socket.on('connect', function() {
 
