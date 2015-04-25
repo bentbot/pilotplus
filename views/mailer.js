@@ -5,8 +5,8 @@ var nodemailer = require("nodemailer")
 var smtpTransport = nodemailer.createTransport("SMTP",{
     service: "Gmail",
     auth: {
-        user: fs.readFileSync('/home/node/keys/mail.id'),
-        pass: fs.readFileSync('/home/node/keys/mail.key')
+        user: fs.readFileSync('/home/ubuntu/keys/mail.id'),
+        pass: fs.readFileSync('/home/ubuntu/keys/mail.key')
     }
 });
 

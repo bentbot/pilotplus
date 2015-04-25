@@ -37,8 +37,7 @@ function showTerms() {
 
     html = html + '<h2>Security</h2><p>'+
       'This is an open source project. <b>Please send any bug reports to <a href="mailto:mail@vbit.io">mail@vbit.io</a> right away.</b><br />'+
-      'Security is a top concern, it is built in at every angle.'+
-      'To date there have been no security breaches.'+
+      'Security is a top concern, any breaches will be posted.'+
     '</p>'; 
 
     html = html + '<h2>Referrals</h2><p>'+

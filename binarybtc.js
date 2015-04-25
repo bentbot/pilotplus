@@ -10,7 +10,6 @@ var port = 8080
   , redis = require('redis')
   , passport = require('passport')
   , Keygrip = require('keygrip')
-  , bitcoin = require('bitcoin')
   , bson = require('bson')
   , async = require('async')
   , LocalStrategy = require('passport-local').Strategy

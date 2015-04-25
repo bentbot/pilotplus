@@ -13,7 +13,11 @@ function bottlepop(tx, amount) {
 
 // Trading
 $(function() {
+<<<<<<< HEAD
   var defaultsymbol = ['CADUSD'];
+=======
+  var defaultsymbol = ['BTCUSD'];
+>>>>>>> 3f1d22f20fb15d79da6a1d320a42ea7ca697c1d3
   page('trade', defaultsymbol);
 
 // $("[data-translate]").jqTranslate('trans',{defaultLang: 'es'});
