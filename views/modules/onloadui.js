@@ -13,10 +13,8 @@ function bottlepop(tx, amount) {
 
 // Trading
 $(function() {
-  var defaultsymbol = ['GCM14.CMX'];
+  var defaultsymbol = ['CADUSD'];
   page('trade', defaultsymbol);
-
-
 
 // $("[data-translate]").jqTranslate('trans',{defaultLang: 'es'});
 $(".hook").on("mousedown",".reveal",function(e) {
