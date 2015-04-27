@@ -19,6 +19,16 @@ $ tar xzf redis-3.0.0.tar.gz
 $ cd redis-3.0.0
 $ make
 ```
+Setup Mongodb with a local admin and so that NodeJS can connect.
+```
+$ mongo
+use admin
+db.addUser("supermongo", "7zof44Xncx2J1p8")
+db.auth("supermongo", "7zof44Xncx2J1p8")
+use binarybtc
+db.addUser("nodemongo", "WYd224Oa612h147")
+```
+
 ### 2. Install NodeJS both locally and remotely to start the servers
 ```
 $ sudo apt-get install npm
