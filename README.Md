@@ -37,7 +37,8 @@ $ sudo bash ./redis.sh
 $ nano /etc/redis/6379.conf
 
 * Set *daemonize* to yes
-* Ser *dir* to /var/redis/6379
+* Set *dir* to /var/redis/6379
+* Set *requirepass* redismasterpass
 
 ```
 ### 2. Install NodeJS both locally and remotely to start the servers
@@ -69,7 +70,7 @@ irc.host	irc://localhost:6697/vbit
 mail.id		Mail from address
 mail.key	Mail IMAP password
 mongo.key	Mongo connection URL: mongodb://nodemongo:MasterPassword@localhost/binarybtc
-redis.key	Redis connection URL: redis://RedisM4ST3RP4SS@localhost:6379/binarybtc
+redis.key	Redis requirepass
 send.key	Master Bitcoin sending password
 server.csr	Server SSL CSR
 server.key	Server SSL Key
