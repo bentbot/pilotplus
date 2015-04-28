@@ -4,20 +4,41 @@
 
 ### 1. Install Redis and MongoDB for user management
 ```
-nano mongo.sh
+Create a batch script to install MongoDB
+
+$ sudo nano mongo.sh
 
 apt-key adv --keyserver keyserver.ubuntu.com --recv 7F0CEB10
 echo "deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen" | tee -a /etc/apt/sources.list.d/10gen.list
 apt-get -y update
 apt-get -y install mongodb-10gen
 
-$ chmod +x ./mongo.sh
-$ bash ./mongo.sh
+$ sudo chmod +x ./mongo.sh
+$ sudo bash ./mongo.sh
 
-$ wget http://download.redis.io/releases/redis-3.0.0.tar.gz
-$ tar xzf redis-3.0.0.tar.gz
-$ cd redis-3.0.0
-$ make
+Install Redis and configure the daemon
+
+$ sudo nano redis.sh
+
+wget http://download.redis.io/releases/redis-3.0.0.tar.gz
+tar xzf redis-3.0.0.tar.gz
+cd redis-3.0.0
+make
+
+mkdir /etc/redis
+mkdir /var/redis
+mkdir /var/redis/6379
+cp ./redis-3.0.0/utils/redis_init_script /etc/init.d/redis_6375
+cp ./redis-3.0.0/redis.conf /etc/redis/6379.conf
+
+$ sudo chmod +x ./redis.sh
+$ sudo bash ./redis.sh
+
+$ nano /etc/redis/6379.conf
+
+* Set *daemonize* to yes
+* Ser *dir* to /var/redis/6379
+
 ```
 ### 2. Install NodeJS both locally and remotely to start the servers
 ```
