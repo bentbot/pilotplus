@@ -43,11 +43,6 @@ $ nano /etc/redis/6379.conf
 ```
 Setup Mongodb with a local admin and so that NodeJS can connect.
 ```
-<<<<<<< HEAD
-=======
-Setup Mongodb with a local admin and so that NodeJS can connect.
-```
->>>>>>> 83ab434f07de95bdb1df004e44e18f903604539f
 $ mongo
 use admin
 db.addUser("supermongo", "7zof44Xncx2J1p8")
