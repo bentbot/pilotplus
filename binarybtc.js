@@ -4,8 +4,15 @@ var port = 8080
   , path = require('path')
   , http = require('http')
   , nowjs = require('now')
+  , ejs = require('ejs')
   , https = require('https')
   , express = require('express')
+  , partials = require('express-partials')
+  , bodyParser = require('body-parser')
+  , cookieParser = require('cookie-parser')
+  , favicon = require('serve-favicon')
+  , session = require('express-session')
+  , servefavicon = require('serve-favicon')
   , mongoose = require('mongoose')
   , redis = require('redis')
   , passport = require('passport')
@@ -14,11 +21,10 @@ var port = 8080
   , async = require('async')
   , LocalStrategy = require('passport-local').Strategy
   , StringDecoder = require('string_decoder').StringDecoder
-  //, mailer = require('mailer')
   , irc = require('irc')
   , authy = require('authy-node')
   , bcrypt = require('bcrypt')
-  , nodemailer = require("nodemailer")
+  , nodemailer = require('nodemailer')
   , crypto = require('crypto');
 
   var SALT_WORK_FACTOR = 10;
@@ -38,7 +44,7 @@ var port = 8080
     });
       // Allow console to talk
       var stdin = process.stdin;
-      stdin.setRawMode( true );
+      //stdin.setRawMode( true );
       stdin.resume();
       stdin.setEncoding( 'utf8' );
       var cons = '';
@@ -77,7 +83,6 @@ var clock = setInterval(function() {
 
 // create reusable transport method (opens pool of SMTP connections)
 var smtpTransport = nodemailer.createTransport("SMTP",{
-    service: "Gmail",
     auth: {
         user: fs.readFileSync('/home/ubuntu/keys/mail.id'),
         pass: fs.readFileSync('/home/ubuntu/keys/mail.key')
@@ -227,24 +232,25 @@ ca = (function() {
 })();
 
 var options = {
-  ca: ca,
   key: fs.readFileSync('/home/ubuntu/keys/server.key'),
   cert: fs.readFileSync('/home/ubuntu/keys/vbit_io.crt')
 }
 // Start secure webserver
 //var keys = new Keygrip(["SEKRIT2", "SEKRIT1"]);
 var app = module.exports = express();
-app.configure(function() {
-  app.use(express.static('public'));
-  app.use(app.router);
-  app.use(express.cookieParser('SEKRIT1'));
-  app.use(passport.initialize());
-  app.use(passport.session());
-  app.use(express.bodyParser());
-});
-app.engine('.html', require('ejs').__express);
+
+
+//app.engine('.html', require('ejs').__express);
 app.set('views', __dirname + '/views');
-app.set('view engine', 'html');
+app.set('view engine', 'ejs');
+
+app.use(partials());
+app.use(express.static('public'));
+app.use(cookieParser('SEKRIT1'));
+app.use(passport.initialize());
+app.use(passport.session());
+app.use(bodyParser.text({ type: 'text/html' }));
+
 // Create the server object
 var server = https.createServer(options, app).listen(port, function(){
   console.log("Express server listening on port " + port);
