@@ -7,7 +7,6 @@ var port = 8080
   , ejs = require('ejs')
   , https = require('https')
   , express = require('express')
-  , partials = require('express-partials')
   , bodyParser = require('body-parser')
   , cookieParser = require('cookie-parser')
   , favicon = require('serve-favicon')
@@ -25,47 +24,112 @@ var port = 8080
   , authy = require('authy-node')
   , bcrypt = require('bcrypt')
   , nodemailer = require('nodemailer')
-  , crypto = require('crypto');
+  , crypto = require('crypto')
+  , keys = require('./keys.json')
 
-  var SALT_WORK_FACTOR = 10;
+keys.ssl.lock = { 
+  "ca": fs.readFileSync(JSON.stringify(keys.ssl.ca).split('"')[1], 'utf8'),
+  "key": fs.readFileSync(JSON.stringify(keys.ssl.key).split('"')[1], 'utf8'),
+  "cert": fs.readFileSync(JSON.stringify(keys.ssl.cert).split('"')[1], 'utf8')
+}
+
+var SALT_WORK_FACTOR = 10;
+
+// User Framework
+
+var UserSchema = new mongoose.Schema({
+    username: { type: String, required: true },
+    password: { type: String, required: true },
+    passwordlast: { type: String },
+    email: { type: String, required: true },
+    verifiedemail: { type: String, required: true },
+    btc: { type: String, required: true },
+    logins: { type: String },
+    authy: {type: String }
+});
+
+UserSchema.pre('save', function(next) {
+    var user = this;
+
+    // only hash the password if it has been modified (or is new)
+    if (!user.isModified('password')) return next();
+
+    // generate a salt
+    bcrypt.genSalt(SALT_WORK_FACTOR, function(err, salt) {
+        if (err) return next(err);
+
+        // hash the password using our new salt
+        bcrypt.hash(user.password, salt, function(err, hash) {
+            if (err) return next(err);
+
+            // override the cleartext password with the hashed one
+            user.password = hash;
+            next();
+        });
+    });
+});
+UserSchema.pre('update', function(next) {
+    var user = this;
+
+    // only hash the password if it has been modified (or is new)
+    if (!user.isModified('password')) return next();
+
+    // generate a salt
+    bcrypt.genSalt(SALT_WORK_FACTOR, function(err, salt) {
+        if (err) return next(err);
+
+        // hash the password using our new salt
+        bcrypt.hash(user.password, salt, function(err, hash) {
+            if (err) return next(err);
+
+            // override the cleartext password with the hashed one
+            user.password = hash;
+            next();
+        });
+    });
+});
+
+UserSchema.methods.comparePassword = function(candidatePassword, cb) {
+    bcrypt.compare(candidatePassword, this.password, function(err, isMatch) {
+        if (err) throw(err);
+        cb(isMatch, err);
+    });
+};
+
+var User = mongoose.model('users', UserSchema);
 
 // IRC Listener
-  var messages = new Array();
-  fs.readFile('/home/ubuntu/keys/irc.host', 'utf8', function (err,data) {
-  if (err) throw (err)
-  var host = data.replace("\n", "").replace("\r", "");
-  var name = 'root';
-    var girclient = new irc.Client(host, name, {
-      channels: ['#deetz'],
-    });
-      girclient.addListener('message#deetz', function (from, message) {
-      messages.push({from:from, message:message});
-      console.log(from+':'+message);
-    });
-      // Allow console to talk
-      var stdin = process.stdin;
-      //stdin.setRawMode( true );
-      stdin.resume();
-      stdin.setEncoding( 'utf8' );
-      var cons = '';
-      stdin.on( 'data', function( key ){
-        // ctrl-c ( end of text )
-        if ( key === '\u0003' ) {
-          process.exit();
-        }
-        cons = cons + key;
-        if ( key === '\u000D' ) {
-          if (cons.charAt(0) == '/') {
-            console.log(cons);
-          } else {
-            girclient.say('#deetz', cons);
-            console.log('root:'+cons);
-            cons = '';
-          }
-        }
+var messages = new Array();
+var girclient = new irc.Client(keys.irc, 'root', {
+  channels: ['#deetz'],
+});
+girclient.addListener('message#deetz', function (from, message) {
+  messages.push({from:from, message:message});
+  console.log(from+':'+message);
+});
+// Allow console to talk
+var stdin = process.stdin;
+//stdin.setRawMode( true );
+stdin.resume();
+stdin.setEncoding( 'utf8' );
+var cons = '';
+stdin.on( 'data', function( key ){
+  // ctrl-c ( end of text )
+  if ( key === '\u0003' ) {
+    process.exit();
+  }
+  cons = cons + key;
+  if ( key === '\u000D' ) {
+    if (cons.charAt(0) == '/') {
+      console.log(cons);
+    } else {
+      girclient.say('#deetz', cons);
+      console.log('root:'+cons);
+      cons = '';
+    }
+  }
 
-      });
-  });
+});
 
 
 // Global clock
@@ -82,13 +146,7 @@ var clock = setInterval(function() {
 // Mailer
 
 // create reusable transport method (opens pool of SMTP connections)
-var smtpTransport = nodemailer.createTransport("SMTP",{
-    auth: {
-        user: fs.readFileSync('/home/ubuntu/keys/mail.id'),
-        pass: fs.readFileSync('/home/ubuntu/keys/mail.key')
-    }
-});
-
+var smtpTransport = nodemailer.createTransport("SMTP");
 
 function sendConfirmation(to, key, cb) {
 var rand = Math.random();
@@ -117,16 +175,13 @@ smtpTransport.sendMail(mailOptions, function(err, response){
 }
 
 // Database connect
-fs.readFile('/home/ubuntu/keys/mongo.key', 'utf8', function (err,data) {
-  if (err) throw (err)
-  var key = data.replace("\n", "").replace("\r", "");
-  mongoose.connect(key);
-  var db = mongoose.connection;
-  db.on('error', console.error.bind(console, 'connection error:'));
-  db.once('open', function callback () {
-    console.log('Database connected on port 27017');
-  });
+mongoose.connect(keys.mongo);
+var db = mongoose.connection;
+db.on('error', console.error.bind(console, 'connection error:'));
+db.once('open', function callback () {
+  console.log('Database connected on port 27017');
 });
+
 // Setup database schemas and models
 var schema = new mongoose.Schema({ key: 'string', user: 'string', createdAt: { type: Date, expires: '1h' }});
 var Activeusers = mongoose.model('activeusers', schema);
@@ -156,21 +211,11 @@ var Userverify = mongoose.model('userverify', schema);
 Pageviews.remove({}, function(err) {
   if (err) console.log(err);
 });
-// Activetrades.remove({}, function(err) {
-//   if (err) console.log(err);
-// });
-
-
 
 // Key value connect and money handling
-  fs.readFile('/home/ubuntu/keys/redis.key', 'utf8', function (err,data) {
-    if (err) throw (err);
-    var key = data.replace("\n", "").replace("\r", "");
-    var options = {
-      auth_pass: key
-    }
-    rclient = redis.createClient(null, null, options);
-  });
+rclient = redis.createClient();
+rclient.auth(keys.redis);
+
 function pay(amount, tradeuser) {
   amount = round(amount, 6);
   rclient.get('myaccount', function(err, reply) {
@@ -208,43 +253,22 @@ function pay(amount, tradeuser) {
 }
 
 // 2 Factor
-fs.readFile('/home/ubuntu/keys/authy.key', 'utf8', function (err,data) {
-  if (err) throw (err)
-  var key = data.replace("\n", "").replace("\r", "");
-  authy.api.mode = 'production'
-  authy.api.token = key;
-});
-
+authy.api.mode = 'production'
+authy.api.token = keys.authy;
 
 // Webserver
 
 // Include SSL server.key and domain.crt from a safe place
 var ca, file, files, fs, https, httpsOptions, httpsServer, requestHandler;
-files = ["vbit_io.crt"];
-ca = (function() {
-  var _i, _len, _results;
-  _results = [];
-  for (_i = 0, _len = files.length; _i < _len; _i++) {
-    file = files[_i];
-    _results.push(fs.readFileSync("/home/ubuntu/keys/" + file));
-  }
-  return _results;
-})();
 
-var options = {
-  key: fs.readFileSync('/home/ubuntu/keys/server.key'),
-  cert: fs.readFileSync('/home/ubuntu/keys/vbit_io.crt')
-}
+
 // Start secure webserver
-//var keys = new Keygrip(["SEKRIT2", "SEKRIT1"]);
+//var keygrip = new Keygrip(["SEKRIT2", "SEKRIT1"]);
 var app = module.exports = express();
 
-
-//app.engine('.html', require('ejs').__express);
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
 
-app.use(partials());
 app.use(express.static('public'));
 app.use(cookieParser('SEKRIT1'));
 app.use(passport.initialize());
@@ -252,17 +276,13 @@ app.use(passport.session());
 app.use(bodyParser.text({ type: 'text/html' }));
 
 // Create the server object
-var server = https.createServer(options, app).listen(port, function(){
+var server = https.createServer(keys.ssl.lock, app).listen(port, function(){
   console.log("Express server listening on port " + port);
 });
 
 // Start secure socket server
-var io = require('socket.io').listen(3000, options);
+var io = require('socket.io').listen(3000, keys.ssl.lock);
 io.set('log level', 1); // reduce logging
-
-// User Middleware
-var User = require('user-model');
-
 
 
 // Tradeserver Variables
@@ -755,7 +775,7 @@ var symbols = ['BTCUSD', 'LTCUSD', 'EURUSD', 'GBPUSD', 'CADUSD', 'AAPL', 'GOOG',
       if (err) throw(err);
   });
 
-}, 2753);
+}, 6753);
 
 
 User.count({ }, function (err, count) {
@@ -2034,10 +2054,18 @@ function processTrade(trades) {
 }
 
 
-
-
 var chartdata = new Array();
 var lag = 0;
+var btceoptions = {
+  host: 'btc-e.com',
+  port: 443,
+  path: '/api/2/btc_usd/ticker',
+  method: 'GET',
+  cert: keys.ssl.lock.cert,
+  key: keys.ssl.lock.key,
+  agent: false
+};
+
 function getPrice(symbol, force, callback) {
   var err = 0;var data = null;
 
@@ -2045,12 +2073,8 @@ function getPrice(symbol, force, callback) {
   var symb = symbol.match(/.{3}/g);
   var symb = symbol.toLowerCase();
   symb = symb[0];
-  var options = {
-    host: 'btc-e.com',
-    port: 443,
-    path: '/api/2/btc_usd/ticker'
-  };
-  https.get(options, function(resp){
+
+  var req = https.request(btceoptions, function(resp){
     var decoder = new StringDecoder('utf8');
     resp.on('data', function(chunk){
       chunk = decoder.write(chunk);
@@ -2070,20 +2094,16 @@ function getPrice(symbol, force, callback) {
       }
     });
   }).on("error", function(e){
-    console.log("Got "+options.host+" error: " + e.message);
+    console.log("Got "+btceoptions.host+" error: " + e.message);
   }); // if symbol is a currency, we run it through for the exchange rate
   }  else if (symbol == 'LTCUSD') { // || symbol == 'NMCUSD' || symbol == 'NVCUSD' || symbol == 'NVCUSD'
   var symb = symbol.match(/.{3}/g);
   var symb = symbol.toLowerCase();
   symb = symb[0];
-  var options = {
-    host: 'btc-e.com',
-    port: 443,
-    path: '/api/2/ltc_usd/ticker'
-  };
-  https.get(options, function(resp){
+
+  var req = https.request(btceoptions, function(res){
     var decoder = new StringDecoder('utf8');
-    resp.on('data', function(chunk){
+    res.on('data', function(chunk){
       chunk = decoder.write(chunk);
       //console.log(chunk)
       var data = chunk.split(',');
@@ -2101,7 +2121,7 @@ function getPrice(symbol, force, callback) {
       }
     });
   }).on("error", function(e){
-    console.log("Got "+options.host+" error: " + e.message);
+    console.log("Got "+btceoptions.host+" error: " + e.message);
   }); // if symbol is a currency, we run it through for the exchange rate
   } else if (symbol == 'EURUSD' || symbol == 'GBPUSD' || symbol == 'CADUSD') {
   var options = {
@@ -2109,9 +2129,9 @@ function getPrice(symbol, force, callback) {
     port: 80,
     path: '/d/quotes.csv?s='+symbol+'=X&f=sl1d1t1c1ohgv&e=.csv'
   };
-  http.get(options, function(resp){
+  http.get(options, function(res){
     var decoder = new StringDecoder('utf8');
-    resp.on('data', function(chunk){
+    res.on('data', function(chunk){
       chunk = decoder.write(chunk);
       data = chunk.split(',');
       data = data[1];
@@ -2135,9 +2155,9 @@ function getPrice(symbol, force, callback) {
     port: 80,
     path: '/d/quotes.csv?s='+symbol+'&f=sl1d1t1c1ohgv&e=.csv'
   };
-  http.get(options, function(resp){
+  http.get(options, function(res){
     var decoder = new StringDecoder('utf8');
-    resp.on('data', function(chunk){
+    res.on('data', function(chunk){
       chunk = decoder.write(chunk);
       data = chunk.split(',');
       data = data[1];

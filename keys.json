@@ -1,0 +1,13 @@
+{
+	"authy": "7a62ad572fb2b77aac354d32c9653fba",
+	"coin": "kapitalcoin private key",
+	"irc": "irc://localhost:6667/vbit",
+	"mongo": "mongodb://nodemongo:gBqYMU115g2n44M@localhost/binarybtc",
+	"redis": "169buildinglsbonr3memb3rproud789",
+	"send": "mastersend",
+	"ssl": {
+		"ca": "/home/ubuntu/keys/server.ca",
+		"key": "/home/ubuntu/keys/server.key",
+		"cert": "/home/ubuntu/keys/vbit_io.crt"
+	}
+}
