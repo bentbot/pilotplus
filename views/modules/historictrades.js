@@ -1,4 +1,4 @@
-function showhistoric(data, user, trim){
+function showhistoric(data, user, trim) {
     if (!trim) trim = 0;
     var twins = 0;
     var tpush = 0;
@@ -6,7 +6,7 @@ function showhistoric(data, user, trim){
     var tid = 0;
     $('.historictrades').html('');
     var tradehtml = '';
-    if (trim==0) tradehtml = tradehtml+ '<div class="userblock"><div class="header" data-translate="historictrades">Historic Trades <span style="float:right"><span class="green twins">x</span>/<span class="orange tpush">y</span>/<span class="red tlosses">z</span></span></div>';    
+    if (trim==0) tradehtml = tradehtml+ '<div class="userblock"><div class="header" data-translate="historictrades">Historic Trades <span style="float:right"><span class="green twins">x</span> / <span class="orange tpush">y</span> / <span class="red tlosses">z</span></span></div>';    
     if (trim>0) tradehtml = tradehtml+ '<div class="userblock"><div class="header" data-translate="lasttrades">Last Trades </div>';    
     if (data) {
     tradehtml = tradehtml + '<div class="row-fluid"><div class="span12"><div><table class="table" id="historictrades">';
@@ -14,7 +14,7 @@ function showhistoric(data, user, trim){
     var index;
     for (index = 0; index < data.length; ++index) {
       entry = data[index];
-       //console.log(entry.symbol);
+
       entry.symbol = symbolSwitch(entry.symbol);
 
       if (entry.user == user) {
@@ -46,20 +46,38 @@ function showhistoric(data, user, trim){
         if (tid <= trim) {
         if (entry.outcome == 'Win') {
           twins++;
-          var thumbhtml = '<span class="green" data-translate="won">Won</span></td><td> m<i class="fa fa-btc"></i>'+possiblewin+'</span></td>';
+          var thumbhtml = '<span class="green" data-translate="won">Won</span>';
         } else if (entry.outcome == 'Lose') {
           tlosses++;
-          var thumbhtml = '<span class="red" data-translate="lost">Lost</span></td><td> m<i class="fa fa-btc"></i>'+entry.amount+'</span></td>';
+          var thumbhtml = '<span class="red" data-translate="lost">Lost</span>';
         } else if (entry.outcome == 'Tie') {
           tpush++;
-          var thumbhtml = '<span class="orange">Push</span></td><td> m<i class="fa fa-btc"></i>'+entry.amount+'</span></td>';
+          var thumbhtml = '<span class="orange">Push</span>';
         }
-        tradehtml = tradehtml + '<tr class="historictrade" id="'+entry._id+'">' +
-                    '<td class="symbol keystonelink" id="'+entry.symbol+'">'+entry.symbol+'</td>'+
-                    '<td><time class="timeago" datetime="'+iodate+'">'+entrytime+'</time></td>'+
-                    '<td>'+arrowhtml+' <span class="tradeprice">'+entry.price+'</span></td>'+
+
+        var currencyicon;
+        if (entry.currency == 'BTC') { 
+          currencyicon = 'm<i class="fa fa-btc"></i>'; 
+        } else if (entry.currency == 'CAD') {
+          currencyicon = 'CAD <i class="fa fa-dollar"></i>'; 
+        } else if (entry.currency == 'EUR') {
+          currencyicon = 'EUR <i class="fa fa-eur"></i>'; 
+        } else if (entry.currency == 'GBP') {
+          currencyicon = 'GBP <i class="fa fa-gbp"></i>';
+        } else if (entry.currency == 'USD') {
+          currencyicon = 'USD <i class="fa fa-dollar"></i>';
+        } else {
+          currencyicon = '<i class="fa fa-dollar"></i>';
+        }
+
+        tradehtml = tradehtml + '<tr class="historictrade" data-symbol="'+entry._id+'">' +
+                    '<td class="symbol keystonelink" data-symbol="'+entry.symbol+'">'+entry.symbol+'</td>'+
+                    '<td class="time"><i style="opacity: 0.7"  class="fa fa-clock-o"></i> <time class="timeago" datetime="'+iodate+'">'+entrytime+'</time></td>'+
+                    '<td class="trade">'+arrowhtml+' <span class="tradeprice">'+entry.price+'</span></td>'+
+                    '<td class="price"><i style="opacity: 0.7"  class="fa fa-bell-o"></i> <span class="tradeprice">'+entry.finalprice+'</span></td>'+
+                    '<td class="outcome">'+thumbhtml+'</td>'+
+                    '<td class="currency">'+currencyicon+' '+entry.winnings+'</td>'+
                     //'<td title="Expires: '+thisdate+' '+thistime+'">'+thistime+'</td>'+
-                    '<td>'+thumbhtml+'</td>'+
                     //'<td class="bold" title="Expires: '+thisdate+' '+thistime+'">Trade in: <span class="expiretime"></span></td>'+
                   '</tr>';
         if (trim > 0) tid++;
@@ -81,7 +99,7 @@ function showallhistoric(data, user, trim){
     var tid = 0;
     $('.allhistorictrades').html('');
     var tradehtml = '';
-    if (trim==0) tradehtml = tradehtml+ '<div class="userblock"><div class="header" data-translate="historictrades">Historic Trades <span style="float:right"><span class="green twins">x</span>/<span class="orange tpush">y</span>/<span class="red tlosses">z</span></span></div>';    
+    if (trim==0) tradehtml = tradehtml+ '<div class="userblock"><div class="header" data-translate="historictrades">Historic Trades <span style="float:right"><span class="green twins">x</span> / <span class="orange tpush">y</span> / <span class="red tlosses">z</span></span></div>';    
     if (trim>0) tradehtml = tradehtml+ '<div class="userblock"><div class="header" data-translate="lasttrades">Last Trades</div>';    
     if (data) {
     tradehtml = tradehtml + '<div class="row-fluid"><div class="span12"><div><table class="table" id="historictrades">';
@@ -120,20 +138,39 @@ function showallhistoric(data, user, trim){
         if (tid <= trim) {
         if (entry.outcome == 'Win') {
           twins++;
-          var thumbhtml = '<span class="green" data-translate="won">Won</span></td><td> m<i class="fa fa-btc"></i>'+possiblewin+'</span></td>';
+          var thumbhtml = '<span class="green" data-translate="won">Won</span>';
         } else if (entry.outcome == 'Lose') {
           tlosses++;
-          var thumbhtml = '<span class="red" data-translate="lost">Lost</span></td><td> m<i class="fa fa-btc"></i>'+entry.amount+'</span></td>';
+          var thumbhtml = '<span class="red" data-translate="lost">Lost</span>';
         } else if (entry.outcome == 'Tie') {
           tpush++;
-          var thumbhtml = '<span class="orange">Push</span></td><td> m<i class="fa fa-btc"></i>'+entry.amount+'</span></td>';
+          var thumbhtml = '<span class="orange">Push</span>';
         }
+
+        var currencyicon;
+        if (entry.currency == 'BTC') { 
+          currencyicon = 'm<i class="fa fa-btc"></i>'; 
+        } else if (entry.currency == 'CAD') {
+          currencyicon = 'CAD <i class="fa fa-dollar"></i>'; 
+        } else if (entry.currency == 'EUR') {
+          currencyicon = 'EUR <i class="fa fa-eur"></i>'; 
+        } else if (entry.currency == 'GBP') {
+          currencyicon = 'GBP <i class="fa fa-gbp"></i>';
+        } else if (entry.currency == 'USD') {
+          currencyicon = 'USD <i class="fa fa-dollar"></i>';
+        } else {
+          currencyicon = '<i class="fa fa-dollar"></i>';
+        }
+
         tradehtml = tradehtml + '<tr class="historictrade" id="'+entry._id+'">' +
                     '<td class="symbol">'+entry.symbol+'</td>'+
-                    '<td><time class="timeago" datetime="'+iodate+'">'+entrydate+' '+entrytime+'</time></td>'+
-                    '<td>'+arrowhtml+' <span class="tradeprice">'+entry.price+'</span></td>'+
+                    '<td class="trade">'+arrowhtml+' <span class="tradeprice">'+entry.price+'</span></td>'+
+                    '<td class="time"><i style="opacity: 0.7"  class="fa fa-clock-o"></i> <time class="timeago" datetime="'+iodate+'">'+entrydate+' '+entrytime+'</time></td>'+
+                    '<td class="price"><i style="opacity: 0.7"  class="fa fa-bell-o"></i> <span class="tradeprice">'+entry.finalprice+'</span></td>'+
                     //'<td title="Expires: '+thisdate+' '+thistime+'">'+thistime+'</td>'+
-                    '<td>'+thumbhtml+'</td>'+
+                    '<td class="amount">'+currencyicon+' '+entry.amount+'</td>'+
+                    '<td class="outcome">'+thumbhtml+'</td>'+
+                    '<td class="currency">'+currencyicon+' '+entry.winnings+'</td>'+
                     //'<td class="bold" title="Expires: '+thisdate+' '+thistime+'">Trade in: <span class="expiretime"></span></td>'+
                   '</tr>';
         if (trim > 0) tid++;

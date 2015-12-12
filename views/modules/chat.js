@@ -3,59 +3,102 @@ var globalchats = new Array();
 function showChat() {
   $('.chat').html('');
   var chathtml = '<div class="userblock"><div class="header" data-translate="noactivetrades">Chat</div>';
-  chathtml = chathtml + '<div class="row-fluid"><div class="span12 "><div class="chatcontainer"><table class="table chattable" id="chat">';
-  chathtml = chathtml + '<tbody class="chatmessages">';
-  if (globalchats){
-    var i = 0;
-    while (i < globalchats.length) {
-        var from = globalchats[i].from;
-        var message = globalchats[i].message;
-        if (message.indexOf(user) > -1){
-          ircBloop.play();         
-        chathtml = chathtml + '<td style="font-weight: bold;"><span>'+from+':</span>'+
-        ' '+message+'</td>'+
-        '</tr>';
-        } else {
-        chathtml = chathtml + '<td><span style="font-weight: bold;">'+from+':</span>'+
-        ' '+message+'</td>'+
-        '</tr>';
-        }
-        i++;
-    }
+  chathtml = chathtml + '<div class="row-fluid"><div class="span12 ">';
+  if (globalchats.length > 0) { 
+    chathtml = chathtml + '<div class="chatcontainer">'; 
+  } else {
+    chathtml = chathtml + '<div class="chatcontainer">'; 
   }
-          chathtml = chathtml + '</tbody>'+
-          '</table></div>'+
-          '<div class="talk"><input type="text" class="say" placeholder="Say..." /></div>'+
-          '</div></div></div>';
-     $('.chat').html(chathtml);
+  chathtml = chathtml + '<table class="table chattable" id="chat">';
+  chathtml = chathtml + '<tbody class="chatmessages">';
+  chathtml = chathtml + '</tbody>'+
+    '</table></div>'+
+    '<div class="chaterror"></div>'+
+    '<div class="talk"><input type="text" class="say" placeholder="Say..." /></div>'+
+    '</div></div></div>';
+  $('.chat').html(chathtml);
+  setTimeout( function() {
+    if (messages) {
+      $.each(messages, function (i, message) {
+        newChat(message.from, false, message.message, false)
+      });
+    }
+  }, 500);
 }
 
-function newChat(from,message) { 
-        var newchathtml = newchathtml + '<tr class="chatmessage">';
-        globalchats.push({from:from, message: message});
-        //console.log(globalchats);
-        if (message.indexOf(user) > -1){
-        ircBloop.play();         
-        newchathtml = newchathtml + '<td style="font-weight: bold;"><span>'+from+':</span>'+
-        ' '+message+'</td>'+
-        '</tr>';
-        } else {
-        newchathtml = newchathtml + '<td><span style="font-weight: bold;">'+from+':</span>'+
-        ' '+message+'</td>'+
-        '</tr>';
-        }
-        $('.chatmessages').append(newchathtml);
-        $('.chatcontainer').scrollTop($('.chatcontainer')[0].scrollHeight);
-
+function newChat(from,to,message,errors) {
+  var chatclasses = '';
+  var chathtml = '';
+  var chatcolour = 'inherit';
+  var err = false;
+  var lowercasemessage = message.toLowerCase();
+  if (lowercasemessage.indexOf(user) > -1 || to == user){
+    ircBloop.play();
+    chatclasses = chatclasses + 'bold';
   }
 
+  message = XBBCODE.process({
+    text: message,
+    removeMisalignedTags: false,
+    addInLineBreaks: false
+  });
+  
+  if (message.error) err = 'BBCode tag opening/closing error.';
+  
+  message = emoji.replace_colons(message.html);
+  if ((message.match(/:/g) || []).length > 1) err = 'Invalid emoji: '+message+'<span style="float:right;font-style:italic;"><a href="http://emojipedia.org/" target="_blank">:sweat_smile: <span class="emoji emoji-sizer" style="background-image:url(/emoji-data/img-apple-64/1f605.png)" title="sweat_smile"></span></a></span></span>';
+
+  message = emoji.replace_emoticons(message);
+
+  if (err && errors) {
+    $('.chaterror').html(err).addClass('show');
+    setTimeout( function() { $('.chaterror').removeClass('show'); }, 3000);
+  }  else {
+    chathtml = chathtml + '<tr class="chatmessage">'+
+      '<td>'+
+        '<span class="from">'+from+':</span> ' +
+        '<span class="'+chatclasses+'" style="color:'+chatcolour+'">'+message+'</span>'+
+      '</td>'+
+    '</tr>';
+    $('.chatmessages').append(chathtml);
+    $('.say').val('');
+  }
+}
+
 $(function() {
-$(".hook").on("keyup",".say",function(e) {
+  var said = new Array();
+  var i = 0;
+  $(".hook").on("keyup",".say",function(e) {
     if (e.keyCode == 13){
+      i = 0;
       var msg = $('.say').val();
-      chat(msg);
-      newChat(user, msg);
-      $('.say').val('');
+      said.unshift(msg);
+
+       var message = XBBCODE.process({
+          text: msg,
+          removeMisalignedTags: false,
+          addInLineBreaks: false
+        });
+        
+        if (message.error) var err = 'BBCode tag opening/closing error.';
+    
+        message = emoji.replace_colons(message.html);
+        if ((message.match(/:/g) || []).length > 1) var err = 'Invalid emoji: '+message+'<span style="float:right;font-style:italic;"><a href="http://emojipedia.org/" target="_blank">:sweat_smile: <span class="emoji emoji-sizer" style="background-image:url(/emoji-data/img-apple-64/1f605.png)" title="sweat_smile"></span></a></span></span>';
+
+        message = emoji.replace_emoticons(message);
+
+        if (err) {
+          $('.chaterror').html(err).addClass('show');
+          setTimeout( function() { $('.chaterror').removeClass('show'); }, 3000);
+        }  else {
+            chat(msg);
+        }
+    } else if (e.keyCode == 38){
+      $('.say').val(said[i]);
+      i++;
+    } else if (e.keyCode == 40){
+      $('.say').val(said[i]);
+      i--;
     }
   });
 });

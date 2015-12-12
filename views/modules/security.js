@@ -19,7 +19,7 @@ function showSecurity() {
     html = html + '</div>';
 
     html = html + '<div class="alert alert-success emailverify">';
-    if (verified == true) {
+    if (verified == 'true') {
     html = html + '<i class="fa fa-envelope fa-lg alertico"></i><strong>'+email+'</strong> has been verified.';
     html = html + '<span style="float:right;opacity: 0.75"><i class="fa fa-check fa-lg"></i></span>';
     } else {
@@ -29,38 +29,37 @@ function showSecurity() {
     html = html + '</div>';
 
     html = html + '<div class="alert alert-info passwordchange">';
-    html = html + '<span class="lastchange"><i class="fa fa-eye-slash fa-lg alertico"></i><strong>Your password</strong> has never been changed.</span>';
+    html = html + '<span class="lastchange"><i class="fa fa-eye-slash fa-lg alertico"></i> Your password has never been changed.</span>';
     html = html + '<span class="newpasswordinput"><span class="red inputerror"></span><div class="input-group input-group-sm"><input type="password" class="form-control" id="currentpass" placeholder="Current Password"><input type="password" class="form-control" id="newpass" placeholder="New Password"></div></span>';
     html = html + '<span style="float:right;"><a href="#" class="btn btn-xs btn-blue" id="changepassword">Change Password</a></span>';
     html = html + '</div>'
 
   $(".csec").html(html);
-  animateAuthy();
-  lastPass();
+      $('.authylogo').animate({
+        opacity: 1,
+        top: "5"
+      }, 2000, "easeOutBounce", function() {
+    }); 
 }
 function lastPass(){
     $.ajax({
     url: '/lastpasschange/'+user,
     cache: false
   }).done(function(result) {
-    console.log(result);
     if (result != 0) {
     var coeff = 1000 * 60 * 1;
-    var entrytime = new Date(0);
     var entrydate = new Date(0);
-    entrytime.setUTCMilliseconds(result);
     entrydate.setUTCMilliseconds(result);
-    entrytime = new Date(Math.round(entrytime.getTime() / coeff) * coeff);
     entrydate = new Date(Math.round(entrydate.getTime() / coeff) * coeff);
-    entrytime = entrytime.customFormat( "#hhh#:#mm#:#ss# " );
-    entrydate = entrydate.customFormat( "#DD#/#MM#/#YYYY#" );
-    $('.lastchange').html('<i class="fa fa-eye-slash fa-lg alertico"></i><strong>Your password was last changed:</strong> '+entrydate+' '+entrytime+'</span>')
+    entrydate = timeSince(entrydate);
+    $('.passwordchange').removeClass('alert-danger alert-warning alert-success').addClass('alert-info');
+    $('.lastchange').html('<i class="fa fa-eye-slash fa-lg alertico"></i>Your password was last changed  <strong>'+entrydate+'</strong> </span> ago.')
     }
   });
 }
 function verifyEmail (){
     $.ajax({
-    url: '/verifyemail/'+user,
+    url: '/verifyemail/'+email,
     cache: false
   }).done(function(result) {
     console.log(result);
@@ -72,17 +71,9 @@ function verifyEmail (){
   });
 }
 
-function animateAuthy() {
-  $('.authylogo').animate({
-    opacity: 1,
-    top: "7",
-  }, 2000, "easeOutBounce", function() {
-    
-  });
-}
 $(document).ready(function()
 {
-
+ 
  $(".hook").on("keyup","#newpass",function(e) {    
   var oldpass = $('#currentpass').val();
   var newpass = $('#newpass').val();
@@ -92,11 +83,11 @@ $(document).ready(function()
         url: url,
         cache: false
       }).done(function(result) {
-          console.log(result);
           if (result == 'OK') {
             $('.newpasswordinput').hide();
             $('.passwordchange').removeClass('alert-danger alert-warning alert-info').addClass('alert-success');
-            $('.lastchange').html('<i class="fa fa-eye-slash fa-lg alertico"></i> <strong data-translate="passwordjustchanged">Your password was just changed.</strong>')
+            $('.lastchange').html('<i class="fa fa-eye-slash fa-lg alertico"></i> <strong data-translate="passwordjustchanged">Your password was just changed.</strong><span style="float:right;opacity: 0.75"><i class="fa fa-check fa-lg"></i></span>')
+            setTimeout( function() { lastPass(); }, 2500);
           } else {
             $('.lastchange').html(result);
             $('.passwordchange').removeClass('alert-info alert-warning').addClass('alert-danger');
@@ -170,20 +161,20 @@ function auth(e) {
       }).done(function( html ) {
           console.log(html);
           if (html.token == 'is valid') {
-              $("#authbtn").removeClass('btn-blue').removeClass('btn-warning').addClass('btn-success');
-              $(".securestatus").removeClass('fa-lock').removeClass('fa-key').addClass('fa-unlock-alt');
+              $("#authbtn").removeClass('btn-blue').removeClass('btn-danger').addClass('btn-success');
+              $(".csecsecure").removeClass('fa-lock').removeClass('fa-key').addClass('fa-unlock-alt');
             setTimeout(function() {
-              $(".securestatus").removeClass('fa-unlock-alt').removeClass('fa-key').addClass('fa-lock');
-              $("#authbtn").removeClass('btn-warning').removeClass('btn-success').addClass('btn-blue');
+              $(".csecsecure").removeClass('fa-unlock-alt').removeClass('fa-key').addClass('fa-lock');
+              $("#authbtn").removeClass('btn-danger').removeClass('btn-success').addClass('btn-blue');
               $("#auth").val('');
             },20000);
           } else {
-            $("#authbtn").removeClass('btn-success').removeClass('btn-blue').addClass('btn-warning');
+            $("#authbtn").removeClass('btn-success').removeClass('btn-blue').addClass('btn-danger');
             $(".securestatus").removeClass('fa-key').addClass('fa-lock');
           }
       });
     } else {
-      $("#authbtn").removeClass('btn-success').removeClass('btn-blue').addClass('btn-warning');
+      $("#authbtn").removeClass('btn-success').removeClass('btn-blue').addClass('btn-danger');
       $(".securestatus").removeClass('fa-key').addClass('fa-lock');
     }
 }
@@ -221,4 +212,32 @@ function showLoginattempts(data) {
   index++;
   }
   $(".loginattempts").html(html);
+}
+
+function timeSince(date) {
+
+    var seconds = Math.floor((new Date() - date) / 1000);
+
+    var interval = Math.floor(seconds / 31536000);
+
+    if (interval > 1) {
+        return interval + " years";
+    }
+    interval = Math.floor(seconds / 2592000);
+    if (interval > 1) {
+        return interval + " months";
+    }
+    interval = Math.floor(seconds / 86400);
+    if (interval > 1) {
+        return interval + " days";
+    }
+    interval = Math.floor(seconds / 3600);
+    if (interval > 1) {
+        return interval + " hours";
+    }
+    interval = Math.floor(seconds / 60);
+    if (interval > 1) {
+        return interval + " minutes";
+    }
+    return "just seconds";
 }

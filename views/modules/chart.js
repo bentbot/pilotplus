@@ -1,41 +1,49 @@
 var h = new Array();
 var chartinit = {};
-function updateChart(symbol, data) {
-symbol = symbol[0];
-symbol = symbolSwitch(symbol);
-if($("#" + symbol + "_container").length == 1) {
-  //console.log(data);
-  if (h[symbol]) {
-  var series = h[symbol].series[0];
-  h[symbol].series[0].addPoint(data, true);
-  // Currently this code can only handle the display of one live chart at a time
-  }
-}}
+var chartbusy = false;
 
-function loadChart(symbol, data) {
+function updateChart(symbol, data) {
+  symbol = symbolSwitch(symbol);
+  if($("#" + symbol + "_container").length == 1 && !chartbusy) {
+    if (h[symbol]) {
+      h[symbol].series[0].addPoint(data);
+      // Currently this code can only handle the display of one live chart at a time
+    }
+  } 
+}
+
+function loadChart(data) {
   // create the chart
 // she can not be tamed
-symbol = symbol[0];
-symbol = symbolSwitch(symbol);
+var chartbusy = true;
+
+symbol = symbolSwitch(data.symbol);
 if($("#" + symbol + "_container").length == 1) {
+  
+  var timeoffset = 5*60; // 5 hour offset
+  if (prefs.timezone) timeoffset = prefs.timezone;
+
 //console.log(symbol);
   Highcharts.setOptions({
     global: {
-      useUTC: false,
-      timezoneOffset:240
+      useUTC: true,
+      timezoneOffset: timeoffset
     }
   });
+
+    var spark = '.'+symbol + "_spark";
+    //$(spark).sparkline(data);
     var container = symbol + "_container";
-    h[symbol]=new Highcharts.Chart({
+    h[data.symbol]=new Highcharts.Chart({
         chart: {
           renderTo: container,
             zoomType: 'x',
             resetZoomButton: {
                 theme: {
-                    fill: 'rgba(238, 238, 238, 0.5)',
+                    fill: 'rgba(238, 238, 238, 0.3)',
                     stroke: 'rgba(238, 238, 238, 0.7)',
                     style: {
-                      color: 'rgba(0, 0, 0, 0.5)',
+                      color: 'rgba(0, 0, 0, 0.5)'
                     },
                     r: 0,
                     states: {
@@ -56,6 +64,7 @@ if($("#" + symbol + "_container").length == 1) {
         },
         xAxis: {
             type: 'datetime',
+            tickPixelInterval: 150,
             lineColor: '#eee'
         },
       yAxis : {
@@ -89,10 +98,11 @@ if($("#" + symbol + "_container").length == 1) {
         },
         series : [
           {
-          type : 'line',
-          color: '#e96d01',
-          name : symbol,
-          data : data
+            type : data.properties.type,
+            color: data.properties.lineColor,
+            turboThreshold: 10000,
+            name : data.symbol,
+            data : data.chart
           }
         //  ,{
         //   type : 'flags',
@@ -125,4 +135,6 @@ if($("#" + symbol + "_container").length == 1) {
         ]
     });
   chartinit[symbol] = true;
-}}
+}
+chartbusy = false;
+}

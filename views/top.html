@@ -1,9 +1,10 @@
 <div class="globalheader">
   <div class="title">
-    <div class="topcontainer">
+    <div class="container">
         <!-- site title -->
       <button type="button" style="height: 31px;" class="btn btn-warning btnlogo">
-         <span class="sitename" style="padding-bottom: 2px;"><span class="glyphicon glyphicon-arrow-up"></span><span class="glyphicon glyphicon-arrow-down"></span></span>
+         <span class="sitename" style="padding-bottom: 2px;"><span class="glyphicon glyphicon-arrow-up"></span><span class="glyphicon glyphicon-arrow-down"></span>
+       </span>
       </button>
 
       <div class="right">
@@ -12,22 +13,10 @@
 
     </div>
   </div>
+  <div class="header">
   <div class="linktray" style="height: 30px;">
-    <div class="container" style="padding: 0px;position:relative;height:30px;">
-      <ul class="keystones">
-        <li id="BTCUSD"><a href="#">Bitcoin:<span class="keystoneBTCUSD"></span></a></l1>
-        <li id="LTCUSD"><a href="#">Litecoin:<span class="keystoneLTCUSD"></span></a></l1>
-        <li id="EURUSD"><a href="#">Euro:<span class="keystoneEURUSD"></span></a></l1>
-        <li id="GBPUSD"><a href="#">Pound:<span class="keystoneGBPUSD"></span></a></l1>
-        <li id="CADUSD"><a href="#">Canadian:<span class="keystoneCADUSD"></span></a></l1>
-        <li id="AAPL"><a href="#">Apple:<span class="keystoneAAPL"></span></a></li>
-        <li id="GOOG"><a href="#">Google:<span class="keystoneGOOG"></span></a></li>
-        <li id="GCM14.CMX"><a href="#">Gold:<span class="keystoneGOLD"></span></a></li>
-        <li id="^SLVSY"><a href="#">Silver:<span class="keystoneSILVER"></span></a></li>
-        <li id="CLM14.NYM"><a href="#">Oil:<span class="keystoneOIL"></span></a></li>
-        <li class="btn btn-xs btn-blue seeall hide" data-translate="seeall">More</li>
-      </ul>
-    </div>
+    <ul class="keystones" id="keystones">
+    </ul>
   </div>
 <% if (user) { %>
   <div class="accounttray">
@@ -82,6 +71,12 @@
     </div>
   </div>
   <% } %>
-
+</div>
+</div>
+<div class="menu">
+  <div class="sidebar-title" data-translate="trade">Trade
+    <div class="sidebar-pin"><i class="fa fa-toggle-off"></i></div>
+  </div>
+  <ul class="sidebar-symbols"></ul>
 </div>
 <div class="hook">

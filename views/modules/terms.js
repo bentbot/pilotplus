@@ -59,6 +59,8 @@ function showTerms() {
       "Your use of this website and any dispute arising out of such use of the website is subject to Canadain law." +
     '</p>';
 
+    html = html + '';
+
   $(".terms").html(html);
 }
 

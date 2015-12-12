@@ -1,12 +1,5 @@
-keys.json
-
-*.js
-
-*.md
 
 node_modules/bitcoin/Makefile
-
-*.md
 
 node_modules/bitcoin/Makefile
 

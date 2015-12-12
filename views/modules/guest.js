@@ -1,34 +1,48 @@
 function showGuest () {
+  var localcurrency = 'Canadian Dollar';
   $('.guest').html('');
-  var guesthtml = '<div class="row guestpanels">'+
-        '<div class="col-md-4"><i class="fa fa-lock"></i><h1 data-translate="safe">Safe</h1><p data-translate="safebody">Encryption and dual factor authorization to protect your funds.</p></div>'+
-        '<div class="col-md-4"><i class="fa fa-flag"></i><h1 data-translate="instant">Fast</h1><p data-translate="instantbody">Instantly deposit, trade, and withdrawal with Bitcoin.</p></div>'+
-        '<div class="col-md-4"><span data-translate="fiaticon"><i class="fa fa-usd"></i></span><h1 data-translate="options">Options</h1><p data-translate="optionsbody">Trade on exchange rates, crypto currencies, stocks, and more.</p></div>'+
+  var guesthtml = '<div class="tradesbody"></div>'+
+      '<div class="row guestpanels">'+
+        '<div class="col-md-4"><i class="fa fa-lock" style="color: #FF9800 !important;"></i><h1 data-translate="safe">Super Safe</h1><p data-translate="safebody">Encryption and dual factor authorization so only you can access your funds.</p></div>'+
+        '<div class="col-md-4"><i class="fa fa-bolt" style="color: #00BCD4 !important;"></i><h1 data-translate="instant">Lightning Fast</h1><p data-translate="instantbody">Instantly deposit, trade, and withdrawal with '+localcurrency+' and Bitcoin.</p></div>'+
+        '<div class="col-md-4"><span data-translate="fiaticon"><i class="fa fa-usd"></i></span><h1 data-translate="options">Instantly Profitable</h1><p data-translate="optionsbody">Profit in seconds by trading on exchange rates, crypto currencies, stocks, and more.</p></div>'+
+      '</div>'+
+      '<div class="slider">'+
+        '<div class="slide">'+
+          'slide 1'+
+        '</div>'+
+        '<div class="slide">'+
+          'slide 2'+
+        '</div>'+
       '</div>'+
       '<div class="signupbox well">'+
-      '<form>'+
+      '<form autocomplete="false">'+
       '<div class="input-group">'+
-          '<input type="username" class="form-control username" placeholder="Username">'+
+          '<input type="username" autocomplete="false" class="form-control username" placeholder="Username">'+
           '<i class="fa usernamei"></i>'+
-          '<input type="email" class="form-control email" placeholder="Email">'+
+          '<input type="email" autocomplete="false" class="form-control email" placeholder="Email">'+
           '<i class="fa emaili"></i>'+
-          '<input type="password" class="form-control pwd" placeholder="Password">'+
+          '<input type="password" autocomplete="false" class="form-control pwd" placeholder="Password">'+
           '<i class="fa passwordi"></i>'+
           '<button type="button" value="Register" class="btn btn-large btn-blue signupbtn" data-translate="signup">Sign Up</button>'+
         '</div>'+
         '<p><input type="checkbox" id="termsbox" name="terms"> I accept the <a href="#" id="terms">terms and conditions</a>, and I understand this service is not guaranteed.</p>'+
       '<form>'+
-      '</div>';
+      '</div>'+
+      '<div class="signupbonus" data-translate="signupbonus"> Get started with $5 free when you sign up today! <i class="fa fa-reply swoop fa-6"></i></div>';
   $('.guest').append(guesthtml);
-}
-$(function () {
-
-$.ajax({
-      url: "signupsopen/",
+  //showChat();
+  //showactive();
+  $.ajax({
+      url: "/signupsopen/",
       cache: false
     }).done(function( resp ) {
-      if (resp != 'OK') $('.signupbox').removeClass('well').html('<div class="alert alert-warning"><strong data-translate="inviteonly">No Goats Allowed:</strong> <span data-translate="registrationsdisabled">New registrations are currently disabled.</span> <a class="btn btn-warning alertbtn" style="display:none;" id="invitebtn"href="#" data-translate="haveaninvite">Have an Invite?</a></div>');
+      if (resp != 'OK') $('.signupbox').html('<strong data-translate="inviteonly">No New Registrations Accepted.</strong> <span data-translate="registrationsdisabled">New registrations are currently disabled.</span> <a class="btn btn-warning alertbtn" style="display:none;" id="invitebtn" href="#" data-translate="haveaninvite">Have an Invite?</a>');
    });
+
+  }
+$(function () {
+  var validemail = false;
 
   $(".hook").on("keyup",".username",function(e) {
     $('.signupbox p').show();
@@ -52,8 +66,14 @@ $.ajax({
       cache: false
     }).done(function( resp ) {
     $('input-group .emaili').addClass('orange fa-times');
-      if (resp == 'OK') $('.input-group .emaili').removeClass('orange fa-times').addClass('green fa-check');
-      if (resp == 'NO') $('.input-group .emaili').removeClass('green fa-check').addClass('orange fa-times');
+      if (resp == 'OK') {
+        $('.input-group .emaili').removeClass('orange fa-times').addClass('green fa-check');
+        validemail = true;
+      }
+      if (resp == 'NO') {
+        $('.input-group .emaili').removeClass('green fa-check').addClass('orange fa-times');
+        validemail = false;
+      }
     });  
   }
   });  
@@ -78,7 +98,7 @@ $.ajax({
     var un = $(".username").val();
     var em = $(".email").val();
     var pwd = $(".pwd").val();
-    if (un && em && pwd && term) {
+    if (un && em && pwd && term && validemail && un.length >= 3) {
     console.log('ajax out:'+un+':'+em+':'+pwd);
     $.ajax({
       url: "adduser/"+un+"/"+em+"/"+pwd,

@@ -3,57 +3,97 @@ var tradestatus = false;
 var chatstatus = false;
 
 function showPrefs() {
-  var html = '';
-  $(".prefs").html(html);
 
-    if (tradestatus == true) html = html + '<div class="alert alert-success">';
-    if (tradestatus == false) html = html + '<div class="alert alert-info">';
-    if (tradestatus == true) html = html + '<a href="#" style="margin-right: 10px;"><i class="fa fa-check-circle-o fa-lg tradetimertoggle"></i></a> <strong>Trade Timer</strong> Visually countdown the number of seconds until the next trade.';
-    if (tradestatus == false) html = html + '<a href="#" style="margin-right: 10px;"><i class="fa fa-circle-o fa-lg tradetimertoggle"></i></a> <strong>Trade Timer</strong> Visually countdown the number of seconds until the next trade.';
-    html = html + '</div>';
+  var account = '<div class="userprefs"><div class="header" data-translate="accountsettings">Account Settings</div>'+
+  '<table class="table account-preferences table-hover">'+
+    '<tbody>'+
+      '<tr>'+
+        '<td class="remember-me">Remember Me</td>'+
+        '<td class="preferences">'+
+          '<a href="#" class="preference" data-pref="rememberme" data-setting="true">Enable</a> / '+
+          '<a href="#" class="preference enabled" data-pref="rememberme" data-setting="false">Disabled</a>'+
+        '</td>'+
+      '</tr>'+
+      '<tr>'+
+        '<td class="title-countdown">Window Title Countdown</td>'+
+        '<td class="preferences">'+
+          '<a href="#" class="preference" data-pref="titlecountdown" data-setting="true">Enable</a> / '+
+          '<a href="#" class="preference enabled" data-pref="titlecountdown" data-setting="false">Disabled</a>'+
+        '</td>'+
+      '</tr>'+
+    '</tbody>'+
+  '</table>'+
+  '</div>';
 
-    if (chatstatus == true) html = html + '<div class="alert alert-success">';
-    if (chatstatus == false) html = html + '<div class="alert alert-info">';
-    if (chatstatus == true) html = html + '<a href="#" style="margin-right: 10px;"><i class="fa fa-check-circle-o fa-lg chatboxtoggle"></i></a> <strong>Chat Box</strong> Show the chat box on the trade page.';
-    if (chatstatus == false) html = html + '<a href="#" style="margin-right: 10px;"><i class="fa fa-circle-o fa-lg chatboxtoggle"></i></a> <strong>Chat Box</strong> Show the chat box on the trade page.';
-    html = html + '</div>';
+  var trading = '<div class="userprefs"><div class="header" data-translate="tradesettings">Trade Settings</div>'+
+  '<table class="table trading-preferences table-hover">'+
+    '<tbody>'+
+      '<tr>'+
+        '<td>Visual Countdown Timer</td>'+
+        '<td class="preferences">'+
+          '<a href="#" class="preference enabled" data-pref="timer" data-setting="true">Enabled</a> / '+
+          '<a href="#" class="preference" data-pref="timer" data-setting="false">Disable</a>'+
+        '</td>'+
+      '</tr>'+
+      '<tr>'+
+        '<td>Symbol Ratio Bar</td>'+
+        '<td class="preferences">'+
+          '<a href="#" class="preference enabled" data-pref="symbolratios" data-setting="true">Enabled</a> / '+
+          '<a href="#" class="preference" data-pref="symbolratios" data-setting="false">Disable</a>'+
+        '</td>'+
+      '</tr>'+
+      '<tr>'+
+        '<td>Chat Window</td>'+
+        '<td class="preferences">'+
+          '<a href="#" class="preference enabled" data-pref="chat" data-setting="true">Enabled</a> / '+
+          '<a href="#" class="preference" data-pref="chat" data-setting="false">Disable</a>'+
+        '</td>'+
+      '</tr>'+
+      '<tr>'+
+        '<td>Statistics</td>'+
+        '<td class="preferences">'+
+          '<a href="#" class="preference enabled" data-pref="statistics" data-setting="true">Enabled</a> / '+
+          '<a href="#" class="preference" data-pref="statistics" data-setting="false">Disable</a>'+
+        '</td>'+
+      '</tr>'+
+      '<tr>'+
+        '<td>Last Trades</td>'+
+        '<td class="preferences">'+
+          '<a href="#" class="preference enabled" data-pref="lasttrades" data-setting="true">Enabled</a> / '+
+          '<a href="#" class="preference" data-pref="lasttrades" data-setting="false">Disable</a>'+
+        '</td>'+
+      '</tr>'+
+    '</tbody>'+
+  '</table>'+
+  '</div>';
 
-  $(".prefs").html(html);
+
+  $(".prefs").html(account + trading);
+  socket.emit('get-pref');
 }
 
 
 
 $(function() {
 	
-	$(".hook").on("click",".tradetimertoggle",function(e) {  
+  socket.emit('get-pref');
+
+	$(".hook").on("click",".preference",function(e) {  
     e.preventDefault();
-		if (tradestatus == true) { tradestatus = false; }
-		else if (tradestatus == false) { tradestatus = true; }
-		showPrefs();
-    updateOption('tradetimer',tradestatus);
-	});	
+    var pref = $(this).data('pref');
+    var setting = $(this).data('setting');
+    socket.emit('set-pref', {pref: pref, setting: setting });
+    if (pref == 'remember-me') $('.remember-me').html('Remember Me <span class="pref-info">Requires logout</span>');
+  });
 
-	$(".hook").on("click",".chatboxtoggle",function(e) {  
-    e.preventDefault();
-		if (chatstatus == true) { chatstatus = false; }
-		else if (chatstatus == false) { chatstatus = true; }
-		showPrefs();
-    updateOption('chatbox',chatstatus);
-	});
-
-function updateOption(option,intl) {
-    $.ajax({
-        url: '/userprefs/'+user+'/'+option+'/'+intl,
-        cache: false
-      }).done(function(html) {
-          console.log(html);
-          if (html == 'OK') {
-            
-          } else {
-            
-          }
-      });
-}
-
+  socket.on('get-pref', function(data) {
+    $('a[data-pref="'+data.pref+'"]').each(function () {
+      var setting = $(this).data('setting');
+      if (setting == true && data.setting == false) $(this).removeClass('enabled').html('Enable');
+      if (setting == true && data.setting == true) $(this).addClass('enabled').html('Enabled');
+      if (setting == false && data.setting == true) $(this).removeClass('enabled').html('Disable');
+      if (setting == false && data.setting == false) $(this).addClass('enabled').html('Disabled');
+    });
+  });
 
 });

@@ -12,6 +12,8 @@ function showLocalBals(data){
     var total = 0;
     for (index = 0; index < data.length; ++index) {
       entry = data[index];
+      if (!entry.address) entry.address = 0;
+      if (!entry.bal) entry.bal = 0;
       total = (+entry.bal+total);
         localhtml = localhtml + '<tr class="localbal">' +
                     '<td>'+entry.account+'</td>'+

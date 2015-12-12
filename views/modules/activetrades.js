@@ -1,10 +1,10 @@
 function showactive(data, nexttrade) {
     //console.log(data);
     $('.tradesbody').html('');
-    if (data[0] != null) {
-      var tradehtml = '<div class="usertrades"><div class="header"><span data-translate="activetrades">Active Trades</span> <span style="float:right;"><span class="expiretime">'+nexttrade[0]+':'+nexttrade[1]+'</span> <i class="fa fa-clock-o hide"></i></span></div>';
+    if (data && data[0] != null) {
+      var tradehtml = '<div class="usertrades userblock"><div class="header"><span data-translate="activetrades">Active Trades</span> <span style="float:right;"><span class="expiretime">'+nexttrade[0]+':'+nexttrade[1]+'</span> <i class="fa fa-clock-o hide"></i></span></div>';
     } else {
-      var tradehtml = '<div class="usertrades"><div class="header" data-translate="noactivetrades">No Active Trades</div>';
+      var tradehtml = '<div class="usertrades userblock"><div class="header" data-translate="noactivetrades">No Active Trades</div>';
     }
           tradehtml = tradehtml + '<div class="row-fluid"><div class="span12 "><div><table class="table tradestable" id="trades">';
               // '<thead>' +
@@ -17,38 +17,51 @@ function showactive(data, nexttrade) {
         //if (publictrades == true) { tradehtml = tradehtml + '<th>User</th>'; }
        // tradehtml = tradehtml + '</tr>' +
               //'</thead>'+
-              tradehtml = tradehtml + '<tbody class="tradesbody">';
-    var index;
-    for (index = 0; index < data.length; ++index) {
-            entry = data[index];
-      entry[0] = symbolSwitch(entry[0]);
+      
+      tradehtml = tradehtml + '<tbody class="tradesbody">';
+      
+      $.each(data, function (index, data) {
 
-
-      if (entry[6] == user) {
-        var possiblewin = (+entry[3]+(entry[3]*entry[2]));
+      if (data.user == user) {
+        var possiblewin = (+data.amount+(data.amount*data.offer));
         possiblewin = possiblewin.toFixed(2);
-        var date = new Date(entry[5]);
-        var thistime = date.customFormat( "#hh#:#mm# #AMPM#" );
-        var thisdate = date.customFormat( "#DD#/#MM#/#YYYY#" );
-        entry[1] = Number(entry[1]);
+        // var date = new Date(data.time);
+        // var thistime = date.customFormat( "#hh#:#mm# #AMPM#" );
+        // var thisdate = date.customFormat( "#DD#/#MM#/#YYYY#" );
+        var currency = data.currency;
+        data.price = Number(data.price);
 
         if (!lastprice) {
           lastprice = '-.--';
         }
 
-
-        if (entry[4] == 'Call') {
+        if (data.direction == 'Call') {
           var arrowhtml = '<span class="green glyphicon glyphicon-arrow-up"></span>';
-        } else if (entry[4] == 'Put') {
+        } else if (data.direction == 'Put') {
           var arrowhtml = '<span class="red glyphicon glyphicon-arrow-down"></span>';
         }
 
-        tradehtml = tradehtml + '<tr class="bgtransition usertrade" id="trade'+index+'">' +
-                    '<td class="symbol"><a class="keystonelink" id="'+entry[0]+'">'+entry[0]+':<span class="keystone keystone'+entry[0]+'">'+price[entry[0]]+'</span></a></td>'+
-                    '<td>'+arrowhtml+' <span class="direction">'+entry[4]+'</span> from <span class="tradeprice">'+entry[1]+'</span></td>'+
-                    '<td>m<i class="fa fa-btc"></i>'+entry[3]+'</td>'+
+        if (data.currency == 'BTC') { 
+          currencyicon = '<td>m<i class="fa fa-btc"></i>'; 
+        } else if (data.currency == 'CAD') {
+          currencyicon = '<td>CAD <i class="fa fa-dollar"></i>'; 
+        } else if (data.currency == 'EUR') {
+          currencyicon = '<td>EUR <i class="fa fa-eur"></i>'; 
+        } else if (data.currency == 'GBP') {
+          currencyicon = '<td>GBP <i class="fa fa-gbp"></i>'; 
+        } else if (data.currency == 'USD') {
+          currencyicon = '<td>USD <i class="fa fa-dollar"></i>'; 
+        } else {
+          currencyicon = '<td><i class="fa fa-dollar"></i>'; 
+        }
+
+
+        tradehtml = tradehtml + '<tr class="bgtransition usertrade" id="trade'+index+'">';
+        tradehtml = tradehtml + '<td class="symbol"><a class="keystonelink" id="'+data.symbol+'">'+data.symbol+':<span class="keystone keystone'+data.symbol+'">'+price[data.symbol]+'</span></a></td>';
+        tradehtml = tradehtml + '<td>'+arrowhtml+' <span class="direction">'+data.direction+'</span><span class="from"> from</span> <span class="tradeprice">'+data.price+'</span></td>';
+        tradehtml = tradehtml + '<td>'+currencyicon+data.amount+'</td>';
+        tradehtml = tradehtml + '<td>'+currencyicon+possiblewin+'</td>';
                     //'<td title="Expires: '+thisdate+' '+thistime+'">'+thistime+'</td>'+
-                    '<td>m<i class="fa fa-btc"></i>'+possiblewin+'</td>';
                     // if (nexttrade[0] == 0 && nexttrade[1] < 60) {
                     // tradehtml = tradehtml + '<td><i class="fa fa-lock"></i></td>';
                     // } else {
@@ -63,10 +76,11 @@ function showactive(data, nexttrade) {
         //   $('#trade'+index+'').removeClass('greenbg').removeClass('redbg');
         // }
       }
-    }
-    tradehtml = tradehtml + '</tbody></table></div></div></div></div>';
-     $('.tradestable').html(tradehtml);
-
+  
+    // loop end
+});
+  tradehtml = tradehtml + '</tbody></table></div></div></div></div>';
+  $('.tradestable').html(tradehtml);
 $( ".usertrade" ).each(function( index ) {
       var tradeid = $(this).attr('id');
       var symbolprice = $('#'+tradeid+' .keystone').html();

@@ -1,9 +1,9 @@
 $REDISPASSWORD = redispassword
 
 apt-key adv --keyserver keyserver.ubuntu.com --recv 7F0CEB10
-echo "deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen" |$
+echo "deb http://repo.mongodb.org/apt/ubuntu precise/mongodb-org/3.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-3.0.list
 apt-get -y update
-apt-get -y install mongodb-10gen
+sudo apt-get install -y mongodb-org
 mkdir /data
 mkdir /data/db
 

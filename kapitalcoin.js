@@ -1,12 +1,43 @@
-var 	socket   	= require('socket.io-client')('https://vbit.io:3000'),
-	kapitalize 	= require('kapitalize')({
-		user: 'bitcoin',
-		pass: 'bitcoin'
-	});
+var socket = require('socket.io-client')('https://vbit.io:3030'),
+    express = require('express'),
+    keys = require('./keys.json'),
+    app = express();
+
+    kapitalize = require('kapitalize')({
+		user: keys.btcrpc.user,
+		pass: keys.btcrpc.password
+	}),
+	keys = require('./keys.json');
+
+var heart;
+var beats = new Array();
+
+app.use('/add/:id', function(req, res) {
+	socket.emit('addtx', { txid: req.params.id });
+	res.send('Heard '+req.params.id);
+});
+
+app.use('/log/:id', function(req, res) {
+	socket.emit('log', { log: req.params.id });
+	res.send('Logged '+req.params.id);
+});
+
+app.listen(3030);
+
 
 socket.on('connect', function() {
 
-	socket.emit('coinconnect', { key: 'AVERYLONGSTRING' });
+	console.log('Connected');
+
+	socket.on('addtx', function (data) {
+
+		console.log('addtx: '+data);
+
+		console.log('New transation: ' + data)
+
+	});
+
+	socket.emit('coinconnect', { key: keys.coin });
 
 	socket.on('coinconnection', function (data) {
 
@@ -14,65 +45,96 @@ socket.on('connect', function() {
 
 			status = true;
 
-			var heart = setInterval(function() {
+			heart = setInterval(function() {
 				var date = new Date(),
-				time = date.getTime();
-				socket.emit('heartbeat', { host: 'localhost', time: time });
-			}, 1000);
-			socket.on('heartbeat', function(beat) { console.log(beat); });
+				time = date.getTime(),
+				rand = new Array(5).join().replace(/(.|$)/g, function(){return ((Math.random()*36)|0).toString(36)[Math.random()<.5?"toString":"toUpperCase"]();});
+				socket.emit('heartbeat', { host: 'Kapitalcoin', time: time });
+			}, 1650);
 
 		} else if (data.status == 'KEY') {
-			console.log('Invalid Private Key - Could Not Connect');
+			console.log(data.date + ': Invalid Private Key - Could Not Connect');
 		}
 
 	});
 
-	socket.on('getinfo', function (data) {
-		gclient.cmd('getinfo', function(err, info) {
-			socket.emit('getinfo', { err: err, info: info });
-		});
+	socket.on('heartbeat', function (beat) {
+		beats.push(beat);
+		//console.log('heartbeat '+beat.latency); 
 	});
 
 	socket.on('backupwallet', function (data) {
-		gclient.cmd('backupwallet', data.mount, function(err, info){
+
+		console.log('backupwallet: '+data);
+		kapitalize.exec('backupwallet', data.mount, function(err, info){
+			if (err) throw (err);
 			socket.emit('backupwallet', { err: err, info: info });
 		});
 	});
 
-	socket.on('getbalance', function (data){
-		gclient.cmd('getbalance', data.user, data.confirmations, function(err, balance, resHeaders) {
-			socket.emit('getbalance', { err: err, balance: balance });
+	socket.on('getbalance', function (data) {
+		if (data) {
+			kapitalize.exec('getbalance', data.user, data.confirmations, function(err, balance, resHeaders) {
+				if (err) throw (err);
+				socket.emit('getbalance', { err: err, balance: balance });
+				console.log('Balance: '+balance);
+			});	
+		} else {
+			kapitalize.exec('getbalance', function(err, balance, resHeaders) {
+				if (err) throw (err);
+				socket.emit('getbalance', { err: err, balance: balance });
+			});
+		}	
+	});
+
+	socket.on('getinfo', function (data) {
+		kapitalize.exec('getinfo', function(err, info) {
+			if (err) throw (err);
+			console.log('Info: '+info);
+			socket.emit('getinfo', { err: err, info: info });
 		});
 	});
 
-	socket.on('getnewaddress', function (data){
-		gclient.cmd('getnewaddress', data.label, function(err, add, resHeaders) {
+	socket.on('getnewaddress', function (data) {
+		kapitalize.exec('getnewaddress', data.label, function(err, add, resHeaders) {
+			if (err) throw (err);
+			console.log('New address for '+data.label+ ' >> ' + add);
 			socket.emit('getnewaddress', { err: err, address: add });
 		});
 	});
 
-	socket.on('listreceivedbyaddress', function (data){
-		gclient.cmd('listreceivedbyaddress', function(err, result, resHeaders) {
+	socket.on('listreceivedbyaddress', function (data) {
+
+		console.log('listreceivedbyaddress: '+data);
+		kapitalize.exec('listreceivedbyaddress', function(err, result, resHeaders) {
+			if (err) throw (err);
 			socket.emit('listreceivedbyaddress', { err: err, result: result });
 		});
 	});
 
+	socket.on('move', function(data) {
+		console.log('move: '+data);
+		kapitalize.exec('move', data.from, data.to, data.amount, function(err, result, resHeaders) {
+			if (err) throw (err);
+			socket.emit('move', { err: err, result: result });
+		});
+	});
 
 	socket.on('sendfrom', function (data){
-		gclient.cmd('sendfrom', data.from, data.to, data.amount, function(err, txid, resHeaders) {
+
+		console.log('sendfrom: '+data);
+		kapitalize.exec('sendfrom', data.from, data.to, data.amount, function(err, txid, resHeaders) {
+			if (err) throw (err);
 			socket.emit('sendfrom', { err: err, txid: txid });
 		});
 	});
 
 	socket.on('sendtoaddress', function(data) {
-		gclient.cmd('sendtoaddress', data.to, data.amount, function(err, txid, resHeaders) {
-			socket.emit('sendtoaddress', { err: err, txid: txid });
-		});
-	});
 
-	socket.on('move', function(data) {
-		gclient.cmd('move', data.from, data.to, data.amount, function(err, result, resHeaders) {
-			socket.emit('move', { err: err, result: result });
+		console.log('sendtoaddress: '+data);
+		kapitalize.exec('sendtoaddress', data.to, data.amount, function(err, txid, resHeaders) {
+			if (err) throw (err);
+			socket.emit('sendtoaddress', { err: err, txid: txid });
 		});
 	});
 
