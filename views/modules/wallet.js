@@ -12,14 +12,14 @@ console.log(data);
         var classes = '';
         var width = (100/currencies.length);
         if (data.currency == currency.symbol) {
-          classes = 'btn-blue active';
+          classes = 'btn-textured active';
         } else {
           classes = 'btn-default';
         }
         html = html + '<button type="button" data-currency="'+currency.symbol+'" style="width:'+width+'%;" class="currency btn '+classes+'">';
+        if (currency.balance) html = html + '<span class="amount">'+currencySwitch(currency.symbol)+currency.balance+' </span>';
         html = html + '<span class="name">'+currency.name+'</span>';
         html = html + '<span class="symbol">'+currency.symbol+'</span>';
-        html = html + '<span class="amount">'+currency.amount+'</span>';
         html = html + '</button>';
       });
       
@@ -47,15 +47,7 @@ console.log(data);
       $('.btcbal').html('<strong class="georgia">m</strong><i class="fa fa-bitcoin"></i> <strong class="livebalance">'+data.balance+'</strong>')
 
       break;
-      case 'CAD':
-
-      html = html + '<div class="addcard alert alert-info" style="margin-top: 20px;min-height: 146px;">'+
-      '</div><div class="cards">'+
-        '<div class="visa credit card"><div class="details">4510 **** **** **79</div></div>'+
-      '</div>';
-
-      break;
-      case 'USD':
+      default:
 
       html = html + '<div class="addcard alert alert-info" style="margin-top: 20px;';
         if (data.methods) html = html + 'height: 125px;';
@@ -72,7 +64,7 @@ console.log(data);
             '<div class="method cc">'+
               '<form>'+
                 '<div class="input-group">'+
-                  '<span class="input-group-addon"><i class="fa fa-cc-stripe"></i></span>'+
+                  '<span class="input-group-addon"><a href="https://stripe.com" target="_blank"><i class="fa fa-cc-stripe"></i></a></span>'+
                   '<input type="text" class="form-control" id="number" placeholder="••••  ••••  ••••  ••••" autocomplete="off">'+
                   '<input type="text" class="form-control" id="expiry" maxlength="5" placeholder="••/••" autocomplete="off">'+
                   '<input type="text" class="form-control" id="cvc" maxlength="3" placeholder="•••" autocomplete="off">'+
@@ -103,25 +95,9 @@ console.log(data);
         '</div>'+
       '</div>'+
       '<div class="cards">'+
-        '<div class="card green"><div class="stripe"></div><div class="label"><i class="fa fa-cc-visa"></i></div><div class="value">USD</div><i class="fa fa-stripe"></i><div class="numbers"><span>3759</span><span>xxxx</span><span>xxxx</span><span>3456</span></div><div class="valid"><i class="fa fa-clock-o"></i> 10 / 20</div><div class="secure">123 <i class="fa fa-lock"></i></div></div>'+
-        '<div class="card blue"><div class="stripe"></div><div class="label"><i class="fa fa-cc-visa"></i></div><div class="value">USD</div><i class="fa fa-stripe"></i><div class="numbers"><span>3759</span><span>xxxx</span><span>xxxx</span><span>3456</span></div><div class="valid"><i class="fa fa-clock-o"></i> 10 / 20</div><div class="secure">123 <i class="fa fa-lock"></i></div></div>'+
-        '<div class="card purple"><div class="stripe"></div><div class="label"><i class="fa fa-cc-visa"></i></div><div class="value">USD</div><i class="fa fa-stripe"></i><div class="numbers"><span>3759</span><span>xxxx</span><span>xxxx</span><span>3456</span></div><div class="valid"><i class="fa fa-clock-o"></i> 10 / 20</div><div class="secure">123 <i class="fa fa-lock"></i></div></div>'+
-      '</div>';
-
-      break;
-      case 'EUR':
-
-      html = html + '<div class="addcard alert alert-info" style="margin-top: 20px;min-height: 146px;">'+
-      '</div><div class="cards">'+
-        '<div class="visa credit card"><div class="details">4510 **** **** **79</div></div>'+
-      '</div>';
-
-      break;
-      case 'GBP':
-      
-      html = html + '<div class="addcard alert alert-info" style="margin-top: 20px;min-height: 146px;">'+
-      '</div><div class="cards">'+
-        '<div class="visa"></div>'+
+      '<div class="card green"><div class="stripe"></div><div class="label"><i class="fa fa-cc-visa"></i></div><div class="value">'+data.currency+'</div><i class="fa fa-cc-stripe"></i><div class="numbers"><span>3759</span><span>xxxx</span><span>xxxx</span><span>3456</span></div><div class="valid"><i class="fa fa-clock-o"></i> 10 / 20</div><div class="secure">123 <i class="fa fa-lock"></i></div></div>'+
+      '<div class="card blue"><div class="stripe"></div><div class="label"><i class="fa fa-cc-visa"></i></div><div class="value">'+data.currency+'</div><i class="fa fa-cc-stripe"></i><div class="numbers"><span>3759</span><span>xxxx</span><span>xxxx</span><span>3456</span></div><div class="valid"><i class="fa fa-clock-o"></i> 10 / 20</div><div class="secure">123 <i class="fa fa-lock"></i></div></div>'+
+      '<div class="card purple"><div class="stripe"></div><div class="label"><i class="fa fa-cc-visa"></i></div><div class="value">'+data.currency+'</div><i class="fa fa-cc-stripe"></i><div class="numbers"><span>3759</span><span>xxxx</span><span>xxxx</span><span>3456</span></div><div class="valid"><i class="fa fa-clock-o"></i> 10 / 20</div><div class="secure">123 <i class="fa fa-lock"></i></div></div>'+
       '</div>';
 
       break;
@@ -215,6 +191,7 @@ $(document).ready(function() {
     var number = $('#number').val().replace(' ', '').replace('-','');
     var expiry = $('#expiry').val();
     var cvc = $('#cvc').val();
+    $('.cc').width('100%');
     if ( Stripe.validateCardNumber(number) != true || Stripe.validateExpiry(expiry) != true || Stripe.validateCVC(cvc) != true ) {
       // Invalid Card
       $('#number').css('color', '#D83300');
@@ -255,6 +232,12 @@ $(document).ready(function() {
 
   // Selection BTC Accress
   $(".hook").on("click",".btcaddress",function(e) {    
+    select_all(this);
+    var add = $(this).html();
+    clientText.setText( add );
+  });
+  // Selection of CC Numbers
+  $(".hook").on("click",".numbers",function(e) {    
     select_all(this);
     var add = $(this).html();
     clientText.setText( add );

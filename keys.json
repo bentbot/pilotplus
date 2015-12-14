@@ -1,0 +1,98 @@
+{
+	"authy": "7a62ad572fb2b77aac354d32c9653fba",
+	"currencies": [
+		{ "symbol": "BTC", "name": "Bitcoin" }, 
+		{ "symbol": "CAD", "name": "Canadian" },
+		{ "symbol": "USD", "name": "US Dollar" },
+		{ "symbol": "EUR", "name": "Euro" },
+		{ "symbol": "GBP", "name": "Pound" }
+	],
+	"symbols": [
+		{ "symbol": "BTCUSD", "name": "Bitcoin" },
+		{ "symbol": "LTCUSD", "name": "Litecoin" },
+		{ "symbol": "AUDUSD", "name": "Australian" },
+		{ "symbol": "CADUSD", "name": "Canadaian" },
+		{ "symbol": "EURUSD", "name": "Euro" },
+		{ "symbol": "GBPUSD", "name": "Pound" },
+		{ "symbol": "USDJPY", "name": "Japanese" },
+		{ "symbol": "USDCHF", "name": "Swiss Franc" },
+		{ "symbol": "NZDUSD", "name": "New Zealand" },
+		{ "symbol": "USDINR", "name": "Indian Rupee" },
+		{ "symbol": "USDCNH", "name": "Chinese Yuan" },
+		{ "symbol": "USDHKD", "name": "Hong Kong" },
+		{ "symbol": "USDSGD", "name": "Singapore" }
+
+	],
+	"defaultsymbol": "BTCUSD",
+	"coin": "X8tw74e6Htba9xkBTqjPfmRb3zD5qugkZ5CAMXkrbeSeDeNh87V5qXzfvM6bmC4cupHhVsfG",
+	"cookie": "LxBNGlQxLnyzKndMSA8Lo6cONvC0XPcp",
+	"irc": {
+		"connection": "vbit.io",
+		"channel": "#vbit"
+	},
+	"mongo": "mongodb://nodemongo:gBqYMU115g2n44M@localhost/binarybtc",
+	"redis": "169buildinglsbonr3memb3rproud789",
+	"send": "wBjRKNBvTUgpnb2W3dgMu6tu",
+    "btcrpc": {
+        "user": "bitcoin",
+        "password": "8k2N1mTbW25vD8PDoVhxPGDMaY7yTQcasSyFRsZxvKcQ"
+	},
+	"stripe": { 
+		"secret": "sk_test_qdvsjiU96yXvxOFDlzVFGrpI",
+		"publishable": "pk_test_aPrTxoP7NMvcVl2NXEHYncqa" 
+	},
+	"paypal": {
+		"public": "null",
+		"private": "null"
+	},
+	"site": {
+		"title": "vBit.io",
+		"description": "Worldwide Stock Options",
+		"domain": "vbit.io",
+		"admin": "crunk",
+		"robots": "allow",
+		"offer": "0.8",
+		"tradeevery": "1",
+		"allowsignup": true,
+		"allowtrading": true,
+		"maxamount": "50",
+		"updatems": "3000",
+		"defaultcurrency": "USD",
+		"startingamount": "5",
+		"stoptrading": "3",
+		"offset": { "bottom": "100", "top": "0"  },
+		"experience": { "win": "250", "tie": "50", "loss": "35" },
+		"levels": [
+			{ "title": "Newbie", "xp": "0" },
+			{ "title": "Junior", "xp": "700" },
+			{ "title": "Rookie", "xp": "3000" },
+			{ "title": "Comrade", "xp": "10000" },
+			{ "title": "Captain", "xp": "40000" },
+			{ "title": "Senior", "xp": "80000" },
+			{ "title": "Minor", "xp": "100000" },
+			{ "title": "Major", "xp": "300000" },
+			{ "title": "Pro", "xp": "500000" },
+			{ "title": "Master", "xp": "1000000" }
+		],
+		"chart": { 
+			"type": "line",
+			"width": "100%",
+			"height": "100%",
+			"lineColor": "#e96d01",
+			"fillColor": "#FFF9F1", 
+			"minSpotColor": "undefined",
+		    "maxSpotColor": "undefined",
+		    "highlightSpotColor": "undefined",
+		    "highlightLineColor": "undefined"
+		}
+	},
+	"mailer": {
+		"user": "mail@vbit.io",
+		"password": "++61@travel@PROVE@plants@74++"
+	},
+	"ssl": {
+		"ca": "/home/ubuntu/keys/server.ca",
+		"key": "/home/ubuntu/keys/server.key",
+		"cert": "/home/ubuntu/keys/vbit_io.crt"
+	}
+}

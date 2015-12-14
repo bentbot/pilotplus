@@ -4,7 +4,7 @@ var port = 8080
   , path = require('path')
   , http = require('http')
   , nowjs = require('now')
-  , ejs = require('ejs')
+  , jade = require('jade')
   , https = require('https')
   , sio = require('socket.io')
   , express = require('express')
@@ -57,7 +57,8 @@ var UserSchema = new mongoose.Schema({
     referral: {type: String },
     achievements: {type: String },
     percentage: {type: String },
-    experience: {type: Number }
+    experience: {type: Number },
+    level: {type: Number}
 });
 
 UserSchema.pre('save', function(next) {
@@ -260,7 +261,7 @@ rclient = redis.createClient();
 rclient.auth(keys.redis);
 
 function pay(amount, tradeuser, currency, callback) {
-  var errors = false;
+  var errors = false;  
   if (!currency) currency = '';
   if (amount > 0) {
     console.log('Paying '+amount+' '+currency+' to '+tradeuser);
@@ -281,7 +282,6 @@ function pay(amount, tradeuser, currency, callback) {
             });
         });
     });
-  
   }
 }
 
@@ -324,7 +324,7 @@ var ca, file, files, fs, https, httpsOptions, httpsServer, requestHandler;
 var app = module.exports = express();
 
 app.set('views', __dirname + '/views');
-app.set('view engine', 'ejs');
+app.set('view engine', 'jade');
 
 app.use(express.static('public'));
 app.use(cookieParser(keys.cookie));
@@ -503,7 +503,7 @@ app.get('/check/:username/:password', function( req, res ) {
 function trade() {
   var index;//Loop the trades
   var processedtrades = new Array();
-    async.each( trades, function (trade){
+    trades.forEach(function (trade){
       var winnings = 0;
       // Check the direction and calculate the outcome
       if (trade.direction == 'Call'){
@@ -513,8 +513,7 @@ function trade() {
         } else if (trade.price < price[trade.symbol]){
           trade.outcome = 'Win'; 
           // User wins trade
-          winnings = Number(+trade.amount + (+trade.amount*trade.offer) );
-          console.log('winnings '+ winnings);
+          winnings = Number(+trade.amount + (+trade.amount*trade.offer) ).toFixed(2);
           pay(winnings, trade.user, trade.currency, function (err) {
             if (err) throw (err);
           });
@@ -529,8 +528,7 @@ function trade() {
           trade.outcome = 'Lose';//Lose
           // User lost put
         } else if (trade.price > price[trade.symbol]){
-          winnings = Number(++trade.amount + (+trade.amount*trade.offer) );
-          console.log('winnings '+ winnings);
+          winnings = Number(++trade.amount + (+trade.amount*trade.offer) ).toFixed(2);
           trade.outcome = 'Win';
           //Update user balance and move winnings out of the bank
           pay(winnings, trade.user, trade.currency, function (err) {
@@ -598,148 +596,146 @@ function addTrade(symbol, amount, direction, user, socket) {
   User.findOne({ username: user }, function (err, docs) {
     if (err) throw (err);  
     currency = docs.currency;
-    currency = currency.symbol;
-  });
 
-  // Check if the trade is closing
-  if (nexttradesecs > keys.site.stoptrading) {
-  // Check the amount
-  if (amount > 0) {
-  // Check the direction and make sure price[symbol] exists
-  if (direction == 'Call' || direction == 'Put' && price[symbol]) {
-    // Put the amount info a number
-    amount = Number(amount);
-    // Check if the amount is over maxamount
-    if (amount <= maxamount) {
-      // Check if the amount is over the user balance
-      rclient.get(user+'.'+currency, function (err, balance) {
+    // Check if the trade is closing
+    if (nexttradesecs > keys.site.stoptrading) {
+    // Check the amount
+    if (amount > 0) {
+    // Check the direction and make sure price[symbol] exists
+    if (direction == 'Call' || direction == 'Put' && price[symbol]) {
+      // Put the amount info a number
+      amount = Number(amount);
+      // Check if the amount is over maxamount
+      if (amount <= maxamount) {
+        // Check if the amount is over the user balance
+        rclient.get(user+'.'+currency, function (err, balance) {
 
-      if (balance >= amount) {
+        if (balance >= amount) {
 
-        if (direction == 'Call' && ratio[symbol] > maxoffset.bottom) {
-          // The direction is invalid
-              err.sym = symbol;
-              err.msg = 'Call';
-              socket.emit('tradeerror', err);
-          return false;
-        } else if (direction == 'Put' && ratio[symbol] < maxoffset.top) {
-          // The direction is invalid
-              err.sym = symbol;
-              err.msg = 'Put';
-              socket.emit('tradeerror', err);
-              return false;
-        } else {
-          var now = time;
+          if (direction == 'Call' && ratio[symbol] > maxoffset.bottom) {
+            // The direction is invalid
+                err.sym = symbol;
+                err.msg = 'Call';
+                socket.emit('tradeerror', err);
+            return false;
+          } else if (direction == 'Put' && ratio[symbol] < maxoffset.top) {
+            // The direction is invalid
+                err.sym = symbol;
+                err.msg = 'Put';
+                socket.emit('tradeerror', err);
+                return false;
+          } else {
+            var now = time;
 
-          // Move the users funds to the bank
-          collectbank(amount, user, currency, function(amount, user, currency) {
+            // Move the users funds to the bank
+            collectbank(amount, user, currency, function(amount, user, currency) {
 
-          // Adjust the totals
-          if (direction == 'Call') {
-            if (calls[symbol]) {calls[symbol]++;} else {calls[symbol] = 1}
-            if (totalcall.symbol) {
-              var totalcallsi= Number(totalcall.symbol) + Number(amount);
-            } else {
-              var totalcallsi= Number(amount);
+            // Adjust the totals
+            if (direction == 'Call') {
+              if (calls[symbol]) {calls[symbol]++;} else {calls[symbol] = 1}
+              if (totalcall.symbol) {
+                var totalcallsi= Number(totalcall.symbol) + Number(amount);
+              } else {
+                var totalcallsi= Number(amount);
+              }
+              totalcall = { symbol: totalcallsi };
+            } if (direction == 'Put') {
+                if (puts[symbol]) { puts[symbol]++; } else {puts[symbol] = 1}
+              if (totalput.symbol) {
+                var totalputsi= Number(totalput.symbol) + Number(amount);
+              } else {
+                var totalputsi= Number(amount);
+              }
+              totalput = { symbol: totalputsi };
             }
-            totalcall = { symbol: totalcallsi };
-          } if (direction == 'Put') {
-              if (puts[symbol]) { puts[symbol]++; } else {puts[symbol] = 1}
-            if (totalput.symbol) {
-              var totalputsi= Number(totalput.symbol) + Number(amount);
-            } else {
-              var totalputsi= Number(amount);
-            }
-            totalput = { symbol: totalputsi };
-          }
-          if (!totalcall.symbol) { totalcall.symbol = 0; }
-          if (!totalput.symbol) { totalput.symbol = 0; }
+            if (!totalcall.symbol) { totalcall.symbol = 0; }
+            if (!totalput.symbol) { totalput.symbol = 0; }
 
-          if (totalcall.symbol > totalput.symbol) diff[symbol] = (totalcall.symbol - totalput.symbol);
-          if (totalcall.symbol < totalput.symbol) diff[symbol] = (totalput.symbol - totalcall.symbol);
-          if (totalcall.symbol == totalput.symbol) diff[symbol] = 0;
+            if (totalcall.symbol > totalput.symbol) diff[symbol] = (totalcall.symbol - totalput.symbol);
+            if (totalcall.symbol < totalput.symbol) diff[symbol] = (totalput.symbol - totalcall.symbol);
+            if (totalcall.symbol == totalput.symbol) diff[symbol] = 0;
 
-            // Add the two sides to make a total
-          var t = Number(totalcall.symbol) + Number(totalput.symbol);
+              // Add the two sides to make a total
+            var t = Number(totalcall.symbol) + Number(totalput.symbol);
 
-          // Create a ratio percentage
-          ratio[symbol] = round(Number(totalcall.symbol) / Number(t) * 100);
+            // Create a ratio percentage
+            ratio[symbol] = round(Number(totalcall.symbol) / Number(t) * 100);
 
-          var trade = {
-            symbol: symbol,
-            price: price[symbol],
-            offer: offer,
-            amount: amount,
-            currency: currency,
-            direction: direction,
-            time: now,
-            finalprice: price[symbol],
-            user: user,
-            winnings: 0
-          };
+            var trade = {
+              symbol: symbol,
+              price: price[symbol],
+              offer: offer,
+              amount: amount,
+              currency: currency,
+              direction: direction,
+              time: now,
+              finalprice: price[symbol],
+              user: user,
+              winnings: 0
+            };
 
-          trades.push(trade);
+            trades.push(trade);
 
-          // Insert the trade into the database
-          var dbactivetrades = new Activetrades(trade);
-          dbactivetrades.save(function (err) {
-            if (err) throw (err);
-            // console.log('Total Call '+symbol+':'+totalcall.symbol);
-            // console.log('Total Put '+symbol+':'+totalput.symbol);
-            // console.log('Ratio '+symbol+' %'+ratio[symbol]);
-            // console.log('Raw Difference: '+diff[symbol]);
-              // Insert the trade into the ram
-              socket.emit('ratios', ratio);
-              socket.emit('tradeadded', symbol);
-              socket.emit('activetrades', trades);
-              a++;
-              return true;
+            // Insert the trade into the database
+            var dbactivetrades = new Activetrades(trade);
+            dbactivetrades.save(function (err) {
+              if (err) throw (err);
+              // console.log('Total Call '+symbol+':'+totalcall.symbol);
+              // console.log('Total Put '+symbol+':'+totalput.symbol);
+              // console.log('Ratio '+symbol+' %'+ratio[symbol]);
+              // console.log('Raw Difference: '+diff[symbol]);
+                // Insert the trade into the ram
+                socket.emit('ratios', ratio);
+                socket.emit('tradeadded', symbol);
+                socket.emit('activetrades', trades);
+                a++;
+                return true;
+            });
           });
-        });
-      }
+        }
 
+      } else {
+        // The amount is larger than the user's balance
+        var error = {};
+        error.sym = symbol;
+        error.msg = 'Balance';
+        socket.emit('tradeerror', error);
+        return false;
+      } // err
+    });
     } else {
-      // The amount is larger than the user's balance
+      // The amount is over the max ammount
       var error = {};
       error.sym = symbol;
-      error.msg = 'Balance';
+      error.msg = 'Amount';
       socket.emit('tradeerror', error);
       return false;
-    } // err
+    }
+    } else {
+      // The direction is invalid
+      var error = {};
+      error.sym = symbol;
+      error.msg = 'Pick';
+      socket.emit('tradeerror', error);
+      return false;
+    }
+    } else {
+      // The amount is not over zero
+      var error = {};
+      error.sym = symbol;
+      error.msg = 'Amount';
+      socket.emit('tradeerror', error);
+      return false;
+    }
+    } else {
+      // Trade is closing
+      var error = {};
+      error.sym = symbol;
+      error.msg = 'Wait';
+      socket.emit('tradeerror', error);
+      return false;
+    }
   });
-  } else {
-    // The amount is over the max ammount
-    var error = {};
-    error.sym = symbol;
-    error.msg = 'Amount';
-    socket.emit('tradeerror', error);
-    return false;
-  }
-  } else {
-    // The direction is invalid
-    var error = {};
-    error.sym = symbol;
-    error.msg = 'Pick';
-    socket.emit('tradeerror', error);
-    return false;
-  }
-  } else {
-    // The amount is not over zero
-    var error = {};
-    error.sym = symbol;
-    error.msg = 'Amount';
-    socket.emit('tradeerror', error);
-    return false;
-  }
-  } else {
-    // Trade is closing
-    var error = {};
-    error.sym = symbol;
-    error.msg = 'Wait';
-    socket.emit('tradeerror', error);
-    return false;
-  }
-
 }
 
 var nexttrade = new Array();
@@ -846,7 +842,7 @@ var lastdata = new Array();
 function chartPoint(data, symbol) {
   symbol = symbolswitch(symbol);
   // Check if the value has changed and put it in the DB
-  if (data && Number(data) && data != lastdata[symbol]) {
+  if (data && Number(data) && data != lastdata[symbol] || time-lastdata[time] > 1000) {
     var price = {
       symbol: symbol,
       price: data,
@@ -855,6 +851,7 @@ function chartPoint(data, symbol) {
     var historicprice = new Historicprices(price);
     historicprice.save();
     lastdata[symbol] = data;
+    lastdata[time] = time;
   }
 }
 
@@ -1013,7 +1010,7 @@ io.sockets.on('connection', function (socket) {
       break;
     }
     if (!data.time) data.time = 1800000;
-    Historicprices.find({ symbol: data.symbol }).where('time').gte(time-data.time).sort({ time: -1 }).exec(function (err, docs) {
+    Historicprices.find({ symbol: data.symbol }).sort({ time: -1 }).exec(function (err, docs) {
       if (err) throw (err);
       var points = new Array();
      async.each(docs, function (doc) {
@@ -1111,7 +1108,13 @@ io.sockets.on('connection', function (socket) {
 
     User.findOne({ username: myName }, function (err, docs) {
       if (err) throw (err);
-      if (docs) usercurrency = docs.currency;
+      if (docs) {
+        usercurrency = docs.currency;
+        userlevel = docs.level;
+        userxp = docs.experience;
+        userpercentage = docs.percentage;
+        userratio = docs.ratio;
+      }
     });
 
     // Get the user's balance
@@ -1146,11 +1149,12 @@ io.sockets.on('connection', function (socket) {
             verified: docx.verifiedemail, 
             dualfactor: dualFactor[myName], 
             currency: docx.currency,
-            ratio: userratio[myName], 
-            percentage: userpercentage[myName], 
-            xp: userxp[myName], 
-            level: userlevel[myName],
-            currency: usercurrency
+            ratio: userratio, 
+            percentage: userpercentage,
+            xp: userxp, 
+            level: userlevel,
+            currency: usercurrency,
+            lastpass: docx.passwordlast
           });
         });
     } else {
@@ -1167,7 +1171,8 @@ io.sockets.on('connection', function (socket) {
             ratio: userratio[myName], 
             percentage: userpercentage[myName], 
             level: userlevel[myName],
-            currency: usercurrency
+            currency: usercurrency,
+            lastpass: docx.passwordlast
           });
         }
       });
@@ -1298,6 +1303,13 @@ io.sockets.on('connection', function (socket) {
         }
       });
     });
+  
+  var usercurrencies = [];
+  async.each(currencies, function (eachcurrency) { 
+    rclient.get(myName+'.'+eachcurrency.symbol, function (err, bal) {
+      usercurrencies.push({ symbol: eachcurrency.symbol, name: eachcurrency.name, balance: bal })
+    });
+  });
 
   // Get the user's details and analyze them
   User.findOne({ username: myName }, function(err, docs) {
@@ -1314,17 +1326,13 @@ io.sockets.on('connection', function (socket) {
             
             }
 
-            var usercurrencies = [];
-            async.each(currencies, function (currency) { 
-              rclient.get(myName+'.'+currency.symbol, function (err, bal) {
-                usercurrencies.push({ symbol: currency.symbol, name: currency.name, balance: bal })
-              });
-            });
 
+
+            socket.emit('wallet', {name: myName, currency: currency, address: docs.btc, balance: bal, currencies: usercurrencies}); // Update useraddress
             socket.emit('ratio', docs.ratio);
             socket.emit('percentage', docs.percentage);
             socket.emit('experience', docs.experience); // Update xp
-            socket.emit('wallet', {name: myName, currency: currency, address: docs.btc, balance: bal, currencies: currencies}); // Update useraddress
+            socket.emit('level', docs.level); // Update xp
             socket.emit('userbal', { name: myName, currency: currency, balance: bal }); // Update userbalance
             userbalance.currency = bal;
             useraddress[myName] = docs.btc;
@@ -1460,10 +1468,10 @@ app.use('/', express.static(__dirname + '/views'));
 // Send index
 app.get('/', function(req,res) {
   res.render('index', {
+    site: keys.site,
     user: true,
-    col: 2
+    reload: 3600
   });
-
 });
 
 app.get('/robots.txt', function(req,res) {
@@ -1476,7 +1484,9 @@ app.get('/robots.txt', function(req,res) {
 
 app.get('/tos', function(req,res) {
   res.render('index', {
-    user: true,
+    site: keys.site,
+    alert: 'Loading...',
+    reload: '3600; url=https://'+keys.site.domain+'/',
     col: 2
   });
 });
@@ -1746,12 +1756,10 @@ app.get('/verifyemail/:email', function(req, res, next) {
           Userverify.remove({key: key}, function (err) {
             if (err) res.send('Error removing key from data store.');
               res.render('index', {
-                user: true,
-                col: 2
+                site: keys.site,
+                reload: 4,
+                alert: 'Your email has been verified. Thank you!'
               });
-              setTimeout(function() {
-                socket.emit('alertuser', { message: 'Your email has been veridifed.', colour: 'green' }); 
-              }, 3000);
           });
         });
       }
@@ -1949,16 +1957,19 @@ if (signupsopen == true) {
     
           //create a user a new user
           if (!address) var address = null;
+          if (!referer) var referer = null;
           var newUser = new User({
               username: req.params.username,
               email: req.params.email,
               verifiedemail: false,
               password: req.params.password,
               currency: keys.site.defaultcurrency,
-              btc: null,
+              referral: referer,
               ratio: '0:0',
               percentage: '50',
-              experience: '0'
+              experience: '0',
+              level: '1',
+              btc: null,
           });
 
           // save user to database

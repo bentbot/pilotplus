@@ -44,13 +44,13 @@ function showactive(data, nexttrade) {
         if (data.currency == 'BTC') { 
           currencyicon = '<td>m<i class="fa fa-btc"></i>'; 
         } else if (data.currency == 'CAD') {
-          currencyicon = '<td>CAD <i class="fa fa-dollar"></i>'; 
+          currencyicon = '<td><span class="hideinmobile">CAD</span> <i class="fa fa-dollar"></i>'; 
         } else if (data.currency == 'EUR') {
-          currencyicon = '<td>EUR <i class="fa fa-eur"></i>'; 
+          currencyicon = '<td><span class="hideinmobile">EUR</span> <i class="fa fa-eur"></i>'; 
         } else if (data.currency == 'GBP') {
-          currencyicon = '<td>GBP <i class="fa fa-gbp"></i>'; 
+          currencyicon = '<td><span class="hideinmobile">GBP</span> <i class="fa fa-gbp"></i>'; 
         } else if (data.currency == 'USD') {
-          currencyicon = '<td>USD <i class="fa fa-dollar"></i>'; 
+          currencyicon = '<td><span class="hideinmobile">USD</span> <i class="fa fa-dollar"></i>'; 
         } else {
           currencyicon = '<td><i class="fa fa-dollar"></i>'; 
         }

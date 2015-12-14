@@ -7,14 +7,6 @@ function showGuest () {
         '<div class="col-md-4"><i class="fa fa-bolt" style="color: #00BCD4 !important;"></i><h1 data-translate="instant">Lightning Fast</h1><p data-translate="instantbody">Instantly deposit, trade, and withdrawal with '+localcurrency+' and Bitcoin.</p></div>'+
         '<div class="col-md-4"><span data-translate="fiaticon"><i class="fa fa-usd"></i></span><h1 data-translate="options">Instantly Profitable</h1><p data-translate="optionsbody">Profit in seconds by trading on exchange rates, crypto currencies, stocks, and more.</p></div>'+
       '</div>'+
-      '<div class="slider">'+
-        '<div class="slide">'+
-          'slide 1'+
-        '</div>'+
-        '<div class="slide">'+
-          'slide 2'+
-        '</div>'+
-      '</div>'+
       '<div class="signupbox well">'+
       '<form autocomplete="false">'+
       '<div class="input-group">'+
@@ -99,12 +91,10 @@ $(function () {
     var em = $(".email").val();
     var pwd = $(".pwd").val();
     if (un && em && pwd && term && validemail && un.length >= 3) {
-    console.log('ajax out:'+un+':'+em+':'+pwd);
     $.ajax({
       url: "adduser/"+un+"/"+em+"/"+pwd,
       cache: false
       }).done(function( resp ) {
-        console.log('ajax in: '+resp);
         if (resp == 'OK') {
           $('.input-group .username').css('margin-left', '8%');
           $('.input-group i').css('width', '0%');

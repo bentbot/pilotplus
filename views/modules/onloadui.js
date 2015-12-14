@@ -11,16 +11,6 @@ function bottlepop(tx, amount) {
   }
 }
 
-// Columns
-$("#col1").sortable({
-    handle: '.header',
-    connectWith: '#col2'
-}).disableSelection();
-$("#col2").sortable({
-    handle: '.header',
-    connectWith: '#col1'
-}).disableSelection();
-
 // Emoji
 emoji.include_title = true;
 emoji.img_set = 'apple';
@@ -63,6 +53,13 @@ $(function() {
   if (window.location.pathname == '/tos') page('terms');
 
 
+var element = document.getElementById('keystones');
+
+var options = {
+  dragLockToAxis: true,
+  dragBlockHorizontal: true
+};
+
 
 $('.slider').fractionSlider({
 'slideTransition' : 'fade', // default slide transition
@@ -92,8 +89,7 @@ $(".hook").on("mouseup",".reveal",function(e) {
     $(".pwd").replaceWith($('.pwd').clone().attr('type', 'password'));
 });
 
-var elem = document.getElementById('keystones');
-var keystonescroll = new Hammer(elem);
+
 
 $(".globalheader").on("click",".keystones li a",function(e) {
   e.preventDefault();
@@ -106,8 +102,9 @@ $(".globalheader").on("click",".keystones li a",function(e) {
   }
 });
 
-$(".menu").on("click",".keystonelink",function(e) {
+$(".menu").on("click",".keystonesidebar",function(e) {
   e.preventDefault();
+  $(".keystonesidebar").removeClass('selected');
   $(this).addClass('selected');
   var symbol = [$(this).attr('data-symbol')];
   if (lastitem != symbol) {
@@ -117,6 +114,24 @@ $(".menu").on("click",".keystonelink",function(e) {
     selectedsymbol = symbol;
     location.hash = symbol;
   }
+});
+
+var scroll;
+$('.scroller').mouseover( function() {
+  
+  if ( $(this).hasClass('left') ) {
+    scroll = setInterval( function() {
+      var left = $('.keystones').css('left').replace('px', ''); 
+      if (left < 0) $('.keystones').css('left', '+=10'); 
+    }, 100 );
+  } else if ( $(this).hasClass('right') ) {
+    scroll = setInterval( function() { 
+      var left = $('.keystones').css('left').replace('px', ''); 
+      $('.keystones').css('left', '-=10'); 
+    }, 100 );
+  }
+
+  $(this).mouseout( function() { clearInterval(scroll); });
 });
 
 
@@ -345,6 +360,8 @@ $(".menu").on('click', '.sidebar-pin', function (e) {
   if (sidebarpin == true) {
     sidebarpin = false;
     $(this).find('i').addClass('fa-toggle-off').removeClass('fa-toggle-on');
+    $('.menu').removeClass('open');
+    $('.hook').removeClass('open');
   } else {
     sidebarpin = true;
     $(this).find('i').addClass('fa-toggle-on').removeClass('fa-toggle-off');

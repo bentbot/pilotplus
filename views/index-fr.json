@@ -7,7 +7,7 @@
 	"from": "De",
 	"in": "À",
 	"instant": "Instant",
-	"instantbody": "Immédiatement déposer, le commerce, et le retrait avec Bitcoin.",
+	"instantbody": "Immédiatement déposer, le commerce, et le retrait avec Euro et Bitcoin.",
 	"safe": "Sûr",
 	"safebody": "Cryptologie et le double autorisation pour protéger vos fonds.",
 	"options": "Sélection",
@@ -28,5 +28,7 @@
 	"received": "Reçu",
 	"sent": "Expédié",
 	"justaddbitcoin": "Votre compte est d'argent. Ajoutez un peu.",
-	"justnow": "Nouveau"
+	"justnow": "Nouveau",
+	"fiaticon": "<i class='fa fa-euro'></i>",
+	"fiat": "Euro"
 }

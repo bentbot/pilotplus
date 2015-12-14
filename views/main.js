@@ -26,6 +26,7 @@ var $messagesOutput = $('.messages');
 var $messagesInput = $('#chat input');
 var sitetitle = 'vBit.io';
 var status = true;
+var lastpass = false;
 var userpage = true;
 var target = 0;
 var offer = 0;
@@ -161,37 +162,41 @@ socket.on('symbols', function (data) {
 
       // Render menus
       if (data.price) menu = menu + '<li class="keystone keystonelink " data-symbol="'+data.symbol+'"><a>'+data.name+': <span class="keystone'+data.symbol+' '+classes+'">'+data.price+'</span></a></li>'; 
-      if (data.price) sidebar = sidebar + '<li class="keystone keystonesidebar keystonelink keystone'+data.symbol+' '+classes+'" data-symbol="'+data.symbol+'"><div class="name">'+data.name+'</div><div class="price">'+data.price+'</div>'; 
+      if (data.price) sidebar = sidebar + '<li class="keystone keystonesidebar keystonelink keystone'+data.symbol+' '+classes+'" data-symbol="'+data.symbol+'"><div class="name">'+data.name+'</div><div class="price">'+data.price+'</div></li>'; 
 
-      $.each(activetrades, function(i, active) {
+      sidebar = sidebar + '<ul class="'+data.symbol+'-trades trades">';
 
-        var activeclasses = '';
-        
-        if (active.direction == 'Put') {
-          if (price[active.symbol] > active.price) {
-            activeclasses = 'red';
-          } else if (price[active.symbol] < active.price) {
-            activeclasses = 'green';
-          } else {
-            activeclasses = '';
+        $.each(activetrades, function(i, active) {
+
+          var activeclasses, direction;
+          
+          if (active.direction == 'Put') {
+            direction = '<span class="red glyphicon glyphicon-arrow-down"></span> '+active.price;
+            if (price[active.symbol] > active.price) {
+              activeclasses = 'red';
+            } else if (price[active.symbol] < active.price) {
+              activeclasses = 'green';
+            } else {
+              activeclasses = '';
+            }
+          } else if (active.direction == 'Call') {
+            direction = '<span class="green glyphicon glyphicon-arrow-up"></span> '+active.price;
+            if (price[active.symbol] < active.price) {
+              activeclasses = 'red';
+            } else if (price[active.symbol] > active.price) {
+              activeclasses = 'green';
+            } else {
+              activeclasses = '';
+            }
           }
-        } else if (active.direction == 'Call') {
-          if (price[active.symbol] < active.price) {
-            activeclasses = 'red';
-          } else if (price[active.symbol] > active.price) {
-            activeclasses = 'green';
-          } else {
-            activeclasses = '';
-          }
-        }
 
-        sidebar = sidebar + '<ul class="trades">';
-        if (active.symbol == data.symbol) {
-          sidebar = sidebar + '<li class="'+activeclasses+'"><span style="float: left;">'+active.currency+active.amount+'</span><span style="float:right;">'+active.direction+'</span></li>';
-        }
-        sidebar = sidebar + '</ul>';
-      });
-      sidebar = sidebar + '</li>';
+          if (active.symbol == data.symbol) {
+            sidebar = sidebar + '<li class="'+activeclasses+' sidebartrade keystonelink" data-symbol="'+active.symbol+'"><span style="float: left;">'+currencySwitch(active.currency)+' '+active.amount+'</span><span style="float:right;">'+direction+'</span></li>';
+          }
+
+        });
+
+      sidebar = sidebar + '</ul>';
 
       $('.keystones').html(menu);
       $('.sidebar-symbols').html(sidebar);
@@ -506,6 +511,7 @@ function loadHistory() {
       verified = data.verified;
       ratio = data.ratio;
       percentage = data.percentage;
+      lastpass = data.lastpassword;
       if (percentage == null) percentage = 50;
       level = data.level;
       console.log('Hello '+user+' #'+userid+' '+email+' coin:'+currency+' btc:'+userdeposit+' 2f:'+dualfactor+' email:'+verified+' radio:'+ratio+' %:'+percentage);
@@ -552,6 +558,12 @@ function loadHistory() {
     socket.on('percentage', function (data) {
       percentage = data;
       $('.percentage').html(percentage);
+    });
+
+    var level = 0;
+    socket.on('level', function (data) {
+      level = data;
+      $('.userlevel').html(level);
     });
 
    var autopage = 0;
@@ -645,7 +657,7 @@ function loadHistory() {
     $('.btnlogo').removeClass('btn-warning').removeClass('btn-yellow').removeClass('btn-danger').addClass('btn-success');
     $('.btnlogo .sitename').html('<span class="glyphicon glyphicon-lock"></span> <span data-translate="reconnected">Reconnected</span>');
     setTimeout(function(){
-      $('.btnlogo').removeClass('btn-success').removeClass('btn-danger').addClass('btn-warning');
+      $('.btnlogo').removeClass('btn-success').removeClass('btn-danger').addClass('btn-yellow');
       $('.btnlogo .sitename').html('<span class="glyphicon glyphicon-arrow-up"></span><span class="glyphicon glyphicon-arrow-down"></span>');
     },3000);
   });
@@ -674,6 +686,7 @@ socket.on('tradeoutcome', function (data) {
       showSplit(data.x, data.y, data.z, 0, showSymbols);
     }
   }
+  $('.trades li').css('left', '100%')
 });
 
 socket.on('chart', function (data) {

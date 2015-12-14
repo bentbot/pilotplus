@@ -253,7 +253,7 @@ display: table-cell;
   color: white !important;
 }
 
-.menu li .name {
+.menu .name {
   font-size: 16px;
   font-weight: 500;
   color: #424242;
@@ -261,7 +261,7 @@ display: table-cell;
   float: left;
   cursor: pointer;
 }
-.menu li .price {
+.menu .price {
   font-size: 15px;
   float: right;
   padding-right: 5px;
@@ -270,35 +270,51 @@ display: table-cell;
   font-weight: 500;
   cursor: pointer;
 }
-.menu li .trades {
+.menu .trades {
   clear: both;
+  margin-top: 0px;
+  position: relative;
+  z-index: -1;
+  left: 10px;
+  width: 95%;
+  top: 0px;
 }
-.menu li .trades li {
-  height: 28px;
-  padding: 0 10px 0 10px;
-  margin: 0px;
+.menu .trades li {
+  height: 30px;
+  padding: 0px 10px 0 10px;
+  margin: 0 2% 0 2%;
   min-height: 0px;
   background: rgba(243, 243, 243, 0.9);
   border-bottom: 1px solid rgba(167, 167, 167, 0.9);
   border-radius: 4px;
-  width: 97%;
+  width: 95%;
   color: #333;
   text-transform: capitalize;
   font-weight: bold;
   text-shadow: 0px 1px 0 #FFFFFF;
   font-size: 12px;
   letter-spacing: 0.4px;
+  margin-top: 2%;
+  left: 0%;
+  -webkit-transition: all 0.14s ease-in;
+  transition: all 0.14s ease-in;
 }
 
-.menu li .trades li.red { 
+.menu .trades li.red { 
   color: white !important; 
   border-bottom: 1px solid #820000;
-  background: rgba(178, 0, 0, 0.7) !important;
+  background: rgba(178, 0, 0, 1) !important;
 }
-.menu li .trades li.green { 
+.menu .trades li.green { 
   color: white !important;
   border-bottom: 1px solid #0A5600;
-  background: rgba(20, 178, 0, 0.7) !important;
+  background: rgb(55, 160, 42) !important;
+}
+
+.menu .trades li.green .green, .menu .trades li.green .red, 
+.menu .trades li.red .green, .menu .trades li.red .red {
+  text-shadow: none;
+  color: white !important;
 }
 
 .menu li a, 
@@ -309,6 +325,11 @@ display: table-cell;
   text-decoration: none;
   color: #333;
 
+}
+
+.sidebar-symbols ul {
+  margin-bottom: 7px;
+  margin-top: 5px;
 }
 
 .sparkline {
@@ -513,13 +534,11 @@ display: table-cell;
           margin-top: 11px;
           width: 85%;
         }
-        .green {
-          color: hsl(113, 100%, 35%) !important;
-        }.red {
-          color: hsl(360, 100%, 42%) !important;
-        }.orange {
-          color: hsl(28, 99%, 46%) !important;
-        }
+        .green { color: hsl(113, 100%, 35%) !important; }
+        .red { color: hsl(360, 100%, 42%) !important; }
+        .orange { color: hsl(28, 99%, 46%) !important; }
+        .yellow { color: #F3C723 !important }
+        .yellow .fa { text-shadow: 0px 1px 0px rgb(214, 149, 29); }
         .userxp {color: #E91E63 !important;}
 .progress-bar-success {
   background-color: hsl(113, 100%, 35%);
@@ -546,7 +565,7 @@ height: 42px;
   .callputcontainer { width: 60px !important; right: 118px; }
 }
 @media screen and (max-width: 720px) {
-  .hook { padding: 0 10px; }
+  .container { padding: 0 10px !important; }
   .controls { height: 100px; padding: 0 10px; }
   .controls .info { width: 100% !important; position: absolute !important; left: 0px !important; }
   .controls .info .details { width: 32% !important; left: 32% !important; position: absolute; }
@@ -558,7 +577,7 @@ height: 42px;
   .controls .applytrade { font-size: 18px; width: 100% !important; margin-top: 11px; }
   .historictrades .time { display: none; }
   .callputcontainer { position: absolute; right: 10px;}
-
+  .title { padding: 0 10px !important; }
 }
 @media screen and (max-width: 600px) {
   .historictrade .time { display: none; }
@@ -581,8 +600,39 @@ margin-top: 5px;
 .title .accountinfo {
   margin: 0px 0px 0px 0px;
 }
+.keystones {
+  left: 0px;
+  position: relative;
+  transition: all 0.2s;
+}
+.scroller {
+  position: absolute;
+  height: 100%;
+  width: 25px;
+  transition: all .2s;
+  color: white;
+}.scroller:hover {
+  opacity: 1 !important;
+}
+.left.scroller { 
+  left: 0px; 
+  /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#ffffff+0,ffffff+100&1+0,0+100 */
+  background: -moz-linear-gradient(left,  rgba(255,255,255,1) 0%, rgba(255,255,255,0) 100%); /* FF3.6-15 */
+  background: -webkit-linear-gradient(left,  rgba(255,255,255,1) 0%,rgba(255,255,255,0) 100%); /* Chrome10-25,Safari5.1-6 */
+  background: linear-gradient(to right,  rgba(255,255,255,1) 0%,rgba(255,255,255,0) 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#00ffffff',GradientType=1 ); /* IE6-9 */
+}
+.right.scroller { 
+  right: 0px; 
+  /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#ffffff+0,ffffff+100&0+0,1+100 */
+  background: -moz-linear-gradient(left,  rgba(255,255,255,0) 0%, rgba(255,255,255,1) 100%); /* FF3.6-15 */
+  background: -webkit-linear-gradient(left,  rgba(255,255,255,0) 0%,rgba(255,255,255,1) 100%); /* Chrome10-25,Safari5.1-6 */
+  background: linear-gradient(to right,  rgba(255,255,255,0) 0%,rgba(255,255,255,1) 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#00ffffff', endColorstr='#ffffff',GradientType=1 ); /* IE6-9 */
+}
+
 .linktray {
-  -webkit-transition: height 0.5s; /* For Safari 3.1 to 6.0 */
+-webkit-transition: height 0.5s; /* For Safari 3.1 to 6.0 */
 transition: height 0.5s;
 background-color: hsl(28, 0%, 94%) !important;
 width: 100%;
@@ -597,8 +647,8 @@ padding: 0px;
 float:left;
 list-style: none;
 cursor: default;
-width: 100%;
-left: -130px;
+width: 1000%;
+/* left: -130px; */
 }.linktray ul:first-child {
   margin-left: 10px;
 }
@@ -752,6 +802,7 @@ font-family: monospace;
   display: none;
 }
 @media screen and (max-width: 760px) {
+  .walletcurrencies button { height: 60px; }
   .walletcurrencies button .name { display: none !important; }
   .walletcurrencies button .symbol { display: block !important; }
 }
@@ -761,10 +812,12 @@ font-family: monospace;
   width: 68%;
   margin-right: 1.5%;
   padding: 0px;
-  transition: all 0.4s ease-out;
+  -webkit-transition: all 0.2s ease-in-out;
+  transition: all 0.2s ease-in-out;
   margin-top: 20px !important;
   float: left;
   min-height: 0 !important;
+  overflow: hidden;
 }
 .addcard .lefttitle {
   float: left;
@@ -785,7 +838,7 @@ font-family: monospace;
 }
 .addcard .center .paymentmethod span {
   padding: 0 15px 5px 15px;
-  border-bottom: 1px solid rgb(23, 83, 115, 0.25);
+  border-bottom: 1px solid rgba(23, 83, 115, 0.25);
 }
 .addcard .center .addfunds {
   margin-top: 10px;
@@ -822,7 +875,7 @@ font-family: monospace;
 
 /* Payment Methods */
 .method.cc {
-  width: 70%;
+  width: 90%;
   margin: auto;
   margin-top: 15px;
 }.method.cc .input-group-addon {
@@ -832,6 +885,8 @@ font-family: monospace;
   border-left: 1px solid #298FC5;
   border-bottom: 1px solid #298FC5;
   font-size: 25px;
+}.method.cc .input-group-addon a {
+  color: white !important;
 }.method.cc .input-group-addon .fa {
   margin: 0;
 }.method.cc input {
@@ -876,7 +931,7 @@ font-family: monospace;
 .method.paypal {
   height: 0px;
   margin-top: 0px !important;
-  width: 70%;
+  width: 90%;
   margin: auto;
   margin-top: 15px;
 }.method.paypal .input-group-addon {
@@ -912,11 +967,53 @@ font-family: monospace;
 }
 
 
+/* Bank Account */
+.method.bank {
+  height: 0px;
+  margin-top: 0px !important;
+  width: 90%;
+  margin: auto;
+  margin-top: 15px;
+}.method.bank .input-group-addon {
+  background: #5FB3E0 !important;
+  color: white;
+  border-top: 1px solid #298FC5;
+  border-left: 1px solid #298FC5;
+  border-bottom: 1px solid #298FC5;
+  font-size: 25px;
+  height: 45px;
+}.method.bank input {
+  letter-spacing: 2px;
+  font-size: 21px;
+  font-family: 'Roboto Slab';
+  border-left: 0px;
+  height: 45px;
+}.method.bank input::selection {
+  background:rgba(49, 112, 143, 0.75) !important;
+  color:#fff;
+}.method.bank #email {
+  text-align: center;
+  width: 70%;
+  color: #555555;
+  float: left;
+}.method.bank button {
+  font-size: 17px;
+  background: #3c763d;
+  color: white;
+  padding: 7px 13px;
+  float: left;
+  width: 30%;
+  height: 45px;
+}
+
+
 .fundsinput .showmethod {
 height: 100%;
 opacity: 1;
 }
 .card {
+transition: all 0.3s;
+-webkit-transition: all 0.3s;
 width: 320px;
 height: 200px;
 background: rgb(217, 237, 247);
@@ -930,7 +1027,35 @@ text-align: center;
 box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.19);
 float: left;
 margin: 20px 2.6%;
-}.card .value::selection, .card .secure::selection, .card .valid::selection {
+}
+.card.selected { 
+  border-width: 5px !important; 
+}
+
+.card.paypal {
+  height: 120px;
+}.card.paypal .value { 
+  top: 15%; 
+}.card.paypal .label { 
+  top: 20px; 
+}.card.paypal .label .fa { 
+  font-size: 30px;
+}.card.paypal .label .fa { 
+  font-size: 30px;
+}.card.paypal .numbers {
+  font-size: 20px;
+  position: absolute;
+  top: 70px;
+  left: 5%;
+  font-family: sans-serif;
+  text-shadow: 1px 1px #5A5A5A;
+  text-decoration: underline;
+  padding-bottom: 0px;
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+
+.card .value::selection, .card .secure::selection, .card .valid::selection {
   background: rgba(51, 51, 51, 0.45) !important;
   color: white !important;
 }
@@ -946,13 +1071,17 @@ font-size: 30px;
 color: white;
 text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.56);
 }.card div i {
-font-size: 32px;
+font-size: 50px;
 position: relative;
 text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.27);
 }.card .secure .fa-lock {
 left: 5px;
 }.card .valid .fa-clock-o {
 left: -5px;
+}
+.card .fa-cc-stripe {
+  font-size: 21px;
+  text-shadow: 1px 1px rgba(0, 0, 0, 0.32);
 }
 .card .value {
 position: absolute;
@@ -1026,6 +1155,7 @@ height: 35px;
   border: 2px solid #EFEFEF;
   border-radius: 10px;
   box-shadow: inset 0px 0px 12px rgba(0, 0, 0, 0.5);
+ 
 }
 .credit .details {
   margin: 1%;
@@ -1065,11 +1195,11 @@ height: 35px;
 
 .card.blue {
   border: 1px solid #03A9F4;
-  background-color: #2196F3;
+  background-color: #298fc5;
   background-image: repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,.5) 35px, rgba(255,255,255,.5) 70px);  
 }.card.green {
   border: 1px solid #4CAF50;
-  background-color: #8BC34A;
+  background-color: #119800;
   background-image: repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,.5) 35px, rgba(255,255,255,.5) 70px);
 }.card.teal {
   border: 1px solid #03A9F4;
@@ -1103,7 +1233,7 @@ height: 35px;
 }
 .card.purple {
   border: 1px solid #3F51B5;
-  background-color: #3F51B5;
+  background-color: #8F3176;
   background-image: repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,.5) 35px, rgba(255,255,255,.5) 70px);
 }
 
@@ -1116,6 +1246,7 @@ height: 35px;
     margin-right: 13px;
     font-size: 18px;
   }
+  .card div i { font-size: 32px; }
 }
 @media screen and (max-width: 760px) {
   .cards { 
@@ -1129,7 +1260,7 @@ height: 35px;
     margin: 7px 1%;
     float: left;
   }
-
+  .card div i { font-size: 32px; }
   .method.cc #number {
     text-align: center;
     width: 85%;
@@ -1859,25 +1990,25 @@ overflow: hidden;
 background-color: white;
 margin: 5px 0px;
 border: 1px solid #EEE;
-border-radius: 4px;
+border-radius: 3px;
 }.usertrades {
 overflow: hidden;
 background-color: white;
 margin: 5px 0px;
 border: 1px solid #EEE;
-border-radius: 4px;
+border-radius: 3px;
 }.userprefs {
 overflow: hidden;
 background-color: white;
 margin: 5px 0px 20px 0px;
 border: 1px solid #EEE;
-border-radius: 4px;
+border-radius: 3px;
 }.userprefs .header {
   font-weight: bold;
 }
 
 @media screen and (max-width: 760px) {
-  .usertrade .direction, .usertrade .from {
+  .usertrade .direction, .usertrade .from, .hideinmobile {
     display: none;
   } 
 }
@@ -1936,11 +2067,20 @@ background: whitesmoke;
 }
 .header {
   cursor: pointer;
-  /*background: #EEEEEE;*/
-  color: black;
-  font-size: 15px;
+  color: #505050;
+  font-size: 14px;
   padding: 5px 10px;
   border-bottom: 1px solid #EEE;
+  font-weight: 400;
+  text-shadow: 0px 1px 0px white;
+}
+.header:active, .header.active {
+  background: #F3F3F3;
+  cursor: move;
+}
+.header::selection {
+  background: silver !important;
+  text-shadow: none !important;
 }
 .optionheader {
   border-top: 1px solid #eee;
@@ -2137,6 +2277,7 @@ display: none;
   background-image: -o-linear-gradient(top, #e96d01, #e96d01);
   background-image: linear-gradient(#e96d01, #e96d01);
   border-color: #AD5101 #AD5101 hsl(28, 99%, 46%);
+  border-bottom: 2px solid #AD5101;
   color: #fff;
   text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.00);
   -webkit-font-smoothing: antialiased;
@@ -2220,6 +2361,20 @@ display: none;
 }.btn-dark:focus { 
   color: white !important;
 }
+.btn-textured {
+  background-image: url(/assets/img/lintbg.png) !important;
+  color: #fff !important;
+  text-shadow: 0px 1px 0px rgb(0, 0, 0) !important;
+  -webkit-font-smoothing: antialiased;
+}
+.btn-textured:hover {
+  color: white !important;
+}.btn-textured:active, .btn-textured.active {
+  -webkit-box-shadow: inset 1px 2px 3px rgba(0, 0, 0, 0.43) !important;
+  box-shadow: inset 1px 2px 3px rgba(0, 0, 0, 0.43) !important;
+  border-radius: 2px !important;
+}
+
 .input-group-addon {
 padding: 6px 12px;
 font-size: 14px;

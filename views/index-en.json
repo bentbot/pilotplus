@@ -1,3 +1,4 @@
 {
-	"fiaticon": "<i class='fa fa-usd'></i>"
+	"fiaticon": "<i class='fa fa-usd'></i>",
+	"fiat": "United States dollar"
 }

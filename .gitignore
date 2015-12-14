@@ -6,3 +6,4 @@ node_modules/bitcoin/Makefile
 node_modules/bitcoin/lib/bitcoin/client.js
 
 node_modules/bitcoin/Makefile
+vbit

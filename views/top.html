@@ -2,7 +2,7 @@
   <div class="title">
     <div class="container">
         <!-- site title -->
-      <button type="button" style="height: 31px;" class="btn btn-warning btnlogo">
+      <button type="button" style="height: 31px;" class="btn btn-yellow btnlogo">
          <span class="sitename" style="padding-bottom: 2px;"><span class="glyphicon glyphicon-arrow-up"></span><span class="glyphicon glyphicon-arrow-down"></span>
        </span>
       </button>
@@ -17,6 +17,8 @@
   <div class="linktray" style="height: 30px;">
     <ul class="keystones" id="keystones">
     </ul>
+    <div class="left scroller"></div>
+    <div class="right scroller"></div>
   </div>
 <% if (user) { %>
   <div class="accounttray">
@@ -80,3 +82,8 @@
   <ul class="sidebar-symbols"></ul>
 </div>
 <div class="hook">
+<% if (alert) { %>
+  <div class="alert alert-success" style="margin: 0px auto 0px auto; width: 100%; padding: 10px; text-align: center;">
+    <%= alert %>
+  </div>
+<% } %>

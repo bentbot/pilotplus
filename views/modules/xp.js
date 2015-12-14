@@ -2,7 +2,7 @@ function displayxp() {
 var html = '<div class="userblock">'+
   '<div class="row-fluid">'+
  '<div class="span12">'+
-  '<div class="header">'+user+'<span class="orange" style="float:right;display: none;"><i class="fa fa-star"></i> Level '+level+'</span></div>'+
+  '<div class="header">'+user+'<span class="yellow" style="float:right;"><i class="fa fa-star"></i> Level <span class="userlevel">'+level+'</span></span></div>'+
   '<table class="table" id="alltrades">'+
     '<tbody>'+
       '<tr>'+

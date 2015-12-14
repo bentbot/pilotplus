@@ -17,5 +17,7 @@
 	"signup": "Enregistrer",
 	"inviteonly": "Sur invitation seulement",
 	"registrationsdisabled": "Nouveaux utilisateurs anonymes ne sont pas autorisés.",
-	"haveaninvite": "Invité"
+	"haveaninvite": "Invité",
+	"fiaticon": "<i class='fa fa-usd'></i>",
+	"fiat": "Canadian Dollar"
 }

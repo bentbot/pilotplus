@@ -2,14 +2,16 @@ function showSecurity() {
 
   var html = '';
   $(".csec").html(html);
-    html = html + '<div class="alert alert-success" style="margin-top: 20px;min-height: 146px;">';
+
+    if (!dualfactor) html = html + '<div class="dualfactor-setup alert alert-warning" style="margin-top: 20px;min-height: 146px;">';
+    if (dualfactor) html = html + '<div class="dualfactor-setup alert alert-success" style="margin-top: 20px;min-height: 146px;">';
     html = html + '<div class="authtitle">';
     html = html + '<img class="authylogo" src="/assets/img/com.authy.authy.png" />'
     html = html + '<a href="https://itunes.apple.com/us/app/authy/id494168017?mt=8&uo=4" class="apple btn btn-blue btn-xs" target="_blank">iPhone</a>';
     html = html + '<a href="https://play.google.com/store/apps/details?id=com.authy.authy" class="google btn btn-success btn-xs" target="_blank">Android</a>';
     html = html + '</div>';
     html = html + '<div class="authh">Dual-Factor Authorization</div>';
-    if (!dualfactor)html = html + '<div class="authsub"><hr class="leftline" />Setup<hr class="rightline" /></div>';
+    if (!dualfactor) html = html + '<div class="authsub"><hr class="leftline" />Setup<hr class="rightline" /></div>';
     if (dualfactor) html = html + '<div class="authsub"><hr class="leftline" style="width: 70px;" />Enabled<hr class="rightline" style="width: 70px;" /></div>';
     if (!dualfactor) html = html + '<div class="authsign"><div class="input-group"><span class="input-group-addon">Cell +</span><input type="text" class="form-control" id="country" placeholder="1" autocomplete="off"><input type="text" class="form-control" id="phone" placeholder="1234567890" autocomplete="off"><button class="btn btn-success sendcode" style="border-radius: 0px 4px 4px 0px !important;"><i class="fa fa-phone"></i> Next</button></div></div>';
     if (dualfactor) html = html + '<div class="authsign" style="width: 240px"><div class="input-group"><span class="input-group-addon"><i class="fa fa-key securestatus"></i></span><input type="text" id="auth" maxlength="7" placeholder="*******" /><button class="btn btn-blue" id="authbtn" style="border-radius: 0px 4px 4px 0px !important;">Test</button></div></div>'
@@ -18,15 +20,19 @@ function showSecurity() {
     //if (dualfactor == false) html = html + '<div class="btcsecure"><i class="fa fa-key"></i><p>All you need is a cell phone.</p></div>';
     html = html + '</div>';
 
-    html = html + '<div class="alert alert-success emailverify">';
+
     if (verified == 'true') {
+    html = html + '<div class="alert alert-success emailverify">';
     html = html + '<i class="fa fa-envelope fa-lg alertico"></i><strong>'+email+'</strong> has been verified.';
     html = html + '<span style="float:right;opacity: 0.75"><i class="fa fa-check fa-lg"></i></span>';
-    } else {
-    html = html + '<i class="fa fa-envelope fa-lg alertico"></i><strong>Verify your email for greater security:</strong> '+email;
-    html = html + '<span style="float:right;"><a href="#" class="btn btn-xs btn-success" id="verifyemail">Verify Now</a></span>';
-    }
     html = html + '</div>';
+    } else {
+      html = html + '<div class="alert alert-warning emailverify">';
+      html = html + '<i class="fa fa-envelope fa-lg alertico"></i><strong>Verify your email for greater security:</strong> '+email;
+      html = html + '<span style="float:right;"><a href="#" class="btn btn-xs btn-success" id="verifyemail">Verify Now</a></span>';
+      html = html + '</div>';
+    }
+    
 
     html = html + '<div class="alert alert-info passwordchange">';
     html = html + '<span class="lastchange"><i class="fa fa-eye-slash fa-lg alertico"></i> Your password has never been changed.</span>';
@@ -35,11 +41,13 @@ function showSecurity() {
     html = html + '</div>'
 
   $(".csec").html(html);
-      $('.authylogo').animate({
-        opacity: 1,
-        top: "5"
-      }, 2000, "easeOutBounce", function() {
-    }); 
+  
+  lastPass();
+  $('.authylogo').animate({
+      opacity: 1,
+      top: "5"
+    }, 2000, "easeOutBounce", function() {
+  });
 }
 function lastPass(){
     $.ajax({
@@ -64,7 +72,7 @@ function verifyEmail (){
   }).done(function(result) {
     console.log(result);
     if (result == 'OK') {
-      $('.emailverify').removeClass('alert-danger alert-success').addClass('alert-warning').html('<i class="fa fa-envelope fa-lg alertico"></i><strong>Please check your email</strong> <i>'+email+'</i> for a special link.')
+      $('.emailverify').removeClass('alert-danger alert-warning').addClass('alert-success').html('<i class="fa fa-envelope fa-lg alertico"></i><strong>Please check your email</strong> <i>'+email+'</i> for a special link.')
     } else {
       $('.emailverify').removeClass('alert-success alert-warning').addClass('alert-danger').html(result);
     }
@@ -74,6 +82,7 @@ function verifyEmail (){
 $(document).ready(function()
 {
  
+
  $(".hook").on("keyup","#newpass",function(e) {    
   var oldpass = $('#currentpass').val();
   var newpass = $('#newpass').val();
@@ -139,6 +148,7 @@ function sign(e){
           if (result == 'OK') {
             $(".sendcode").html('<i class="fa fa-cog fa-spin"></i> Next');
             setTimeout(function() {
+            $(".dualfactor-setup").removeClass('alert-warning').addClass('alert-success');  
             $(".authsub").html('<hr class="leftline">Test<hr class="rightline">');
             $(".authsign").css('width', 240).html('<div class="input-group"><span class="input-group-addon"><i class="fa fa-key securestatus"></i></span><input type="text" id="auth" maxlength="7" placeholder="*******" /><button class="btn btn-blue" id="authbtn" style="border-radius: 0px 4px 4px 0px !important;">Test</button></div>');
             $(".csecsecure").html('<i class="fa fa-key"></i>');

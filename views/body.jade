@@ -1,0 +1,62 @@
+div( class="globalheader" )
+  div( class="title" )
+    div( class="container" )
+      button( type="button" style="height: 31px;" class="btn btn-yellow btnlogo" )
+          span( class="sitename" style="padding-bottom: 2px;")
+            span( class="glyphicon glyphicon-arrow-up" )
+            span( class="glyphicon glyphicon-arrow-down" )
+      div( class="right" )
+  div( class="header" )
+    div( class="linktray" style="height: 30px;" )
+      ul( class="keystones" )
+      div( class="left scroller" )
+      div( class="right scroller" )
+    div( class="accounttray" )
+      div( class="container" style="padding: 0px;" )
+        ul
+          li( id="prefs" )
+            a( href="#" ) Preferences
+          li( id="security" )
+            a( href="#" ) Security
+          li( id="logout" )
+            a( href="logout" ) Logout
+    div( class="financestray" )
+      div( class="container" style="padding: 0px;" )
+        ul
+          li( id="deposit" )
+            a( href="#" ) Deposit
+          li( id="withdrawl" )
+            a( href="#" ) Withdrawal
+          li( id="history" )
+            a( href="#" ) History
+          li( id="referrals" )
+            a( href="#" ) Referrals
+div( class="announcesplit" )
+  div( class="container" )
+    div( class="x" )
+    div( class="y" )
+    div( class="z" )
+div( class="announcexp" )
+  div( class="container" )
+    div( class="y" )
+div( class="announcesuccess" )
+  div( class="container" )
+    ul
+      li
+        a( href="#" )
+    span( class="label label-warning" )
+div( class="announcedanger" )
+  div( class="container" )
+    ul
+      li
+        a( href="#" )
+    span( class="label label-warning" )
+div( class="menu" )
+  div( class="sidebar-title" ) 
+    span( data-translate="trade" ) Trade
+    div.sidebar-pin
+      i( class="fa fa-toggle-off" )
+  ul.sidebar-symbols
+div( class="hook" )
+if alert
+  div( class="alert alert-!{alert.color}" style="margin: 0px auto 0px auto; width: 100%; padding: 10px; text-align: center;") #{alert.message}

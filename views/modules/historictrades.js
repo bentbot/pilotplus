@@ -74,12 +74,13 @@ function showhistoric(data, user, trim) {
                     '<td class="symbol keystonelink" data-symbol="'+entry.symbol+'">'+entry.symbol+'</td>'+
                     '<td class="time"><i style="opacity: 0.7"  class="fa fa-clock-o"></i> <time class="timeago" datetime="'+iodate+'">'+entrytime+'</time></td>'+
                     '<td class="trade">'+arrowhtml+' <span class="tradeprice">'+entry.price+'</span></td>'+
-                    '<td class="price"><i style="opacity: 0.7"  class="fa fa-bell-o"></i> <span class="tradeprice">'+entry.finalprice+'</span></td>'+
-                    '<td class="outcome">'+thumbhtml+'</td>'+
-                    '<td class="currency">'+currencyicon+' '+entry.winnings+'</td>'+
+                    '<td class="price"><i style="opacity: 0.7"  class="fa fa-bell"></i> <span class="tradeprice">'+entry.finalprice+'</span></td>'+
+                    '<td class="outcome">'+thumbhtml+'</td>';
+                    if (entry.winnings > 0) { tradehtml = tradehtml + '<td class="currency">'+currencyicon+' '+entry.winnings+'</td>'; }
+                    if (entry.winnings == 0) { tradehtml = tradehtml + '<td class="currency">'+currencyicon+' '+entry.amount+'</td>'; }
                     //'<td title="Expires: '+thisdate+' '+thistime+'">'+thistime+'</td>'+
                     //'<td class="bold" title="Expires: '+thisdate+' '+thistime+'">Trade in: <span class="expiretime"></span></td>'+
-                  '</tr>';
+                  tradehtml = tradehtml + '</tr>';
         if (trim > 0) tid++;
       } 
     }
@@ -166,13 +167,14 @@ function showallhistoric(data, user, trim){
                     '<td class="symbol">'+entry.symbol+'</td>'+
                     '<td class="trade">'+arrowhtml+' <span class="tradeprice">'+entry.price+'</span></td>'+
                     '<td class="time"><i style="opacity: 0.7"  class="fa fa-clock-o"></i> <time class="timeago" datetime="'+iodate+'">'+entrydate+' '+entrytime+'</time></td>'+
-                    '<td class="price"><i style="opacity: 0.7"  class="fa fa-bell-o"></i> <span class="tradeprice">'+entry.finalprice+'</span></td>'+
+                    '<td class="price"><i style="opacity: 0.7"  class="fa fa-bell"></i> <span class="tradeprice">'+entry.finalprice+'</span></td>'+
                     //'<td title="Expires: '+thisdate+' '+thistime+'">'+thistime+'</td>'+
                     '<td class="amount">'+currencyicon+' '+entry.amount+'</td>'+
-                    '<td class="outcome">'+thumbhtml+'</td>'+
-                    '<td class="currency">'+currencyicon+' '+entry.winnings+'</td>'+
+                    '<td class="outcome">'+thumbhtml+'</td>';
+                    if (entry.winnings > 0) { tradehtml = tradehtml + '<td class="currency">'+currencyicon+' '+entry.winnings+'</td>'; }
+                    if (entry.winnings == 0) { tradehtml = tradehtml + '<td class="currency">'+currencyicon+' '+entry.amount+'</td>'; }
                     //'<td class="bold" title="Expires: '+thisdate+' '+thistime+'">Trade in: <span class="expiretime"></span></td>'+
-                  '</tr>';
+                  tradehtml = tradehtml + '</tr>';
         if (trim > 0) tid++;
       } 
     }

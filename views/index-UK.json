@@ -1,3 +1,4 @@
 {
-	"fiaticon": "<i class='fa fa-euro'></i>"
+	"fiaticon": "<i class='fa fa-euro'></i>",
+	"fiat": "Euro"
 }
