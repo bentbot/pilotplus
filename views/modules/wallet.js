@@ -1,5 +1,4 @@
 function showWallet(data) {
-console.log(data);
     var html = '';
 
     if (!data.address) data.address = '<i>no address</i>';
@@ -49,10 +48,13 @@ console.log(data);
       break;
       default:
 
-      html = html + '<div class="addcard alert alert-info" style="margin-top: 20px;';
-        if (data.methods) html = html + 'height: 125px;';
-        if (!data.methods) html = html + 'height: 100px;';
-        html = html + '">'+
+      html = html + '<div class="no cards">'+
+      //'<div class="card green"><div class="stripe"></div><div class="label"><i class="fa fa-cc-visa"></i></div><div class="value">'+data.currency+'</div><i class="fa fa-cc-stripe"></i><div class="numbers"><span>3759</span><span>xxxx</span><span>xxxx</span><span>3456</span></div><div class="valid"><i class="fa fa-clock-o"></i> 10 / 20</div><div class="secure">123 <i class="fa fa-lock"></i></div></div>'+
+      //'<div class="card blue"><div class="stripe"></div><div class="label"><i class="fa fa-cc-visa"></i></div><div class="value">'+data.currency+'</div><i class="fa fa-cc-stripe"></i><div class="numbers"><span>3759</span><span>xxxx</span><span>xxxx</span><span>3456</span></div><div class="valid"><i class="fa fa-clock-o"></i> 10 / 20</div><div class="secure">123 <i class="fa fa-lock"></i></div></div>'+
+      //'<div class="card purple"><div class="stripe"></div><div class="label"><i class="fa fa-cc-visa"></i></div><div class="value">'+data.currency+'</div><i class="fa fa-cc-stripe"></i><div class="numbers"><span>3759</span><span>xxxx</span><span>xxxx</span><span>3456</span></div><div class="valid"><i class="fa fa-clock-o"></i> 10 / 20</div><div class="secure">123 <i class="fa fa-lock"></i></div></div>'+
+      '</div>'+
+      '<div class="addcard nocards alert alert-info" style="margin-top: 20px;'+
+        '">'+
         '<div class="center">'+
           '<div class="paymentmethod" data-translate="paymentmethod"><span>Add a Payment</span></div>'+
           '<div class="btn-group" role="group" aria-label="Payment type">'+
@@ -62,42 +64,43 @@ console.log(data);
           '</div>'+
           '<div class="fundsinput">'+
             '<div class="method cc">'+
-              '<form>'+
                 '<div class="input-group">'+
                   '<span class="input-group-addon"><a href="https://stripe.com" target="_blank"><i class="fa fa-cc-stripe"></i></a></span>'+
                   '<input type="text" class="form-control" id="number" placeholder="••••  ••••  ••••  ••••" autocomplete="off">'+
                   '<input type="text" class="form-control" id="expiry" maxlength="5" placeholder="••/••" autocomplete="off">'+
                   '<input type="text" class="form-control" id="cvc" maxlength="3" placeholder="•••" autocomplete="off">'+
-                    '<button class="btn btn-success sendcc" style="border-radius: 0px 4px 4px 0px !important;">'+
+                    '<button class="btn btn-success sendcc">'+
                       'Add Card <i class="fa fa-plus-circle"></i>'+
                     '</button>'+
                   '</div>'+
-              '</form>'+
             '</div>'+
             '<div class="method paypal">'+
-              '<form>'+
                 '<div class="input-group">'+
                   '<span class="input-group-addon"><i class="fa fa-cc-paypal"></i></span>'+
-                  '<input type="text" class="form-control" id="email" placeholder="PayPal Email" autocomplete="off">'+
-                    '<button class="btn btn-success addpaypal" style="border-radius: 0px 4px 4px 0px !important;">'+
-                      'Add PayPal <i class="fa fa-paypal"></i> '+
+                  '<input type="text" class="form-control" id="paypalemail" placeholder="PayPal Email" autocomplete="off">'+
+                    '<button class="btn btn-success addpaypal" data-update="false">'+
+                      '<span data-translate="addpaypal">Add PayPal</span> <i class="fa fa-paypal"></i> '+
                     '</button>'+
                   '</div>'+
-              '</form>'+
+            '</div>'+
+            '<div class="method bank">'+
+                '<div class="input-group">'+
+                  '<span class="input-group-addon"><a href="https://stripe.com" target="_blank"><i class="fa fa-bank"></i></a></span>'+
+                  '<input type="text" class="form-control" id="routing" placeholder="Routing #" autocomplete="off">'+
+                  '<input type="text" class="form-control" id="account" placeholder="Account #" autocomplete="off">'+
+                    '<button class="btn btn-success sendbank">'+
+                      'Add Account <i class="fa fa-plus-circle"></i>'+
+                    '</button>'+
+                  '</div>'+
             '</div>'+
           '</div>';
-          if (data.methods) {
+          if (data.stripe || data.paypal) {
             html = html + '<div class="addfunds notice">'+
-              '<i class="fa fa-info-circle"></i> Select a payment method from below to add funds.'
+              '<i class="fa fa-info-circle"></i> <span data-translate="selectacard">Please select a card to add funds.</span>'
             '</div>';
           }
         html = html + '</div>'+
         '</div>'+
-      '</div>'+
-      '<div class="cards">'+
-      '<div class="card green"><div class="stripe"></div><div class="label"><i class="fa fa-cc-visa"></i></div><div class="value">'+data.currency+'</div><i class="fa fa-cc-stripe"></i><div class="numbers"><span>3759</span><span>xxxx</span><span>xxxx</span><span>3456</span></div><div class="valid"><i class="fa fa-clock-o"></i> 10 / 20</div><div class="secure">123 <i class="fa fa-lock"></i></div></div>'+
-      '<div class="card blue"><div class="stripe"></div><div class="label"><i class="fa fa-cc-visa"></i></div><div class="value">'+data.currency+'</div><i class="fa fa-cc-stripe"></i><div class="numbers"><span>3759</span><span>xxxx</span><span>xxxx</span><span>3456</span></div><div class="valid"><i class="fa fa-clock-o"></i> 10 / 20</div><div class="secure">123 <i class="fa fa-lock"></i></div></div>'+
-      '<div class="card purple"><div class="stripe"></div><div class="label"><i class="fa fa-cc-visa"></i></div><div class="value">'+data.currency+'</div><i class="fa fa-cc-stripe"></i><div class="numbers"><span>3759</span><span>xxxx</span><span>xxxx</span><span>3456</span></div><div class="valid"><i class="fa fa-clock-o"></i> 10 / 20</div><div class="secure">123 <i class="fa fa-lock"></i></div></div>'+
       '</div>';
 
       break;
@@ -105,7 +108,34 @@ console.log(data);
 
     $(".wallet").html(html);
 }
+function showCards(data) {
+  if (data) {
+    var html = '', make, colors = ['blue', 'green', 'teal', 'orange', 'yellow', 'lime', 'purple'], a = 0;
+   
+    if (data.paypal) {
+      html = html + '<div class="card paypal '+colors[a]+'"><div class="paypal"></div><div class="label"><i class="fa fa-paypal"></i></div><div class="numbers"><span>'+data.paypal+'</span></div></div>'
+      a++;
+    }
 
+    if (data.stripe.data) {
+      
+      $.each(data.stripe.data, function (i, card) { a++;
+        var brand = card.brand;
+        brand = brand.toLowerCase();
+        switch ( brand ) {
+          case 'american express':
+            brand = 'amex';
+          break;
+        }
+
+        html = html + '<div class="card '+colors[i]+'"><div class="stripe"></div><div class="label"><i class="fa fa-cc-'+brand+'"></i></div><div class="value">'+card.country+'</div><i class="fa fa-cc-stripe"></i><div class="numbers"><span>xxxx</span><span>xxxx</span><span>xxxx</span><span>'+card.last4+'</span></div><div class="valid"><i class="fa fa-clock-o"></i> '+card.exp_month+' / '+card.exp_year+'</div><div class="secure">••• <i class="fa fa-lock"></i></div></div>'
+      });
+    }
+
+    $('.addcard').removeClass('nocards');
+    $('.cards').removeClass('no').append(html);
+  }
+}
 
 function btcWalletUpdate(data) {  
   //bal = bal.toFixed(8);
@@ -144,8 +174,8 @@ $(document).ready(function() {
       $('.btn-method').removeClass('active');
       $(this).addClass('active');
       var method = $(this).attr('data-method');
-      $('.addcard').height(160);
-
+      $('.addcard').addClass('opened');
+      $('.addfunds').fadeOut();
       if (selectedmethod) {
         $('.fundsinput .method').removeClass('showmethod');
         setTimeout( function() { $('.fundsinput .'+method).addClass('showmethod'); }, 500 );
@@ -191,7 +221,7 @@ $(document).ready(function() {
     var number = $('#number').val().replace(' ', '').replace('-','');
     var expiry = $('#expiry').val();
     var cvc = $('#cvc').val();
-    $('.cc').width('100%');
+    $('.cc').css('width', '100%');
     if ( Stripe.validateCardNumber(number) != true || Stripe.validateExpiry(expiry) != true || Stripe.validateCVC(cvc) != true ) {
       // Invalid Card
       $('#number').css('color', '#D83300');
@@ -207,26 +237,143 @@ $(document).ready(function() {
       $('#number').css('color', 'hsl(113, 100%, 35%)');
       $('#expiry').css('color', 'hsl(113, 100%, 35%)');
       $('#cvc').css('color', 'hsl(113, 100%, 35%)');
-      $('.sendcc').html('Adding Card <i class="fa fa-check"></i>').removeClass('btn-danger').addClass('btn-success');
-      setTimeout( function() { $('.sendcc').html(btntxt); }, 2000);
+      $('.sendcc').html('Adding Card <i class="fa fa-refresh fa-spin"></i>').removeClass('btn-danger').addClass('btn-success');
+      
+      var exp = expiry.split('/');
+
+      Stripe.card.createToken({
+        number: number,
+        cvc: cvc,
+        exp: expiry
+      }, function (content, responce) {
+        if (responce.error) {
+          $('.sendcc').html('<i class="fa fa-times"></i> Token Error').removeClass('btn-success').addClass('btn-danger');
+          setTimeout( function() { $('.sendcc').html(btntxt).removeClass('btn-danger').addClass('btn-success'); }, 2000);
+        } else {
+          socket.emit('addcard', {token: responce.id});
+        }
+      });
+      socket.on('addcard', function (data) {
+        if (data.error) {
+          if (data.error == 'stripe') $('.sendcc').html('Card Error <i class="fa fa-times"></i>').removeClass('btn-success').addClass('btn-danger');
+          if (data.error == 'customer') $('.sendcc').html('Customer <i class="fa fa-times"></i>').removeClass('btn-success').addClass('btn-danger');
+          setTimeout( function() { $('.sendcc').html(btntxt).removeClass('btn-danger').addClass('btn-success'); }, 2000);
+        } else {
+          if (data.result == 'success') {
+            $('.sendcc').html('Card Added <i class="fa fa-check"></i>').removeClass('btn-danger').addClass('btn-success');
+            loadDeposit();
+            setTimeout( function() { $('.sendcc').html(btntxt).removeClass('btn-danger').addClass('btn-success'); }, 2000);
+          }
+        }
+      });  
+      
     }
   });
 
+$('.hook').on('click', '.sendbank', function (e) {
+    var account = $('#account').val();
+    var routing = $('#routing').val();
+    var country = $('#country').val();
+    $('.bank').css('width', '100%');
+    if ( Stripe.validateRoutingNumber(routing, country) != true ) {
+      // Invalid Routing
+      $('#routing').css('color', '#D83300');
+      var btntxt = $('.sendbank').html();
+      $('.sendbank').html('Routing Number <i class="fa fa-times"></i>').removeClass('btn-success').addClass('btn-danger');
+      setTimeout( function() {
+        $('.sendbank').html(btntxt).removeClass('btn-danger').addClass('btn-success');
+      }, 2000);
+
+    } else if ( Stripe.validateAccountNumber(account, country) != true ) {
+      // Invalid Card
+      $('#account').css('color', '#D83300');
+      $('#routing').css('color', '#D83300');
+      $('#country').css('color', '#D83300');
+      var btntxt = $('.sendbank').html();
+      $('.sendcc').html('Account Number <i class="fa fa-times"></i>').removeClass('btn-success').addClass('btn-danger');
+      setTimeout( function() {
+        $('.sendbank').html(btntxt).removeClass('btn-danger').addClass('btn-success');
+      }, 2000);
+    } else {
+      var btntxt = $('.sendbank').html();
+      $('#account').css('color', 'hsl(113, 100%, 35%)');
+      $('#routing').css('color', 'hsl(113, 100%, 35%)');
+      $('#country').css('color', 'hsl(113, 100%, 35%)');
+      $('.sendbank').html('Adding Account <i class="fa fa-refresh fa-spin"></i>').removeClass('btn-danger').addClass('btn-success');
+
+      Stripe.bankAccount.createToken({
+        country: country,
+        currency: currency,
+        routing_number: routing,
+        account_number: account
+      }, function (content, responce) {
+        console.log(responce);
+        if (responce.error) {
+          $('.sendbank').html('Bank Error <i class="fa fa-times"></i>').removeClass('btn-success').addClass('btn-danger');
+          setTimeout( function() { $('.sendbank').html(btntxt).removeClass('btn-danger').addClass('btn-success'); }, 2000);
+        } else {
+          socket.emit('addbank', {token: responce.id});
+        }
+      });
+      socket.on('addbank', function (data) {
+        if (data.error) {
+          if (data.error == 'stripe') $('.sendbank').html('Bank Error <i class="fa fa-times"></i>').removeClass('btn-success').addClass('btn-danger');
+          if (data.error == 'customer') $('.sendbank').html('Token <i class="fa fa-times"></i>').removeClass('btn-success').addClass('btn-danger');
+          setTimeout( function() { $('.sendbank').html(btntxt).removeClass('btn-danger').addClass('btn-success'); }, 2000);
+        } else {
+          if (data.result == 'success') {
+            $('.sendbank').html('Account Added <i class="fa fa-check"></i>').removeClass('btn-danger').addClass('btn-success');
+            loadDeposit();
+            setTimeout( function() { $('.sendbank').html(btntxt).removeClass('btn-danger').addClass('btn-success'); }, 2000);
+          }
+        }
+      });  
+      
+    }
+  });
+
+  var errortimer;
   $('.hook').on('click', '.addpaypal', function (e) {
-    var email = $('#email').val();
+    var paypalbtntxt = '<span data-translate="addpaypal">Add Paypal</span> <i class="fa fa-paypal"></i>';
+    var email = $('#paypalemail').val();
+    var update = $(this).attr('data-update');
+    $('.addcard .paypal').css('width', '100%');
     if ( !email ) {
       // Invalid Card
       $('#email').css('color', '#D83300');
-      var btntxt = $('.addpaypal').html();
       $('.addpaypal').html('Invalid Email <i class="fa fa-times"></i>').removeClass('btn-success').addClass('btn-danger');
       setTimeout( function() {
-        $('.addpaypal').html(btntxt).removeClass('btn-danger').addClass('btn-success');
+        $('.addpaypal').html(paypalbtntxt).removeClass('btn-danger').addClass('btn-success');
       }, 2000);
     } else {
-      var btntxt = $('.addpaypal').html();
       $('#email').css('color', 'hsl(113, 100%, 35%)');
-      $('.addpaypal').html('Adding PayPal <i class="fa fa-check"></i>').removeClass('btn-danger').addClass('btn-success');
-      setTimeout( function() { $('.addpaypal').html(btntxt); }, 2000);
+
+      if (update == true) {
+        $('.addpaypal').html('Updating PayPal <i class="fa fa-refresh fa-spin"></i>').removeClass('btn-warning').addClass('btn-success');
+      } else {
+        $('.addpaypal').html('Adding PayPal <i class="fa fa-refresh fa-spin"></i>').removeClass('btn-danger').addClass('btn-success');
+      }
+      
+      setTimeout( function () { socket.emit('addcard', { paypal: email, update: update }); }, 500);
+
+      socket.on('addcard', function (data) {
+          if (data.error == 'email') {
+            $('#email').css('color', '#D83300');
+            $('.addpaypal').html('Email Error <i class="fa fa-times"></i>').removeClass('btn-success').addClass('btn-danger');
+            errortimer = setTimeout( function() { $('.addpaypal').html(paypalbtntxt).removeClass('btn-danger').addClass('btn-success'); }, 2000);
+          } else if (data.error == 'paypal') {
+            $('#email').css('color', '#D83300');
+            $('.addpaypal').html('Update Address?').attr('data-update', true).removeClass('btn-success').addClass('btn-warning');
+            errortimer = setTimeout( function() { $('.addpaypal').html(paypalbtntxt).attr('data-update', false).removeClass('btn-warning').addClass('btn-success'); }, 2000);
+          }
+          if (data.result == 'success') {
+            $('#email').css('color', 'hsl(113, 100%, 35%)');
+            $('.addpaypal').html('Email Added <i class="fa fa-check"></i>').removeClass('btn-danger').removeClass('btn-warning').addClass('btn-success');
+            loadDeposit();
+            clearTimeout(errortimer);
+            setTimeout( function() { $('.addpaypal').html(paypalbtntxt).removeClass('btn-danger').addClass('btn-success'); }, 2000);
+          }
+      });
     }
   });
 

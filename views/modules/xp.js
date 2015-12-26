@@ -6,9 +6,9 @@ var html = '<div class="userblock">'+
   '<table class="table" id="alltrades">'+
     '<tbody>'+
       '<tr>'+
-        '<td style="width: 33%;"><i class="fa fa-adjust"></i> Ratio: <span class="green ratio">'+ratio+'</span></td>'+
-        '<td style="width: 33%;"><i class="fa fa-tasks"></i> Percentage: <span class="green percentage">'+percentage+'%</span></td>'+
-        '<td style="width: 33%;"><i class="fa fa-star-half-o"></i> Experience: <span class="orange userxp">'+experience+'</span></td>'+
+        '<td style="width: 33%;"><i class="fa fa-adjust"></i> <span class="hideinmobile">Ratio: </span><span class="green ratio">'+ratio+'</span></td>'+
+        '<td style="width: 33%;"><i class="fa fa-bar-chart"></i> <span class="hideinmobile">Percentage: </span><span class="green percentage">'+percentage+'%</span></td>'+
+        '<td style="width: 33%;"><i class="fa fa-star-half-o"></i> <span class="hideinmobile">Experience: </span><span class="orange userxp">'+experience+'</span></td>'+
       '</tr>'+
   '</tbody>'+
 '</table>'+

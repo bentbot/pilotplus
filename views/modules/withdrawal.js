@@ -26,21 +26,84 @@ function showWalletSend(data) {
 
   $(".wallet").html(html); 
 
-    if (data.currency == 'BTC') {
-      $(".walletsend").html(html);
-      html = html + '<div class="alert alert-info" style="margin-top: 20px;min-height: 146px;">';
-      html = html + '<div class="sendtitle"><i class="fa fa-upload"></i></div>';
-      html = html + '<div class="btcaddress liveaddress">'+data.address+'</div>';
-      if (dualfactor == false) html = html + '<div class="btcsend"><div class="input-group"><span class="input-group-addon">m<i class="fa fa-btc"></i></span><input type="text" class="form-control amount" placeholder="0.000000"><span class="input-group-addon" style="border-raidus: 0px;"><i class="fa fa-share"></i></span><input type="text" style="width: 300px;" class="form-control address" placeholder="Bitcoin Address"><button class="btn btn-blue" id="send">Send</button></div></div>';
-      if (dualfactor == true) html = html + '<div class="btcsend" style="width: 697px;"><div class="input-group"><span class="input-group-addon">m<i class="fa fa-btc"></i></span><input type="text" class="form-control amount" placeholder="0.000000"><span class="input-group-addon" style="border-raidus: 0px;"><i class="fa fa-share"></i></span><input type="text" class="form-control address" placeholder="Bitcoin Address"><span class="input-group-addon"><i class="fa fa-key securestatus"></i></span><input type="text" id="auth" maxlength="7" placeholder="*******" /><button class="btn btn-blue" id="send">Send</button></div></div>';
-      html = html + '<div class="btcbal"><i class="fa fa-bitcoin"></i> <strong class="livebalance">'+data.balance+'</strong></div>';
-      //if (dualfactor == true) html = html + '<div class="btcsendsecure"><i class="fa fa-key"></i><span data-translate="dualfactorsend"><input type="text" id="auth" maxlength="7" placeholder="*******" /></div>';
-      //if (dualfactor == false) html = html + '<div class="btcsecure"><i class="fa fa-key"></i><a class="btn btn-xs btn-blue showsecuirtypage" href="#" data-translate="enabledualfactor">Enable Dual-Factor</a></div>';
+    switch (data.currency) { 
+      case 'BTC':
+
+      html = html + '<div class="alert alert-info btcwalletbox" style="margin-top: 20px;min-height: 146px;">';
+      html = html + '<div class="btcqr"></div>';
+      html = html + '<div class="btcwallet" data-translate="yourbtcaddress">Your Bitcoin Address:</div>';
+      html = html + '<div class="btcaddress liveaddress" id="btcaddress">'+data.address+'</div>';
+      html = html + '<div class="btcbal"><strong>m<i class="fa fa-bitcoin"></i> '+data.balance+'</strong></div>';
+      if (dualfactor == true) html = html + '<div class="btcsecure"><i class="fa fa-lock"></i><span data-translate="dualfactorenabled">Dual-Factor Protected</div>';
+      if (dualfactor == false) html = html + '<div class="btcsecure"><i class="fa fa-key"></i><a class="btn btn-xs btn-blue showsecuirtypage" href="#" data-translate="enabledualfactor">Enable Dual-Factor</a></div>';
       html = html + '</div>';
-    } else if (data.currency == 'Canadian') {
+      html = html + '<div class="alert alert-warning nomoney" style="margin-top: 20px;text-align: center;display: none;"><strong data-translate="justaddbitcoin"><i class="fa fa-flag" style="margin: 0px 5px 0px 5px;"></i> Add some Bitcoin to your account to get started.</stong></div>';
 
-    } else if (data.currency == 'US Dollar') {
+      $(".wallet").html(html);
+      if (!data.address) $('.notif').html('<div class="alert alert-danger walleterror" style="display: none;"><strong data-translate="nobtcwalletfound">No Bitcoin wallet found.</strong> Please check back later.</div>');
+      if (!data.address) $(".walleterror").show();
+      $('.liveaddress').html(data.address);
+      $('.btcbal').html('<strong class="georgia">m</strong><i class="fa fa-bitcoin"></i> <strong class="livebalance">'+data.balance+'</strong>')
 
+      break;
+      default:
+
+      html = html + '<div class="no cards">'+
+      //'<div class="card green"><div class="stripe"></div><div class="label"><i class="fa fa-cc-visa"></i></div><div class="value">'+data.currency+'</div><i class="fa fa-cc-stripe"></i><div class="numbers"><span>3759</span><span>xxxx</span><span>xxxx</span><span>3456</span></div><div class="valid"><i class="fa fa-clock-o"></i> 10 / 20</div><div class="secure">123 <i class="fa fa-lock"></i></div></div>'+
+      //'<div class="card blue"><div class="stripe"></div><div class="label"><i class="fa fa-cc-visa"></i></div><div class="value">'+data.currency+'</div><i class="fa fa-cc-stripe"></i><div class="numbers"><span>3759</span><span>xxxx</span><span>xxxx</span><span>3456</span></div><div class="valid"><i class="fa fa-clock-o"></i> 10 / 20</div><div class="secure">123 <i class="fa fa-lock"></i></div></div>'+
+      //'<div class="card purple"><div class="stripe"></div><div class="label"><i class="fa fa-cc-visa"></i></div><div class="value">'+data.currency+'</div><i class="fa fa-cc-stripe"></i><div class="numbers"><span>3759</span><span>xxxx</span><span>xxxx</span><span>3456</span></div><div class="valid"><i class="fa fa-clock-o"></i> 10 / 20</div><div class="secure">123 <i class="fa fa-lock"></i></div></div>'+
+      '</div>'+
+      '<div class="addcard nocards alert alert-info" style="margin-top: 20px;'+
+        '">'+
+        '<div class="center">'+
+          '<div class="paymentmethod" data-translate="paymentmethod"><span>Add a Payment</span></div>'+
+          '<div class="btn-group" role="group" aria-label="Payment type">'+
+            '<button type="button" class="btn btn-method btn-group-xs" data-method="cc">Credit Card</button>'+
+            '<button type="button" class="btn btn-method btn-group-xs" data-method="paypal">PayPal</button>'+
+            '<button type="button" class="btn btn-method btn-group-xs" data-method="bank">Bank Account</button>'+
+          '</div>'+
+          '<div class="fundsinput">'+
+            '<div class="method cc">'+
+                '<div class="input-group">'+
+                  '<span class="input-group-addon"><a href="https://stripe.com" target="_blank"><i class="fa fa-cc-stripe"></i></a></span>'+
+                  '<input type="text" class="form-control" id="number" placeholder="••••  ••••  ••••  ••••" autocomplete="off">'+
+                  '<input type="text" class="form-control" id="expiry" maxlength="5" placeholder="••/••" autocomplete="off">'+
+                  '<input type="text" class="form-control" id="cvc" maxlength="3" placeholder="•••" autocomplete="off">'+
+                    '<button class="btn btn-success sendcc">'+
+                      'Add Card <i class="fa fa-plus-circle"></i>'+
+                    '</button>'+
+                  '</div>'+
+            '</div>'+
+            '<div class="method paypal">'+
+                '<div class="input-group">'+
+                  '<span class="input-group-addon"><i class="fa fa-cc-paypal"></i></span>'+
+                  '<input type="text" class="form-control" id="paypalemail" placeholder="PayPal Email" autocomplete="off">'+
+                    '<button class="btn btn-success addpaypal" data-update="false">'+
+                      '<span data-translate="addpaypal">Add PayPal</span> <i class="fa fa-paypal"></i> '+
+                    '</button>'+
+                  '</div>'+
+            '</div>'+
+            '<div class="method bank">'+
+                '<div class="input-group">'+
+                  '<span class="input-group-addon"><a href="https://stripe.com" target="_blank"><i class="fa fa-bank"></i></a></span>'+
+                  '<input type="text" class="form-control" id="routing" placeholder="Routing #" autocomplete="off">'+
+                  '<input type="text" class="form-control" id="account" placeholder="Account #" autocomplete="off">'+
+                    '<button class="btn btn-success sendbank">'+
+                      'Add Account <i class="fa fa-plus-circle"></i>'+
+                    '</button>'+
+                  '</div>'+
+            '</div>'+
+          '</div>';
+          if (data.stripe || data.paypal) {
+            html = html + '<div class="addfunds notice">'+
+              '<i class="fa fa-info-circle"></i> <span data-translate="selectacard">Please select a card to add funds.</span>'
+            '</div>';
+          }
+        html = html + '</div>'+
+        '</div>'+
+      '</div>';
+
+      break;
     }
 
     $(".walletsend").html(html);
@@ -50,7 +113,34 @@ function showWalletSend(data) {
   }
 
 }
+function showCards(data) {
+  if (data) {
+    var html = '', make, colors = ['blue', 'green', 'teal', 'orange', 'yellow', 'lime', 'purple'], a = 0;
+   
+    if (data.paypal) {
+      html = html + '<div class="card paypal '+colors[a]+'"><div class="paypal"></div><div class="label"><i class="fa fa-paypal"></i></div><div class="numbers"><span>'+data.paypal+'</span></div></div>'
+      a++;
+    }
 
+    if (data.stripe.data) {
+      
+      $.each(data.stripe.data, function (i, card) { a++;
+        var brand = card.brand;
+        brand = brand.toLowerCase();
+        switch ( brand ) {
+          case 'american express':
+            brand = 'amex';
+          break;
+        }
+
+        html = html + '<div class="card '+colors[i]+'"><div class="stripe"></div><div class="label"><i class="fa fa-cc-'+brand+'"></i></div><div class="value">'+card.country+'</div><i class="fa fa-cc-stripe"></i><div class="numbers"><span>xxxx</span><span>xxxx</span><span>xxxx</span><span>'+card.last4+'</span></div><div class="valid"><i class="fa fa-clock-o"></i> '+card.exp_month+' / '+card.exp_year+'</div><div class="secure">••• <i class="fa fa-lock"></i></div></div>'
+      });
+    }
+
+    $('.addcard').removeClass('nocards');
+    $('.cards').removeClass('no').append(html);
+  }
+}
 function walletSendUpdate(data) {
   //bal = bal.toFixed(8);
   if (data.currency == 'BTCUSD') {

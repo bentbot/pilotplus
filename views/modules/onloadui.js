@@ -20,6 +20,16 @@ emoji.init_env();
 // Trading
 $(function() {
 
+  $(".grid").gridster({
+    selector: 'li',
+    min_cols: 2,
+    widget_margins: [10, 10],
+    widget_base_dimensions: [585, 585],
+    draggable: {
+      handle: '.header'
+    }
+  });
+
   $('.linktray container').mousewheel(function(e, delta) {
       this.scrollLeft -= (delta * 40);
       e.preventDefault();
@@ -62,22 +72,22 @@ var options = {
 
 
 $('.slider').fractionSlider({
-'slideTransition' : 'fade', // default slide transition
-'slideTransitionSpeed' : 1000, // default slide transition time
-'slideEndAnimation' : true, // if set true, objects will transition out before next slide moves in      
-'position' : '0,0', // default position | should never be used
-'transitionIn' : 'left', // default in - transition
-'transitionOut' : 'left', // default out - transition
-'fullWidth' : false, // transition over the full width of the window
-'delay' : 0, // default delay for elements
-'timeout' : 2000, // default timeout before switching slides
-'speedIn' : 2500, // default in - transition speed
-'speedOut' : 1000, // default out - transition speed
-'easeIn' : 'easeOutExpo', // default easing in
-'easeOut' : 'easeOutCubic', // default easing out
-'controls' : true, // controls on/off
-'pager' : true, // pager inside of the slider on/off OR $('someselector') for a pager outside of the slider
-'responsive' : true, // responsive slider (see below for some implementation tipps)
+  'slideTransition' : 'fade', // default slide transition
+  'slideTransitionSpeed' : 1000, // default slide transition time
+  'slideEndAnimation' : true, // if set true, objects will transition out before next slide moves in      
+  'position' : '0,0', // default position | should never be used
+  'transitionIn' : 'left', // default in - transition
+  'transitionOut' : 'left', // default out - transition
+  'fullWidth' : false, // transition over the full width of the window
+  'delay' : 0, // default delay for elements
+  'timeout' : 2000, // default timeout before switching slides
+  'speedIn' : 2500, // default in - transition speed
+  'speedOut' : 1000, // default out - transition speed
+  'easeIn' : 'easeOutExpo', // default easing in
+  'easeOut' : 'easeOutCubic', // default easing out
+  'controls' : true, // controls on/off
+  'pager' : true, // pager inside of the slider on/off OR $('someselector') for a pager outside of the slider
+  'responsive' : true, // responsive slider (see below for some implementation tipps)
 });
 
 
@@ -219,74 +229,283 @@ $(".globalheader").on("click",".keystones .seeall",function(e) {
   }
   }
 
-    $(".hook").on("click",".applytrade",function(e) {
-          var symbol = $(this).attr('data-symbol');
-          var direction = $('#'+symbol+' .info .direction .action').html();
-          var amount = Number($('#'+symbol+' .info .amount .amountfield').val());
-          amount = amount.toFixed(2);
-          //user = userid;
+  
+  $('.hook').on('click', '.trade-switch', function (e) {
+   var symbol = $(this).parent().data('symbol');
+    if (autotrader[symbol]) {
+      $(this).removeClass('fa-toggle-on').addClass('fa-toggle-off');
+      $('.trademode').html('Manual').css('opacity', 1);
+      setTimeout( function() { $('.trademode').css('opacity', 0); }, 2500);
+      $('.auto').addClass('hide');
+      $('.manual').removeClass('hide');
+      $('.callbtn').addClass('btn-success').removeClass('btn-default');
+      $('.putbtn').addClass('btn-danger').removeClass('btn-default');
+      $('.keystone-btn').addClass('btn-default').removeClass('btn-yellow');
+      $('.applyautotrade').addClass('btn-warning').removeClass('btn-success').addClass('btn-success').html('Apply');
+      autotrader[symbol] = false;
+    } else {
+      $(this).removeClass('fa-toggle-off').addClass('fa-toggle-on');
+      $('.trademode').html('Automatic').css('opacity', 1);
+      setTimeout( function() { $('.trademode').css('opacity', 0); }, 2500);
+      $('.auto').removeClass('hide');
+      $('.manual').addClass('hide');
+      $('.callbtn').addClass('btn-success').removeClass('btn-default');
+      $('.putbtn').addClass('btn-danger').removeClass('btn-default');
+      $('.keystone-btn').removeClass('btn-default').addClass('btn-yellow');
+      $('.applyautotrade').removeClass('btn-warning').removeClass('btn-success').addClass('btn-success').html('Start');
+      uitradeico(symbol,2);
+      autotrader[symbol] = true;
+    }
+  });
+
+  $('.hook').on('click', '.chart-time', function (e) {
+    var time = $(this).data('time');
+    var symbol = $(this).parent().data('symbol');
+    socket.emit('chart', { symbol: symbol, time: time });
+    $('.chart-time').removeClass('active');
+    $(this).addClass('active');
+  });
+
+  var expanded = false;
+  $('.hook').on('click', '.chart-expand', function (e) {
+    e.preventDefault();
+    if (expanded != true) {
+      expanded = true;
+      $(this).addClass('active');
+      
+      $('.numbotron').height(400).css('opacity', 0);
+      setTimeout( function () {
+        $('.highcharts-container').height(400);
+        var time = $('.chart-time.active').data('time');
+        var symbol = $('.chart-time.active').parent().data('symbol');
+        socket.emit('chart', { symbol: symbol, time: time });
+        setTimeout( function () { 
+          $('.numbotron').css('opacity', 1); 
+          if ($(document).width() > 720) $('.controls').css('top', 93);
+        }, 400);
+      }, 300);
+
+    } else {
+      expanded = false;
+      $(this).removeClass('active');
+      $('.numbotron').height(220).css('opacity', 0);
+      $('.controls').css('top', 0);
+      setTimeout( function () {
+        $('.highcharts-container').height(220);
+        var time = $('.chart-time.active').data('time');
+        var symbol = $('.chart-time.active').parent().data('symbol');
+        socket.emit('chart', { symbol: symbol, time: time });
+        setTimeout( function () { 
+          $('.numbotron').css('opacity', 1);
+        }, 500);
+      }, 300);
+    }
+  });
+
+  $('.hook').on('click', '.chart-ellipsis', function (e) {
+    e.preventDefault();
+    $(this).toggleClass('active');
+    $('.chart-time.active').removeClass('downplay');
+    $('.chart-time.downplay').toggleClass('vanish');
+  });
+
+  var applyingtrade, applyingtrade = false;
+  $(".hook").on("click",".applytrade",function(e) {
+      if (applyingtrade==false) {
+        var symbol = $(this).attr('data-symbol');
+        var direction = $('.'+symbol+' .action').val();
+        var amount = Number($('.'+symbol+' .info .amount .amountfield').val());
+        amount = amount.toFixed(2);
+        //user = userid;
+        if (symbol && direction && amount) {
           socket.emit('trade', {
             symbol : symbol,
             amount : amount,
             direction : direction,
             user : user
           });
+          applyingtrade = true;
+        }
+      } 
+      setTimeout(function () { applyingtrade = false; }, 700);
+  });
+
+  var applyingtrade, applyingtrade = false;
+  $(".hook").on("click",".applyautotrade",function(e) {
+      if (applyingtrade==false) {
+        var symbol = $(this).attr('data-symbol');
+        var direction = $('.'+symbol+' .action').html();
+        var repeat = Number($('#'+symbol+' .info .repeat .repeatfield').val());
+        var amount = Number($('#'+symbol+' .info .amount .repeatamountfield').val());
+        amount = amount.toFixed(2);
+        //user = userid;
+        socket.emit('autotrade', {
+          symbol : symbol,
+          amount : amount,
+          repeat : repeat,
+          direction : direction,
+          user : user
         });
+        applyingtrade = true;
+      } 
+      setTimeout(function () { applyingtrade = false; }, 700);
+  });
+    $(".hook").on("keyup",".applyautotrade",function(e) {
+      if (applyingtrade==false && e.keyCode == 13) {
+        var symbol = $(this).attr('data-symbol');
+        var direction = $('.'+symbol+' .action').html();
+        var repeat = Number($('#'+symbol+' .info .repeat .repeatfield').val());
+        var amount = Number($('#'+symbol+' .info .amount .repeatamountfield').val());
+        amount = amount.toFixed(2);
+        //user = userid;
+        socket.emit('autotrade', {
+          symbol : symbol,
+          amount : amount,
+          repeat : repeat,
+          direction : direction,
+          user : user
+        });
+        applyingtrade = true;
+      } 
+      setTimeout(function () { applyingtrade = false; }, 700);
+  });
+
   $(".hook").on("change",".amountfield",function() {
     var symbol = $(this).attr('data-symbol');
-    var offer = $('#'+symbol+' .info .details .rawoffer').html();
-    var amount = $('#'+symbol+' .info .trader .amount .amountfield').val();
-    var lastbal = 999;
+    var offer = $('.'+symbol+' .info .details .rawoffer').html();
+    var amount = $('.'+symbol+' .info .trader .amount .amountfield').val();
     if (amount > 0) {
-      if (amount < lastbal) {
-        var possiblewin = (+amount+(amount*offer));
-        $('#'+symbol+' .info .details h1').html(currencysymbol + possiblewin.toFixed(2));
-      } else {
-         $('#'+symbol+' .info .trader .amount .amountfield').val(lastbal);
-      }
+      amount = 1;
+      var possiblewin = (+amount+(amount*offer));
+      $('.'+symbol+' .info .manual .details h1').html(currencysymbol + possiblewin.toFixed(2));
     } else { // keep amount above zero
-      $('#'+symbol+' .info .trader .amount .amountfield').val(0);
-      $('#'+symbol+' .info .details h1').html(offer * 100 + "%");
+      $('.'+symbol+' .info .trader .amount .amountfield').val(0);
+      $('.'+symbol+' .info .manual .details h1').html(offer * 100 + "%");
     }
   });  $(".hook").on("keyup",".amountfield",function() {
     var symbol = $(this).attr('data-symbol');
-    var offer = $('#'+symbol+' .info .details .rawoffer').html();
-    var amount = $('#'+symbol+' .info .trader .amount .amountfield').val();
-    var lastbal = 999;
+    var offer = $('.'+symbol+' .info .details .rawoffer').html();
+    var amount = $('.'+symbol+' .info .trader .amount .amountfield').val();
     if (amount > 0) {
-      if (amount < lastbal) {
-        var possiblewin = (+amount+(amount*offer));
-        $('#'+symbol+' .info .details h1').html("m฿" + possiblewin.toFixed(2));
-      } else {
-         $('#'+symbol+' .info .trader .amount .amountfield').val(lastbal);
-      }
+      amount = 1;
+      var possiblewin = (+amount+(amount*offer));
+      $('.'+symbol+' .info .manual .details h1').html(currencysymbol + possiblewin.toFixed(2));
     } else { // keep amount above zero
-      //$('#'+symbol+' .info .trader .amount .amountfield').val(0);
-      $('#'+symbol+' .info .details h1').html(offer * 100 + "%");
+      //$('.'+symbol+' .info .trader .amount .amountfield').val(0);
+      $('.'+symbol+' .info .manual .details h1').html(offer * 100 + "%");
     }
   });
+
+  $(".hook").on("change",".repeatamountfield",function() {
+    var symbol = $(this).attr('data-symbol');
+    var offer = $('.'+symbol+' .info .details .rawoffer').html();
+    var repeat = $('.'+symbol+' .info .trader .repeat .repeatfield').val();
+    var amount = $('.'+symbol+' .info .trader .amount .repeatamountfield').val();
+    if (amount > 0) {
+      if (!repeat || repeat <= 0) {
+        repeat = 1;
+        $('.'+symbol+' .info .trader .repeat .repeatfield').val(1);
+      }
+      var possiblewin = (+amount+(amount*offer))*repeat;
+      $('.'+symbol+' .info .auto .details h1').html(currencysymbol + possiblewin.toFixed(2));
+    } else { // keep amount above zero
+      $('.'+symbol+' .info .trader .amount .repeatamountfield').val(0);
+      $('.'+symbol+' .info .auto .details h1').html(offer * 100 + "%");
+    }
+  });
+  $(".hook").on("keyup",".repeatamountfield",function() {
+    var symbol = $(this).attr('data-symbol');
+    var offer = $('.'+symbol+' .info .details .rawoffer').html();
+    var repeat = $('.'+symbol+' .info .trader .repeat .repeatfield').val();
+    var amount = $('.'+symbol+' .info .trader .amount .repeatamountfield').val();
+    if (amount > 0) {
+      if (!repeat || repeat <= 0) {
+        repeat = 1;
+        $('.'+symbol+' .info .trader .repeat .repeatfield').val(1);
+      }
+      var possiblewin = (+amount+(amount*offer))*repeat;
+      $('.'+symbol+' .info .auto .details h1').html(currencysymbol + possiblewin.toFixed(2));
+    } else { // keep amount above zero
+      $('.'+symbol+' .info .trader .amount .repeatamountfield').val(0);
+      $('.'+symbol+' .info .auto .details h1').html(offer * 100 + "%");
+    }
+  });
+
+  $(".hook").on("change",".repeatfield",function() {
+    var symbol = $(this).attr('data-symbol');
+    var offer = $('.'+symbol+' .info .details .rawoffer').html();
+    var repeat = $('.'+symbol+' .info .trader .repeat .repeatfield').val();
+    var amount = $('.'+symbol+' .info .trader .amount .repeatamountfield').val();
+    if (repeat > 0) {
+      if (!amount || amount <= 0) {
+        amount = 1;
+        $('.'+symbol+' .info .trader .amount .repeatamountfield').val(1);
+      }
+      var possiblewin = (+amount+(amount*offer))*repeat;
+      $('.'+symbol+' .info .auto .details h1').html(currencysymbol + possiblewin.toFixed(2));
+    } else { // keep amount above zero
+      $('.'+symbol+' .info .trader .repeat .repeatfield').val(0);
+      $('.'+symbol+' .info .auto .details h1').html(offer * 100 + "%");
+    }
+  });
+  $(".hook").on("keyup",".repeatfield",function() {
+    var symbol = $(this).attr('data-symbol');
+    var offer = $('.'+symbol+' .info .details .rawoffer').html();
+    var repeat = $('.'+symbol+' .info .trader .repeat .repeatfield').val();
+    var amount = $('.'+symbol+' .info .trader .amount .repeatamountfield').val();
+    if (!repeat || repeat > 0) {
+      if (!amount || amount <= 0) {
+        amount = 1;
+        $('.'+symbol+' .info .trader .amount .repeatamountfield').val(1);
+      }
+      var possiblewin = (+amount+(amount*offer))*repeat;
+      $('.'+symbol+' .info .auto .details h1').html(currencysymbol + possiblewin.toFixed(2));
+    } else { // keep amount above zero
+      $('.'+symbol+' .info .trader .repeat .repeatfield').val(0);
+      $('.'+symbol+' .info .auto .details h1').html(offer * 100 + "%");
+    }
+  });
+
+
   $(".hook").on("click",".callbtn",function() {
     var symbol = $(this).attr('data-symbol');
     $('.apply'+symbol).removeClass('btn-danger').removeClass('btn-default').addClass('btn-warning').html('Apply');
     $('.put'+symbol).removeClass('btn-danger').addClass('btn-default');
     $('.call'+symbol).removeClass('btn-default').addClass('btn-success');
+    $('.keystone-btn').addClass('btn-default').removeClass('btn-yellow');
     uitradeico(symbol, 1, 1);
-    $('#'+symbol+' .direction .action').html('Call');
+    $('.'+symbol+' .action').val('Call');
     //$('.controls .price .lock').html('<span class="glyphicon glyphicon-lock"></span>');
     var autocolor = 0;
     var direction = 'call';
   });
   $(".hook").on("click",".putbtn",function() {
-
     var symbol = $(this).attr('data-symbol');
-    $('.apply'+symbol).removeClass('btn-default').addClass('btn-warning');
+    $('.apply'+symbol).removeClass('btn-default').removeClass('btn-danger').addClass('btn-warning').html('Apply');
     $('.put'+symbol).addClass('btn-danger').removeClass('btn-default');
     $('.call'+symbol).addClass('btn-default').removeClass('btn-success');
+    $('.keystone-btn').addClass('btn-default').removeClass('btn-yellow');
     uitradeico(symbol, 0, 1);
-    $('#'+symbol+' .direction .action').html('Put');
+    $('.'+symbol+' .action').val('Put');
     //$('.controls .price .lock').html('<span class="glyphicon glyphicon-lock"></span>');
     var direction = 'put';
   });
+
+  $(".hook").on("click",".keystone-btn",function() {
+    var symbol = $(this).attr('data-symbol');
+    uitradeico(symbol, 2);
+    if (autotrader[symbol]) {
+      updatekeystones = false;
+      $(this).removeClass('btn-default').addClass('btn-yellow').html('Auto');
+      setTimeout( function() { updatekeystones = true; }, 1000)
+    }
+    $('.put'+symbol).removeClass('btn-default').addClass('btn-danger');
+    $('.call'+symbol).removeClass('btn-default').addClass('btn-success');
+    $('.'+symbol+' .action').val('Auto');
+    $('.applyautotrade').removeClass('btn-warning').removeClass('btn-default').addClass('btn-success').html('Start');
+    var direction = 'auto';
+  });
+
 
 
   $(".globalheader").on("click","#account",function() {
@@ -443,7 +662,7 @@ function showDanger(msg, xp, next) {
 }
 
 
-function showSplit(x, y, z, xp, next) {
+function showSplit(x, y, z, change) {
   if (x||y||z) {
     hideAllPanels();
     $(".announcesplit").css('height', 30);
@@ -485,27 +704,30 @@ function showSplit(x, y, z, xp, next) {
           hideAllPanels();
           document.title = sitetitle;
           specialtitle = false;
-          showXp(xp, showSymbols);
+          showSymbols();
           windowrun = true;
         }
-      },2000); 
+      },change); 
 
   } else {
-    if (xp) {
-      showXp(xp, showSymbols);
-    } else {
-      showSymbols();
-    }
+    showSymbols();
   }
 }
 
-function showXp(xp, next) {
+function showXp(data, change) {
   hideAllPanels();
   $(".announcexp").css('height', 30);
-  $(".announcexp .y").css('width', 100+'%').html('You gained '+xp+'XP');
-    setTimeout(function(){
-      hideAllPanels();next();
-    },2670);
+l;
+
+  var lastpercentage = Number((data.xp-data.lastlevel)/(data.nextlevel-data.lastlevel)*100);
+  if (lastpercentage > 100) lastpercentage = 100;
+  
+
+  $(".announcexp .xp .x").css('width', percentage+'%').html(experience+'/'+data.nextlevel);
+  
+  setTimeout(function() {
+    hideAllPanels();
+  }, change);
 }
 
 function showSymbols() {
@@ -521,10 +743,16 @@ function showFinances() {
 $(".financestray").css('height', 30);
 }
 function uitradeico(symbol, direction, manual) {
-  if (manual) { autocolor = 0; }
-  if (direction == 0) {
-       $(".icon"+symbol).removeClass('green').removeClass('glyphicon-arrow-up').addClass('red').addClass('glyphicon-arrow-down');
-    } else {
-        $(".icon"+symbol).removeClass('red').removeClass('glyphicon-arrow-down').addClass('green').addClass('glyphicon-arrow-up');
+    switch (direction) {
+      case 0:
+        $(".icon"+symbol).removeClass('orange').removeClass('green').removeClass('glyphicon-arrow-up').addClass('red').addClass('glyphicon-arrow-down');
+      break;
+      case 1:
+        $(".icon"+symbol).removeClass('orange').removeClass('red').removeClass('glyphicon-arrow-down').addClass('green').addClass('glyphicon-arrow-up');
+      break;
+      case 2:
+        $(".firsttradeicon").removeClass('red').removeClass('green').removeClass('glyphicon-arrow-down').addClass('orange').addClass('glyphicon-arrow-up');
+        $(".lasttradeicon").removeClass('red').removeClass('green').removeClass('glyphicon-arrow-up').addClass('orange').addClass('glyphicon-arrow-down');
+      break;
     }
 }

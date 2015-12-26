@@ -18,7 +18,7 @@ hr {
 }
 
 ::selection {
-  background:hsl(28, 99%, 46%);
+  background:silver;
   color:#fff;
 }
 
@@ -89,28 +89,28 @@ border: 1px solid;
   border-radius: 0px;
 }
 .refcount .users {
-  font-family: "Inconsolata";
-  background: #658696;
-  padding: 8px;
-  border: 1px solid #74A2B9;
-  color: #D9EDF7;
-  font-size: 16px;
-  text-shadow: 0px 0px 4px #175A80;
-  border-radius: 4px;
-  border-right: 3px solid #5A707B;
-  border-bottom: 2px solid #5A707B;
+    font-family: "Inconsolata";
+    background: #2A8FC6;
+    padding: 8px;
+    border: 1px solid #74A2B9;
+    color: #FFFFFF;
+    font-size: 16px;
+    text-shadow: 0px 0px 4px #17ABFF;
+    border-radius: 4px;
+    border-right: 3px solid #236E94;
+    border-bottom: 2px solid #1B6C94;
 }
 .refcount .cash {
   font-family: "Inconsolata";
-  background: #739665;
+  background: #14B200;
   padding: 8px;
   border: 1px solid #7BB974;
   color: #E0F7D9;
   font-size: 16px;
   text-shadow: 0px 0px 4px #318017;
   border-radius: 4px;
-  border-right: 3px solid #647B5A;
-  border-bottom: 2px solid #5A7B5E;
+  border-right: 3px solid #73C54F;
+  border-bottom: 2px solid #68CC74;
   margin-left: 10px;
 }
 .georgia {
@@ -191,7 +191,7 @@ display: table-cell;
 .menu li {
   position: relative;
   min-height: 36px;
-  background: #EFEFEF;
+  background-color: #EFEFEF;
   padding: 1% 2% 2% 5%;
   border-bottom: 3px solid #D0D0D0;
   width: 96%;
@@ -199,54 +199,38 @@ display: table-cell;
   margin: 2%;
   cursor: hand;
   box-shadow: 0px 0px 2px rgba(0, 0, 0, 0.08);
+  -webkit-transition: background-color 0.04s ease-in-out;
+  transition: background-color 0.04s ease-in-out;
 }
 .menu li.selected  {
-  background-color: hsl(28, 99%, 46%) !important;
-  background-repeat: repeat-x;
-  background-image: -khtml-gradient(linear, left top, left bottom, from(#e96d01), to(#e96d01));
-  background-image: -moz-linear-gradient(top, #e96d01, #e96d01);
-  background-image: -ms-linear-gradient(top, #e96d01, #e96d01);
-  background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #e96d01), color-stop(100%, #e96d01));
-  background-image: -webkit-linear-gradient(top, #e96d01, #e96d01);
-  background-image: -o-linear-gradient(top, #e96d01, #e96d01);
-  background-image: linear-gradient(#e96d01, #e96d01);
+  background-color: #e96d01;
   border-color: #e96d01 #e96d01 hsl(28, 99%, 46%);
   color: #fff;
   text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.00);
   -webkit-font-smoothing: antialiased;
   border-bottom: 3px solid #B75907;
+  -webkit-transition: background-color 0.04s ease-in-out;
+  transition: background-color 0.04s ease-in-out;
   }
 
 .menu li.green  {
-  background-color: hsl(113, 100%, 35%) !important;
-  background-repeat: repeat-x;
-  background-image: -khtml-gradient(linear, left top, left bottom, from(#14b200), to(#14b200));
-  background-image: -moz-linear-gradient(top, #14b200, #14b200);
-  background-image: -ms-linear-gradient(top, #14b200, #14b200);
-  background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #14b200), color-stop(100%, #14b200));
-  background-image: -webkit-linear-gradient(top, #14b200, #14b200);
-  background-image: -o-linear-gradient(top, #14b200, #14b200);
-  background-image: linear-gradient(#14b200, #14b200);
+  background-color: #14b200;
   border-color: #14b200 #14b200 hsl(113, 100%, 35%);
   color: #fff;
   text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.00);
   -webkit-font-smoothing: antialiased;
   border-bottom: 3px solid green;
+  -webkit-transition: background-color 0.04s ease-in-out;
+  transition: background-color 0.04s ease-in-out;
 }.menu li.red  {
-  background-color: hsl(360, 100%, 35%) !important;
-  background-repeat: repeat-x;
-  background-image: -khtml-gradient(linear, left top, left bottom, from(#b20000), to(#b20000));
-  background-image: -moz-linear-gradient(top, #b20000, #b20000);
-  background-image: -ms-linear-gradient(top, #b20000, #b20000);
-  background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #b20000), color-stop(100%, #b20000));
-  background-image: -webkit-linear-gradient(top, #b20000, #b20000);
-  background-image: -o-linear-gradient(top, #b20000, #b20000);
-  background-image: linear-gradient(#b20000, #b20000);
+  background-color: #b20000;
   border-color: #b20000 #b20000 hsl(360, 100%, 35%);
   color: #fff;
   text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.00);
   -webkit-font-smoothing: antialiased;
   border-bottom: 3px solid #820000;
+  -webkit-transition: background-color 0.04s ease-in-out;
+  transition: background-color 0.04s ease-in-out;
 }
 
 .menu li.selected div, .menu li.red div, .menu li.green div {
@@ -284,7 +268,7 @@ display: table-cell;
   padding: 0px 10px 0 10px;
   margin: 0 2% 0 2%;
   min-height: 0px;
-  background: rgba(243, 243, 243, 0.9);
+  background-color: rgba(243, 243, 243, 0.9);
   border-bottom: 1px solid rgba(167, 167, 167, 0.9);
   border-radius: 4px;
   width: 95%;
@@ -298,17 +282,19 @@ display: table-cell;
   left: 0%;
   -webkit-transition: all 0.14s ease-in;
   transition: all 0.14s ease-in;
+  -webkit-transition: background-color 0.08s ease-in;
+  transition: background-color 0.08s ease-in;
 }
 
 .menu .trades li.red { 
   color: white !important; 
   border-bottom: 1px solid #820000;
-  background: rgba(178, 0, 0, 1) !important;
+  background-color: rgba(178, 0, 0, 1) !important;
 }
 .menu .trades li.green { 
-  color: white !important;
-  border-bottom: 1px solid #0A5600;
-  background: rgb(55, 160, 42) !important;
+    color: white !important;
+    border: 1px solid #3AC328;
+    background-color: rgb(87, 197, 73) !important;
 }
 
 .menu .trades li.green .green, .menu .trades li.green .red, 
@@ -331,6 +317,10 @@ display: table-cell;
   margin-bottom: 7px;
   margin-top: 5px;
 }
+.sidebar-symbols {
+  line-height: 30px;
+}
+
 
 .sparkline {
   position: absolute;
@@ -357,9 +347,15 @@ display: table-cell;
       .container {
         margin: 0 auto;
         min-width: 960px;
+        position: relative;
       }
       .container > hr {
         margin: 300px 0 30px 0;
+      }
+      .container .right {
+        position: absolute;
+        top : 0px;
+        right:0px;
       }
       .topcontainer {
         position: relative;
@@ -381,6 +377,8 @@ display: table-cell;
         width: 80%;
         float: left;
         margin-top: 6px;
+        -webkit-transition: all 0.4s;
+        transition: all 0.4s;
       }
       .numbotron h1 {
         font-size: 100px;
@@ -461,6 +459,10 @@ display: table-cell;
         float: right;
         position: relative;
         margin-top: 13px;
+        position: relative;
+        top: 0px;
+        transition: top 0.6s ease-in-out;
+        -webkit-transition: top 0.6s ease-in-out;
       }
 
       .progress.vertical {
@@ -492,18 +494,44 @@ display: table-cell;
         text-align: center;
         padding: 0px;
         height: 30px;
+        transition: color 0.4s;
+        -webkit-transition: color 0.4s;
       }.controls .info {
         text-align: center;
         position: absolute;
         top: 7px;
         right: 0px;
         width: 145px;
-      }.controls .amount {
+      }.controls .amount, .controls .repeat {
         width: 85%;
         margin: auto;
         margin-top: 15px;
         }
         .amountfield {
+          padding: 4px;
+          height: 28px;
+        }
+        .repeatamountfield {
+          padding: 4px;
+          height: 28px;
+        }
+        .amount .input-group-addon, .repeat .input-group-addon {
+          width: 50px;
+        }
+        .auto .amount, .auto .repeat {
+          margin-top: 5px;
+        }
+        .auto .progress {
+          border-radius: 3px;
+          width: 83%;
+          margin: 6px auto 6px auto;
+          height: 10px;
+          background: rgb(30, 201, 8);
+        }
+        .auto .progress .progress-bar {
+          background: #E23030;
+        }
+        .repeatfield {
           padding: 4px;
           height: 28px;
         }
@@ -530,16 +558,37 @@ display: table-cell;
           line-height: 20px;
           color: inherit;
           text-rendering: optimizelegibility;
-        }.info .applytrade {
+        }.info .applytrade, .info .applyautotrade {
           margin-top: 11px;
           width: 85%;
         }
-        .green { color: hsl(113, 100%, 35%) !important; }
-        .red { color: hsl(360, 100%, 42%) !important; }
+        .green,.green:hover, .green:active, .green:focus { color: hsl(113, 100%, 35%) !important; }
+        .red,.red:hover, .red:active, .red:focus { color: hsl(360, 100%, 42%) !important; }
         .orange { color: hsl(28, 99%, 46%) !important; }
         .yellow { color: #F3C723 !important }
         .yellow .fa { text-shadow: 0px 1px 0px rgb(214, 149, 29); }
-        .userxp {color: #E91E63 !important;}
+        .userxp {
+          color: #FFFFFF !important;
+          border-radius: 3px;
+          background: #F3C723;
+          padding: 0px 4px;
+          margin: 0 1px;
+          box-shadow: 2px 2px 0px #FDA502;
+          text-shadow: 0px 1px 0px #FDA502
+      }
+
+      .userxp.green {
+        background: #1EC908;
+        text-shadow: 0px 1px 0px black;
+        box-shadow: 4px 4px 0px #12A500;
+      }
+      .userxp.red {
+        background: #CA2020;
+        text-shadow: 0px 1px 0px black;
+        box-shadow: 3px 2px 0px #960303;
+      }
+
+
 .progress-bar-success {
   background-color: hsl(113, 100%, 35%);
   border-bottom: 1px solid rgba(238, 238, 238, 0.6);
@@ -560,11 +609,30 @@ overflow: hidden;
 position: relative;
 height: 42px;
 }
+.well { 
+  border-radius: 3px !important; 
+}
+
+.trademode {
+  position: absolute;
+  top: -12px;
+  right: 5px;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: #737373;
+  text-shadow: 0px 1px 0px #f5f5f5;
+  font-size: 11px;
+  letter-spacing: 0.65px;
+  opacity: 0;
+  -webkit-transition: all 0.2s ease-in-out;
+  transition: all 0.2s ease-in-out;
+}
+
 @media screen and (max-width: 1200px) {
   .controls .info { width: 115px !important; }
-  .callputcontainer { width: 60px !important; right: 118px; }
+  .callputcontainer { width: 60px !important; right: 115px; }
 }
-@media screen and (max-width: 720px) {
+@media screen and (max-width: 760px) {
   .container { padding: 0 10px !important; }
   .controls { height: 100px; padding: 0 10px; }
   .controls .info { width: 100% !important; position: absolute !important; left: 0px !important; }
@@ -572,9 +640,10 @@ height: 42px;
   .controls .info .trader { width: 30% !important; top: 0px !important; left: 10px; position: absolute; }
   .callputcontainer { width: 27% !important; top: 0px !important; right: 10px; position: absolute; }
   .controls .amount { width: 100% !important; margin-top: 0px; }
+  .controls .repeat { width: 100% !important; margin-top: 0px; }
   .controls .amount .input-group-addon { font-size: 18px; }
-  .controls .amount .amountfield { font-size: 18px; height: 35px; }
-  .controls .applytrade { font-size: 18px; width: 100% !important; margin-top: 11px; }
+  .controls .amount .amountfield, .controls .amount .repeatfield { font-size: 18px; height: 35px; }
+  .controls .applytrade, .controls .applyautotrade { font-size: 18px; width: 100% !important; margin-top: 11px; }
   .historictrades .time { display: none; }
   .callputcontainer { position: absolute; right: 10px;}
   .title { padding: 0 10px !important; }
@@ -601,6 +670,7 @@ margin-top: 5px;
   margin: 0px 0px 0px 0px;
 }
 .keystones {
+  line-height: 30px;
   left: 0px;
   position: relative;
   transition: all 0.2s;
@@ -753,7 +823,7 @@ font-family: monospace;
   position: relative;
   color: #31708f;
   margin-top: 20px;
-  min-height: 146px;
+  min-height: 130px !important;
   background-color: #d9edf7;
   border-color: #bce8f1;
   border-color: #31708F;
@@ -779,8 +849,8 @@ font-family: monospace;
 .walletsend .alert-info {
   position: relative;
   color: #31708f;
-  padding: 25px;
-  height: 164px;
+  margin-top: 20px;
+  min-height: 130px !important;
   background-color: #d9edf7;
   border-color: #bce8f1;
   border-color: #31708F;
@@ -801,23 +871,30 @@ font-family: monospace;
 .walletcurrencies button .symbol {
   display: none;
 }
+.definingrow {
+  font-weight: 500;
+}
 @media screen and (max-width: 760px) {
   .walletcurrencies button { height: 60px; }
   .walletcurrencies button .name { display: none !important; }
   .walletcurrencies button .symbol { display: block !important; }
 }
 .addcard {
+  min-height: 130px !important;
   margin-top: 20px;
-  min-height: 146px;
-  width: 68%;
-  margin-right: 1.5%;
+  width: 70%;
+  margin-right: 0%;
   padding: 0px;
-  -webkit-transition: all 0.2s ease-in-out;
-  transition: all 0.2s ease-in-out;
   margin-top: 20px !important;
   float: left;
   min-height: 0 !important;
   overflow: hidden;
+}
+.addcard.opened {
+  height: 162px !important;
+}
+.addcard.nocards {
+  width: 100% !important;
 }
 .addcard .lefttitle {
   float: left;
@@ -841,8 +918,12 @@ font-family: monospace;
   border-bottom: 1px solid rgba(23, 83, 115, 0.25);
 }
 .addcard .center .addfunds {
-  margin-top: 10px;
-  height: 0px;
+  margin-top: 0px;
+  height: 30px;
+  font-style: italic;
+  font-weight: 500;
+  font-family: 'Georgia';
+
   overflow: hidden;
 }
 .addcard .btn-group {
@@ -870,14 +951,17 @@ font-family: monospace;
   height: 0px;
   opacity: 0;
   overflow: hidden;
-  transition: 0.4s all ease-out;
+  transition: 0.2s all ease-out;
 }
 
 /* Payment Methods */
 .method.cc {
-  width: 90%;
+  width: 95%;
   margin: auto;
   margin-top: 15px;
+  padding: 0px 10px;
+}.method.cc .input-group {
+  padding-left: 0px !important;
 }.method.cc .input-group-addon {
   background: #5FB3E0 !important;
   color: white;
@@ -898,9 +982,12 @@ font-family: monospace;
 }.method.cc input::selection {
   background:rgba(49, 112, 143, 0.75) !important;
   color:#fff;
-}.method.cc #number {
+}.method.cc button {
+  border-radius: 0px 4px 4px 0 !important; 
+}
+.method.cc #number {
   text-align: center;
-  width: 45%;
+  width: 47%;
   color: #555555;
   float: left;
   height: 45px;
@@ -913,7 +1000,7 @@ font-family: monospace;
   height: 45px;
 }
 .method.cc #cvc {
-  width: 15%;
+  width: 16%;
   text-align: center;
   border-left: none;
   height: 45px;
@@ -924,6 +1011,7 @@ font-family: monospace;
   color: white;
   padding: 7px 13px;
   height: 45px;
+  width: 22%;
   float: left;
 }
 
@@ -934,6 +1022,7 @@ font-family: monospace;
   width: 90%;
   margin: auto;
   margin-top: 15px;
+  padding: 0 10px;
 }.method.paypal .input-group-addon {
   background: #5FB3E0 !important;
   color: white;
@@ -964,8 +1053,11 @@ font-family: monospace;
   float: left;
   width: 30%;
   height: 45px;
+  border-radius: 0px 4px 4px 0 !important; 
 }
-
+#paypalemail {
+  width: 70%;
+}
 
 /* Bank Account */
 .method.bank {
@@ -974,6 +1066,7 @@ font-family: monospace;
   width: 90%;
   margin: auto;
   margin-top: 15px;
+  padding: 0 10px;
 }.method.bank .input-group-addon {
   background: #5FB3E0 !important;
   color: white;
@@ -982,7 +1075,19 @@ font-family: monospace;
   border-bottom: 1px solid #298FC5;
   font-size: 25px;
   height: 45px;
-}.method.bank input {
+}.method.bank #account {
+  float: left;
+  width: 40%;
+  text-align: center;
+}.method.bank #routing {
+  width: 30%;
+  text-align: center;
+  float: left;
+}.method.bank .sendbank {
+  border-radius: 0px 4px 4px 0 !important; 
+}
+
+.method.bank input {
   letter-spacing: 2px;
   font-size: 21px;
   font-family: 'Roboto Slab';
@@ -1004,6 +1109,8 @@ font-family: monospace;
   float: left;
   width: 30%;
   height: 45px;
+}.method.bank .input-group-addon a {
+  color: white;
 }
 
 
@@ -1019,21 +1126,19 @@ height: 200px;
 background: rgb(217, 237, 247);
 border-radius: 10px;
 position: relative;
--webkit-transition: opacity 0.5s, -webkit-transform 0.25s;
-transition: opacity 0.5s, transform 0.25s;
 opacity: 1;
 font-family: 'Roboto Slab';
 text-align: center;
 box-shadow: 0px 1px 1px rgba(0, 0, 0, 0.19);
 float: left;
-margin: 20px 2.6%;
+margin: 20px 2.6% 0px 2.6%;
 }
 .card.selected { 
   border-width: 5px !important; 
 }
 
 .card.paypal {
-  height: 120px;
+  height: 70px;
 }.card.paypal .value { 
   top: 15%; 
 }.card.paypal .label { 
@@ -1045,8 +1150,8 @@ margin: 20px 2.6%;
 }.card.paypal .numbers {
   font-size: 20px;
   position: absolute;
-  top: 70px;
-  left: 5%;
+  top: 20px;
+  left: 60px;
   font-family: sans-serif;
   text-shadow: 1px 1px #5A5A5A;
   text-decoration: underline;
@@ -1116,7 +1221,7 @@ color: white;
 font-size: 17px;
 position: absolute;
 bottom: 5%;
-left: 44%;
+left: 35%;
 letter-spacing: 2px;
 text-shadow: 1px 1px 0px black;
 }.card .secure i {
@@ -1141,10 +1246,16 @@ height: 35px;
 }
 .cards {
   width: 30%;
+  height: 100%;
   float: left;
   overflow: hidden;
   -webkit-transition: opacity 0.25s, height 0.25s, -webkit-transform 0.25s;
   transition: opacity 0.25s, height 0.25s, transform 0.25s;
+}
+
+.no.cards {
+  height: 0% !important;
+  opacity: 0 !important;
 }
 
 .credit {
@@ -1189,7 +1300,7 @@ height: 35px;
   bottom: 10px;
 }
 .sendpaypal .fa, .sendcc .fa {
-  margin-left: 10px;
+
 }
 
 
@@ -1206,13 +1317,12 @@ height: 35px;
   background-color: #00BCD4;
   background-image: repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,.5) 35px, rgba(255,255,255,.5) 70px);
 }.card.orange {
-  border: 1px solid #FF9800;
-  background-color: #FF9800;
+  border: 1px solid #E08400;
+  background-color: #DC6800;
   background-image: repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,.5) 35px, rgba(255,255,255,.5) 70px);
 }
 .card.orange .value, .card.orange .valid, .card.orange .secure, .card.orange .numbers, .card.orange i { 
-  color: #333; 
-  text-shadow: 1px 1px 0px rgb(255, 255, 255) !important; 
+ 
 }.card.yellow {
   border: 1px solid #FF9800;
   background-color: #FF9800;
@@ -1247,18 +1357,33 @@ height: 35px;
     font-size: 18px;
   }
   .card div i { font-size: 32px; }
+  .method.cc .input-group {
+    padding-left: 0px !important;
+  }
 }
 @media screen and (max-width: 760px) {
+  .addcard.opened {
+    height: 180px !important;
+  }.addcard.cc.opened {
+    height: 260px !important;
+  }
+  .fundsinput .showmethod {
+    margin-top: 20px !important;
+  }
   .cards { 
-    width: 300px;
+    margin-top: 20px !important;
+    width: 100%;
     margin: auto;
     float: none;
+    text-align: center;
   }
   .credit { height: 150px; }
   .wallet .alert-info { width: 100%; }
+  .btcwalletbox { height: 155px; }
   .card {
     margin: 7px 1%;
-    float: left;
+    display: inline-block;
+    float: none;
   }
   .card div i { font-size: 32px; }
   .method.cc #number {
@@ -1272,26 +1397,70 @@ height: 35px;
   }
   .method.cc #number {
     height: 45px;
-    width: 75% !important;
+    width: 100% !important;
+    border-radius: 0 4px 0 0 !important;
+    border-bottom: none;
   }
   .method.cc #cvc { 
-    width: 30% !important; 
+    width: 50% !important; 
   }
   .method.cc #expiry {
-    width: 45% !important; 
+    width: 50% !important; 
   }
   .method .sendcc {
-    border-radius: 0px 4px 4px 0px !important;
-    height: 100% !important;
-    width: 23% !important;
-    position: absolute;
-    z-index: 100;
-    right: 0px;
+    width: 100% !important;
+    border-radius: 0px 0px 4px 0 !important;
   }
   .method.cc {
     width: 90%;
   }
+  .paypal input {
+    width: 70% !important;
+  }
+  
 
+}
+
+@media screen and (max-width: 400px) {
+  .card {
+    margin: 7px auto;
+    float: none;
+  }
+  .addcard.opened {
+    height: 252px !important;
+  }
+  .addpaypal {
+    float: none !important;
+    width: 100% !important;
+    text-align: center;
+    border-radius: 0px 0px 3px 0px !important;
+  }
+  #paypalemail {
+    width: 100% !important;
+    border-radius: 0px 3px 0px 0px !important;
+    text-align: center;
+  }
+  .method.bank #routing, .method.bank #account, .method.bank button {
+    float: none;
+    width: 100%;
+  }
+  .fundsinput .bank.showmethod {
+    margin-top: 0px !important;
+  }
+  button.currency.btn {
+    width: 100% !important;
+    height: 35px;
+    margin: 0px !important;
+    border-radius: 0px !important;
+  }
+  .walletcurrencies button .symbol {
+    display: inline-block !important;
+  }
+  .walletcurrencies button:first-child {
+    border-radius: 5px 5px 0 0 !important;
+  }.walletcurrencies button:last-child {
+    border-radius: 0 0 5px 5px !important;
+  }
 }
 
 .btcsend {
@@ -1314,7 +1483,7 @@ height: 35px;
   z-index: 5;
 }.say {
 width: 100%;
-padding: 5px 5px 5px 10px;
+padding: 5px 10px;
 border-top: 1px solid #eee !important;
 border: 0px;
 outline-color: silver;
@@ -1677,6 +1846,54 @@ font-size: 15px;
 
 }
 
+.ratio {
+    border-radius: 50%;
+    font-size: 10px;
+    color: #FFFFFF !important;
+    height: 21px;
+    width: 21px;
+    padding: 3px;
+    display: inline-block;
+    top: -1px;
+    position: relative;
+  }
+  .ratio.green {
+    background: #14b200;
+  }
+  .ratio.red {
+    background: #DA1515;
+  }
+  .percentage {
+    padding: 4px;
+    background: #00960C;
+    border-radius: 4px;
+    font-size: 10px;
+    color: #FFFFFF !important;
+  }
+  .percentage.red { 
+    background: #DA1515; 
+    box-shadow: 0px 1px 0px #860606;
+  }
+  .percentage.orange { 
+    background: #DA8215; 
+    box-shadow: 0px 1px 0px #860606;
+  }
+  .percentage.green { 
+    background: #05CE15; 
+    box-shadow: 0px 1px 0px #00AB0E;
+  }
+  .percentage.lightgreen { 
+    background: #08E019;
+    box-shadow: 2px 1px 0px #B0FFB6;
+  }
+  .percentage.darkgreen { 
+    background: #00960C;
+    box-shadow: 1px 1px 0px #00DC12;
+  }
+  .percentage.red { 
+    background: #DA1515; 
+    box-shadow: 0px 1px 0px #860606;
+  }
 
 .guest {
   margin-top:25px;
@@ -1729,14 +1946,13 @@ margin: 20px 0px 0px 0px;
 text-align: center;
 display: none;
 }.signupbonus {
-  font-family: 'Architects Daughter', cursive;
   font-size: 33px;
-  font-weight: 800;
+  font-weight: 200;
   letter-spacing: 1.5px;
   text-align: center;
   position: relative;
 }.signupbonus .swoop {
-  transform: rotateZ(45deg);
+  transform: rotateZ(-45deg);
   font-size: 46px;
   color: #3FAFEA;
 }
@@ -2053,7 +2269,7 @@ background: whitesmoke;
 }
 .nooffer i { font-size: 25px; }
 .globalheader {
-  border-bottom: 1px solid #cecece;
+  /*border-bottom: 1px solid #BFBFBF;*/
   z-index: 10;
   position: relative;
 }
@@ -2061,6 +2277,7 @@ background: whitesmoke;
   background: #EEE;
   padding: 0px;
   border-bottom: 0px;
+  line-height: 30px;
 }
 .globalheader .container {
   padding: 0px;
@@ -2074,16 +2291,58 @@ background: whitesmoke;
   font-weight: 400;
   text-shadow: 0px 1px 0px white;
 }
-.header:active, .header.active {
+.header.active {
   background: #F3F3F3;
   cursor: move;
 }
+.trading .header {
+  padding: 5px 3px 5px 10px !important;
+}
+.progress.header {
+  padding: 0 !important;
+  text-shadow: none !important;
+} 
 .header::selection {
   background: silver !important;
   text-shadow: none !important;
 }
 .optionheader {
   border-top: 1px solid #eee;
+}
+.chart-controls {
+  float: right;
+  color: #ccc;
+  opacity: 1;
+  overflow: hidden;
+  -webkit-transition: all 0.4s;
+  transition: all 0.4s;
+}
+.chart-controls .fa, .chart-controls span {
+  float: right;
+  margin-right: 3px;
+  border-radius: 5px;
+  padding: 2px 5px;
+  font-size: 12px;
+  color: #D6D6D6;
+  text-shadow: none;
+  height: 21px;
+  font-weight: bold;
+  -webkit-transition: all 0.37s;
+  transition: all 0.37s;
+}
+.chart-controls .fa {
+  padding: 5px 7px;
+}
+.chart-controls .fa:hover, .chart-controls span:hover, .chart-controls span.active, .chart-controls .fa.active {
+  color: white !important;
+  background: rgb(206, 206, 206) !important;
+}
+.vanish {
+  width: 0px !important;
+  opacity: 0 !important;
+  padding: 2px 0px !important;
+  margin: 0px !important;
+  pointer-events: none;
 }
 #chat {
   position: relative;
@@ -2131,7 +2390,7 @@ line-height: 13px;
   transition: all 0.2s ease-in-out;
 }
 .chaterror.show {
-  height: 25px;
+  height: 35px;
   opacity: 1;
 }
 
@@ -2204,9 +2463,7 @@ left: 21px;
   border-width: 11px;
   margin-left: -11px;
 }
-li {
-line-height: 30px;
-}
+
 
 .hideme {
 display: none;
@@ -2222,114 +2479,69 @@ color: #707070;
 display: none;
 }
 .btn-success {
-  background-color: hsl(113, 100%, 35%) !important;
-  background-repeat: repeat-x;
-  background-image: -khtml-gradient(linear, left top, left bottom, from(#14b200), to(#14b200));
-  background-image: -moz-linear-gradient(top, #14b200, #14b200);
-  background-image: -ms-linear-gradient(top, #14b200, #14b200);
-  background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #14b200), color-stop(100%, #14b200));
-  background-image: -webkit-linear-gradient(top, #14b200, #14b200);
-  background-image: -o-linear-gradient(top, #14b200, #14b200);
-  background-image: linear-gradient(#14b200, #14b200);
+  background-color: #14b200 !important;
   border-color: #14b200 #14b200 hsl(113, 100%, 35%);
   color: #fff;
   text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.00);
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.08s ease-in-out;
 }
   .btn-danger {
-  background-color: hsl(360, 100%, 35%) !important;
-  background-repeat: repeat-x;
-  background-image: -khtml-gradient(linear, left top, left bottom, from(#b20000), to(#b20000));
-  background-image: -moz-linear-gradient(top, #b20000, #b20000);
-  background-image: -ms-linear-gradient(top, #b20000, #b20000);
-  background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #b20000), color-stop(100%, #b20000));
-  background-image: -webkit-linear-gradient(top, #b20000, #b20000);
-  background-image: -o-linear-gradient(top, #b20000, #b20000);
-  background-image: linear-gradient(#b20000, #b20000);
+  background-color: #B20000 !important;
   border-color: #b20000 #b20000 hsl(360, 100%, 35%);
   color: #fff;
   text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.00);
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.08s ease-in-out;
 }
 .btn-default {
-  background-color: hsl(28, 0%, 94%) !important;
-  background-repeat: repeat-x;
-  background-image: -khtml-gradient(linear, left top, left bottom, from(#efefef), to(#efefef));
-  background-image: -moz-linear-gradient(top, #efefef, #efefef);
-  background-image: -ms-linear-gradient(top, #efefef, #efefef);
-  background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #efefef), color-stop(100%, #efefef));
-  background-image: -webkit-linear-gradient(top, #efefef, #efefef);
-  background-image: -o-linear-gradient(top, #efefef, #efefef);
-  background-image: linear-gradient(#efefef, #efefef);
+  background-color: #efefef;
   border-color: #efefef #efefef hsl(28, 0%, 94%);
   color: #333;
   text-shadow: 0 1px 0px rgba(255, 255, 255, 1.00);
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.08s ease-in-out;
 }
 .btn-warning {
-  background-color: hsl(28, 99%, 46%) !important;
-  background-repeat: repeat-x;
-  background-image: -khtml-gradient(linear, left top, left bottom, from(#e96d01), to(#e96d01));
-  background-image: -moz-linear-gradient(top, #e96d01, #e96d01);
-  background-image: -ms-linear-gradient(top, #e96d01, #e96d01);
-  background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #e96d01), color-stop(100%, #e96d01));
-  background-image: -webkit-linear-gradient(top, #e96d01, #e96d01);
-  background-image: -o-linear-gradient(top, #e96d01, #e96d01);
-  background-image: linear-gradient(#e96d01, #e96d01);
+  background-color: #e96d01 !important;
   border-color: #AD5101 #AD5101 hsl(28, 99%, 46%);
   border-bottom: 2px solid #AD5101;
   color: #fff;
   text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.00);
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.08s ease-in-out;
 }
 .btn-yellow {
   background-color: #FFD507 !important;
-  background-repeat: repeat-x;
-  background-image: -khtml-gradient(linear, left top, left bottom, from(#FFD507), to(rgb(234, 185, 3)));
-  background-image: -moz-linear-gradient(top, #FFD507, rgb(234, 185, 3));
-  background-image: -ms-linear-gradient(top, #FFD507, rgb(234, 185, 3));
-  background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0%, rgb(234, 185, 3)), color-stop(100%, rgb(234, 185, 3)));
-  background-image: -webkit-linear-gradient(top, #FFD507, rgb(234, 185, 3));
-  background-image: -o-linear-gradient(top, #FFD507, rgb(234, 185, 3));
-  background-image: linear-gradient(#FFD507, rgb(234, 185, 3));
   border-color: #DEB71E #EAB903 hsl(53, 100%, 53%);
-  color: #fff !important;
-  text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.38);
+  color: #fff;
+  text-shadow: 0px 1px 2px rgba(0, 0, 0, 0.53) !important;
   -webkit-font-smoothing: antialiased;
-  -webkit-transition: all 0.2s ease-in-out;
-  transition: all 0.1s ease-in-out;
+  -webkit-transition: background-color 0.2s ease-in-out;
+  transition: background-color 0.08s ease-in-out;
+  transition: color 0.08s !important;
+  -webkit-transition: color 0.08s !important;
 }.btn-yellow:hover,  {
   background-color: #DEB800 !important;
-  background-repeat: repeat-x;
-  background-image: -khtml-gradient(linear, left top, left bottom, from(#DEB800), to(#CCA900));
-  background-image: -moz-linear-gradient(top, #DEB800, #CCA900);
-  background-image: -ms-linear-gradient(top, #DEB800, #CCA900);
-  background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #CCA900), color-stop(100%, #CCA900));
-  background-image: -webkit-linear-gradient(top, #DEB800, #CCA900);
-  background-image: -o-linear-gradient(top, #DEB800, #CCA900);
-  background-image: linear-gradient(#DEB800, rgb(234, 185, 3));
   border-color: #DEB71E #EAB903 hsl(53, 100%, 53%);
   color: #fff !important;
   text-shadow: 0px 0px 0px rgba(0, 0, 0, 0.0) !important;
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.08s ease-in-out;
 }
-.btn-yellow:hover {
+.btn-yellow:hover, .btn-yellow:focus  {
   color: white !important;
 }
+.btn-yellow.green, .btn-yellow.red {
+  text-shadow: 0px 1px 1px rgba(0, 0, 0, 0.53) !important;
+}
 .btn-blue {
-  background-color: hsl(201, 65%, 47%) !important;
-  background-repeat: repeat-x;
-  background-image: -khtml-gradient(linear, left top, left bottom, from(#298fc5), to(#298fc5));
-  background-image: -moz-linear-gradient(top, #298fc5, #298fc5);
-  background-image: -ms-linear-gradient(top, #298fc5, #298fc5);
-  background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #298fc5), color-stop(100%, #298fc5));
-  background-image: -webkit-linear-gradient(top, #298fc5, #298fc5);
-  background-image: -o-linear-gradient(top, #298fc5, #298fc5);
-  background-image: linear-gradient(#298fc5, #298fc5);
+  background-color: #298fc5 !important;
   border-color: #298fc5 #298fc5 hsl(201, 65%, 47%);
   color: #fff !important;
   text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.00);
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.08s ease-in-out;
 }
 .btn-blue:hover {
   color: white !important;
@@ -2407,7 +2619,15 @@ border-radius: 3px !important;
 .input-group-sm > .form-control, .input-group-sm > .input-group-addon, .input-group-sm > .input-group-btn > .btn {
 padding: 6px 15px !important;
 }
-
+.grid {
+  padding: 0px;
+}
+.grid .header {
+  padding: 5px 10px;
+}
+.grid li {
+  list-style: none;
+}
 
 .seeall {
   position: absolute;
@@ -2444,10 +2664,15 @@ padding: 6px 15px !important;
 ::-webkit-scrollbar-thumb:window-inactive {
     background: rgba(0, 0, 0, 0.4);
 }
-
-@media (max-width: 720px) {
+@media (min-width: 400px) {
+  .col-md-4 {
+    width: 33.33333333%;
+    float: left;
+  }
+}
+@media (max-width: 760px) {
   body {
-
+    min-width: 360px;
   }
   .topcontainer{
     padding: 0 10px 0 10px;
@@ -2455,12 +2680,16 @@ padding: 6px 15px !important;
   }.container {
     min-width: 100%;
     overflow: hidden;
-  }.col1, .col2 {
+  }
+  .col1, .col2 {
     width: 100%;
     float: none;
   }.numbotron {
     float: none;
     width: 100%;
+    overflow: hidden;
+    transition: all 0.3s;
+    -webkit-transition: all 0.3s;
   }.controls {
     width: 100%;
     float: none;
@@ -2497,12 +2726,14 @@ float: left;
 }.controls .info .details {
 width: 42%;
 float: left;
-}.controls .amount {
+}.controls .amount, .controls .repeat {
   width: 42%;
-}.controls .info .applytrade {
+}.controls .info .applytrade, .controls .info .applyautotrade {
     width: 42%;
+}
 
-}#email, #password {
+
+#email, #password {
   width: 77px !important;
 }.sitename {
   /* display: none;*/ 
@@ -2552,6 +2783,8 @@ display: none;
   .row-fluid {
     width: 100%;
   }
+  
+
   .row,
   .thumbnails {
     margin-left: 0;

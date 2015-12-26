@@ -28,7 +28,6 @@ var port = 8080
   , bcrypt = require('bcrypt')
   , nodemailer = require('nodemailer')
   , crypto = require('crypto')
-  , stripe = require('stripe')
   , keys = require('./keys.json')
 
 keys.ssl.lock = {
@@ -172,6 +171,8 @@ stdin.on( 'data', function( key ){
 
 });
 
+// Stripe API
+var stripe = require("stripe")(keys.stripe.secret);
 
 // Global clock
 var date = 0;
@@ -234,10 +235,12 @@ var schema = new mongoose.Schema({ ip: 'string', time: 'string', handle: 'string
 var Pageviews = mongoose.model('pageviews', schema);
 var schema = new mongoose.Schema({ symbol: 'string', price: 'string', offer: 'string', amount: 'string', direction: 'string', time: 'string', user: 'string', currency: 'string' });
 var Activetrades = mongoose.model('activetrades', schema);
-var schema = new mongoose.Schema({ symbol: 'string', price: 'string', offer: 'string', amount: 'string', direction: 'string', time: 'string', finalprice: 'string', outcome: 'string', winnings: 'string', user: 'string', currency: 'string', outcome: 'string' });
+var schema = new mongoose.Schema({ symbol: 'string', price: 'string', offer: 'string', amount: 'string', direction: 'string', timeplaced: 'string', time: 'string', finalprice: 'string', outcome: 'string', winnings: 'string', user: 'string', currency: 'string', outcome: 'string' });
 var Historictrades = mongoose.model('historictrades', schema);
 var schema = new mongoose.Schema({ symbol: 'string', price: 'string', time: 'string', createdAt: { type: Date, expires: '1h' } });
 var Historicprices = mongoose.model('historicprices', schema);
+var schema = new mongoose.Schema({ username: 'string', stripe: 'string', paypal: 'string' });
+var Customers = mongoose.model('customers', schema);
 var schema = new mongoose.Schema({ from: 'string', to: 'string', amount: 'string', currency: 'string',txid: 'string', time: 'string'});
 var Sentpayments = mongoose.model('sentpayments', schema);
 var schema = new mongoose.Schema({ option: 'string', setting: 'string'});
@@ -261,25 +264,29 @@ rclient = redis.createClient();
 rclient.auth(keys.redis);
 
 function pay(amount, tradeuser, currency, callback) {
+  
   var errors = false;  
-  if (!currency) currency = '';
+  
+  if (!currency) currency = 'USD';
   if (amount > 0) {
+    
     console.log('Paying '+amount+' '+currency+' to '+tradeuser);
-    amount = Number(round(amount, 6));
+    amount = Number(round(amount, 2));
+    
     rclient.get('myaccount.'+currency, function(err, reply) {
       if (err) errors =+ err;
-        var myaccount = Number(round(+reply-amount,6));
+        var myaccount = Number(round(+reply-amount,2));
         rclient.set('myaccount'+'.'+currency, myaccount, function(err, reply) {
           if (err) errors =+ err;
-            rclient.get(tradeuser+'.'+currency, function(err, reply) {
+          rclient.get(tradeuser+'.'+currency, function(err, reply) {
             if (err) errors =+ err;
-              var updatedbal = Number(round(+reply+amount,6));
+            var updatedbal = Number(round(+reply+amount,2));
             console.log('Balance Update for '+tradeuser+': '+reply+' to '+updatedbal);
-              rclient.set(tradeuser+'.'+currency, updatedbal, function(err, reply) {
-                if (err) errors =+ err;
-                  callback();
-              });
+            rclient.set(tradeuser+'.'+currency, updatedbal, function(err, reply) {
+              if (err) errors =+ err;
+              if (callback) callback(errors);
             });
+          });
         });
     });
   }
@@ -408,7 +415,7 @@ var call = 0;
 var maxamount = keys.site.maxamount; // the max amount a user can set for any one trade
 var maxoffset = keys.site.offset;
 var cuttrading = 0; // seconds before trading where the user is locked out from adding a trade (zero to disable)
-var offer = keys.site.offer;
+var offer = keys.site.offers.default;
 var tradeevery = keys.site.tradeevery; // Defaut time in minutes before trading again
 var userNumber = 1;
 var trades = new Array();
@@ -428,7 +435,6 @@ var y = new Array();
 var x = new Array();
 var z = new Array();
 var a = 0;
-var processedtrades = new Array();
 
 // The wild-west of functions
 var lag = 0;
@@ -501,10 +507,12 @@ app.get('/check/:username/:password', function( req, res ) {
 // Master trade function
 //=trade
 function trade() {
-  var index;//Loop the trades
-  var processedtrades = new Array();
+
+    // Trade loop
+     var loopedtrades = new Array(), t=0;
     trades.forEach(function (trade){
       var winnings = 0;
+      t++;
       // Check the direction and calculate the outcome
       if (trade.direction == 'Call'){
         if (trade.price > price[trade.symbol]) {
@@ -514,14 +522,10 @@ function trade() {
           trade.outcome = 'Win'; 
           // User wins trade
           winnings = Number(+trade.amount + (+trade.amount*trade.offer) ).toFixed(2);
-          pay(winnings, trade.user, trade.currency, function (err) {
-            if (err) throw (err);
-          });
+          
         } else if (trade.price == price[trade.symbol]) {
           trade.outcome = 'Tie';
-          pay(trade.amount, trade.user, trade.currency, function (err){
-            if (err) throw (err);
-          });
+          if (keys.site.returntie) winnings = trade.amount;
         }
       } else if (trade.direction == 'Put'){
           if (trade.price < price[trade.symbol]) {
@@ -531,45 +535,56 @@ function trade() {
           winnings = Number(++trade.amount + (+trade.amount*trade.offer) ).toFixed(2);
           trade.outcome = 'Win';
           //Update user balance and move winnings out of the bank
-          pay(winnings, trade.user, trade.currency, function (err) {
-            if (err) throw (err);
-          });
+          
         } else if (trade.price == price[trade.symbol]) {
           trade.outcome = 'Tie';
-          pay(trade.amount, trade.user, trade.currency, function (err) {
-            if (err) throw (err);
-          });
+          if (keys.site.returntie) winnings = trade.amount;
         } 
-      } 
+      }
 
-      //console.log(tradeuser + ' ' + outcome + ' ' + amount);
-
-          var historictrade = {
-            user: trade.user,
-            symbol: trade.symbol,
-            price: trade.price,
-            direction: trade.direction,
-            amount: trade.amount,
-            offer: trade.offer,
-            currency: trade.currency,
-            time: time,
-            outcome: trade.outcome,
-            finalprice: price[trade.symbol],
-            winnings: winnings
-          };
+      var historictrade = {
+        user: trade.user,
+        symbol: trade.symbol,
+        price: trade.price,
+        direction: trade.direction,
+        amount: trade.amount,
+        offer: trade.offer,
+        currency: trade.currency,
+        timeplaced: trade.time,
+        time: time,
+        outcome: trade.outcome,
+        finalprice: price[trade.symbol],
+        winnings: winnings
+      };
 
       // Store the trades in the db
       var dbhistorictrades = new Historictrades(historictrade);
-      dbhistorictrades.save(function (err) {
-        if (err) console.log(err)
-        // and in the ram
+      dbhistorictrades.save(function (err) { if (err) throw(err) });
 
-      });
-      processedtrades.push(historictrade);
+      loopedtrades.push(historictrade);
       ratio[trade.symbol] = 50;
-    });//foreach trade
+    });//foreach trade loop
 
-    processTrade(processedtrades);
+    // Pay loop
+    var payable = new Array();
+    for (var i = loopedtrades.length - 1; i >= 0; i--) {
+      var loop = loopedtrades[i];
+      if (loop.winnings > 0) {
+        payable.push({
+          user: loop.user,
+          currency: loop.currency,
+          winnings: loop.winnings
+        });
+      }
+    };
+
+
+    for (var i = payable.length - 1; i >= 0; i--) {
+      var loop = payable[i];
+      console.log(loop.user, loop.currency, loop.winnings);
+    };
+    
+    //cookTrades(loopedtrades);
 
   // empty the ram and database of old objects
   x = new Array(); //win
@@ -597,6 +612,8 @@ function addTrade(symbol, amount, direction, user, socket) {
     if (err) throw (err);  
     currency = docs.currency;
 
+    // Make sure required fields are met
+    if (symbol && amount && direction) {
     // Check if the trade is closing
     if (nexttradesecs > keys.site.stoptrading) {
     // Check the amount
@@ -674,7 +691,7 @@ function addTrade(symbol, amount, direction, user, socket) {
               winnings: 0
             };
 
-            trades.push(trade);
+            trades.unshift(trade);
 
             // Insert the trade into the database
             var dbactivetrades = new Activetrades(trade);
@@ -732,6 +749,14 @@ function addTrade(symbol, amount, direction, user, socket) {
       var error = {};
       error.sym = symbol;
       error.msg = 'Wait';
+      socket.emit('tradeerror', error);
+      return false;
+    }
+    } else {
+      // Trade is closing
+      var error = {};
+      error.sym = symbol;
+      error.msg = 'Error';
       socket.emit('tradeerror', error);
       return false;
     }
@@ -825,7 +850,8 @@ function updatePrice(data, symbol) {
   //console.log( chart[symbol] );
 }
 var chartdata = [],
-    chartentry = [];
+    chartentry = [], 
+    lastprice = [];
 
 function updateChart(data, symbol, force) {
   symbol = symbolswitch(symbol);
@@ -995,30 +1021,32 @@ io.sockets.on('connection', function (socket) {
 
   socket.on('chart', function (data) {
     if (!data.time) data.time = 1800000;
-    switch ( data.time ) {
-      case '1m':
-        data.time = 10000;
-      break;
-      case '10m':
-        data.time = 600000;
-      break;
-      case '30m':
-        data.time = 1800000;
-      break;
-      case '1h':
-        data.time = 3600000;
-      break;
-    }
-    if (!data.time) data.time = 1800000;
-    Historicprices.find({ symbol: data.symbol }).sort({ time: -1 }).exec(function (err, docs) {
+    Historicprices.find({ symbol: data.symbol }).where('time').gte(time-data.time).sort({ time: -1 }).exec(function (err, docs) {
       if (err) throw (err);
       var points = new Array();
-     async.each(docs, function (doc) {
+      async.each(docs, function (doc) {
         points.unshift([Number(doc.time), Number(doc.price)]);
       });
-     socket.emit('chart', { symbol: data.symbol, chart: points, properties: keys.site.chart });
+      var properties = keys.site.chart;
+      socket.emit('chart', { symbol: data.symbol, chart: points, properties: properties });
     });
-  })
+  });
+
+    socket.on('movingaverage', function (data) {
+      if (!data.time) data.time = 1800000;
+      Historicprices.find({ symbol: data.symbol }).where('time').gte(time-data.time).sort({ time: -1 }).exec(function (err, docs) {
+        if (err) throw (err);
+        var price = 0, avg = 0, diff = 0, closing = 0;
+        async.each(docs, function (doc) {
+          var symbolprice = Number(doc.price);
+          price = Number(price + symbolprice);
+          closing = Number(doc.price);
+        });
+        avg = Number( round( price / docs.length, 4) );
+        diff = Number( round( closing - avg, 4 ) );
+        socket.emit('movingaverage', { symbol: data.symbol, time: data.time, average: avg, difference: diff, closing: closing  });
+      });
+  });
 
 // Bitcoin Socket API
   socket.on('coinconnect', function (data) {
@@ -1267,6 +1295,83 @@ io.sockets.on('connection', function (socket) {
     }
   });
 
+
+
+  socket.on('historictrades', function (data) {
+    if ( myName != keys.site.admin ) data.user = myName;
+    if (!data.limit ) data.limit = 25;
+    if (!data.skip ) data.skip = 0;
+    Historictrades.find({ user: data.user }).sort({time:-1}).limit(data.limit).skip(data.skip).find(function(err, historictrades) {
+      socket.emit('historictrades', historictrades);
+    });
+  });
+
+// Wallet frontend functions
+
+  socket.on('addcard', function (data) {
+    if ( myName != keys.site.admin ) data.user = myName;
+    Customers.findOne({ username: data.user }, function (err, customer) {
+      // if (!customer) {
+      //   var newCustomer = new Customers({ username: data.user });
+      //   newCustomer.save();
+      // }
+      
+      if (data.token) {
+          if (!customer || !customer.stripe) {
+            stripe.customers.create({ description: data.user, source: data.token }, function (err, customer) {
+              if (err) {
+                socket.emit('addcard', { error: 'stripe', string: 'Error creating customer with Stripe.' });
+              } else {
+                Customers.findOneAndUpdate({ username: data.user }, { username: data.user, stripe: customer.id }, { upsert: true }, function (err) {
+                  if (err) socket.emit('addcard', { error: 'customer', string: 'Error adding customer.' });
+                  socket.emit('addcard', { result: 'success', card: customer.sources.data });
+                });
+              }
+            });
+          } else {
+            stripe.customers.createSource(customer.stripe, { source: data.token }, function (err, card) {
+              if (err) socket.emit('addcard', { error: 'stripe', string: 'Error adding card with Stripe.' });
+              socket.emit('addcard', { result: 'success', card: card });
+            });
+          }
+      } else if (data.paypal) {
+        var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+        if (re.test(data.paypal)) {
+          if (!customer || !customer.paypal || data.update == 'true') {
+          Customers.findOneAndUpdate({ username: data.user }, { username: data.user, paypal: data.paypal }, {upsert: true}, function (err,docs) {
+            if (err) {
+              socket.emit('addcard', { error: 'database', string: 'Error adding PayPal Email'});
+            } else {
+              socket.emit('addcard', { result: 'success', paypal: data.paypal });
+            }
+          });
+          } else {
+            socket.emit('addcard', { error: 'paypal' });
+          }  
+        } else {
+        socket.emit('addcard', { error: 'email' });
+        }
+      }
+    });
+  });
+
+  socket.on('cards', function (data) {
+    var paypal, stripecards;
+    if ( myName != keys.site.admin ) data.user = myName;
+      Customers.find({ user: data.user }, function (err, customer) {
+        if (err) throw (err);
+        if (customer.stripe) {
+          stripe.customers.listCards(customer.stripe, function(err, cards) {
+            stripecards = cards;
+          });
+        }
+        if (customer.paypal) {
+          paypal = customer.paypal;
+        }
+        socket.emit('cards', { stripe: stripecards, paypal: paypal });
+    });
+  });
+
   // Proto action socket listener
   socket.on('action', function (data) {
     console.log('action: '+data);
@@ -1278,16 +1383,11 @@ io.sockets.on('connection', function (socket) {
   var updater = setInterval(function() {
 
     // Emit trade objects
-    
-
     socket.emit('username', myName); // Update userbalance
     socket.emit('messages', messages); // Update userbalance
     Activetrades.find({ user: myName }).sort({time:-1}).find(function(err, activetrades) {
       socket.emit('activetrades', activetrades);
       trades = activetrades;
-    });
-    Historictrades.find({ user: myName }).sort({time:-1}).limit(25).skip(0).find(function(err, historictrades) {
-      socket.emit('historictrades', historictrades);
     });
 
     io.sockets.emit('tradingopen', tradingopen); // Update trading status
@@ -1323,12 +1423,40 @@ io.sockets.on('connection', function (socket) {
               bal = bal;
             } else {
               bal = 0;
-            
             }
 
-
-
-            socket.emit('wallet', {name: myName, currency: currency, address: docs.btc, balance: bal, currencies: usercurrencies}); // Update useraddress
+            var paypal, customerid, customercards;
+            Customers.findOne({ username: myName }, function(err, docs) {
+              if (err) throw (err);
+              if (docs.paypal) paypal = docs.paypal;
+              if (docs.stripe) {
+                customerid = docs.stripe;
+                stripe.customers.listCards(customerid, function(err, cards) {
+                  if (err) throw (err);
+                  customercards = cards;
+                  socket.emit('wallet', {
+                    name: myName, 
+                    currency: currency, 
+                    address: docs.btc, 
+                    balance: bal, 
+                    currencies: usercurrencies,
+                    paypal: paypal,
+                    stripe: customercards
+                  }); // Update useraddress
+                });
+              } else {
+                socket.emit('wallet', {
+                  name: myName, 
+                  currency: currency, 
+                  address: docs.btc, 
+                  balance: bal, 
+                  currencies: usercurrencies,
+                  paypal: paypal,
+                  stripe: false
+                }); // Update useraddress
+              }
+              
+            });
             socket.emit('ratio', docs.ratio);
             socket.emit('percentage', docs.percentage);
             socket.emit('experience', docs.experience); // Update xp
@@ -1577,6 +1705,7 @@ app.get('/2f/stats', function(req, res, next){
 
 app.get('/checkusername/:data', function(req, res, next){
   var un = req.params.data;
+  un = un.toLowerCase();
   var query  = User.where({ username: un });
   query.findOne(function (err, user) {
     if (err) throw (err);
@@ -1873,6 +2002,7 @@ app.get('/login/:username/:password', function(req, res) {
       // Get username and password variables
       var password = decodeURI(req.params.password);
       var username = decodeURI(req.params.username);
+      username = username.toLowerCase();
           // Check if this username is in the userfilewall
           Userfirewall.count({username: username}, function(err, c){
             if (err) throw (err)
@@ -1937,14 +2067,16 @@ app.get('/login/:username/:password', function(req, res) {
 
 // Add a user
 app.get('/adduser/:username/:email/:password', function(req, res, next) {
+var username = res.params.username;
+username = username.toLowerCase();
 if (signupsopen == true) {
-  if (req.params.username == 'root' || 'admin' || 'sudo' || 'server' || 'mod' || keys.site.title || keys.site.domain) {
+  if (username == 'root' || 'admin' || 'sudo' || 'server' || 'mod' || keys.site.title || keys.site.domain) {
 
   // Check if  the username is taken
-  var query  = User.where({ username: req.params.username });
+  var query  = User.where({ username: username });
   query.findOne(function (err, user) {
     if (err) throw (err);
-    if (user) { res.send(req.params.username); } else {
+    if (user) { res.send(username); } else {
 
       // Check if the email is taken
       var query  = User.where({ email: req.params.email });
@@ -1953,13 +2085,13 @@ if (signupsopen == true) {
         if (user) { res.send(req.params.email); } else {
 
           // Create a new bitcoin address
-          rclient.set(req.params.username+'.'+keys.site.defaultcurrency, keys.site.startingamount);
+          rclient.set(username+'.'+keys.site.defaultcurrency, keys.site.startingamount);
     
           //create a user a new user
           if (!address) var address = null;
           if (!referer) var referer = null;
           var newUser = new User({
-              username: req.params.username,
+              username: username,
               email: req.params.email,
               verifiedemail: false,
               password: req.params.password,
@@ -2245,64 +2377,79 @@ function isNumber(n) {
 
 
 
-function processTrade(trades) {
+function cookTrades(trades) {
   console.log('Traded '+date.toString());
 
   var xp = new Array();
+  var currentlevel = new Array();
+  var lastlevel = new Array();
+  var nextlevel = new Array();
 
   async.each(trades, function (trade) {
-    
-    xp[trade.user] = 0;
-    trade.amount = Number( trade.amount );
-    trade.offer = Number( trade.offer );
 
-    if (!x[trade.user]) x[trade.user] = 0;
-    if (!y[trade.user]) y[trade.user] = 0;
-    if (!z[trade.user]) z[trade.user] = 0;
-
-    if (trade.outcome == 'Win') {
-      x[trade.user] = Number(+x[trade.user] + (+trade.amount+(trade.amount*trade.offer)));
-      xp[trade.user] = Number(+Number(xp[trade.user]) + +Number(keys.site.experience.win));
-    } else if (trade.outcome == 'Tie') {
-      y[trade.user] = Number(+y[trade.user] + trade.amount);
-      xp[trade.user] = Number(+Number(xp[trade.user]) + +Number(keys.site.experience.tie));
-    } else if (trade.outcome == 'Lose') {
-      z[trade.user] = Number(+z[trade.user] + trade.amount);
-      xp[trade.user] = Number(+Number(xp[trade.user]) + +Number(keys.site.experience.loss));
-    }
-
-    User.findOne({ username: trade.user }, function (err, docs) {
+    User.findOne({ username: trade.user }, function (err, user) {
       if (err) throw (err);
-
-      var achievements = {};
-
-      if (docs.experience) {
-        docs.experience = Number(+Number(docs.experience) + +Number(xp[trade.user]));
-      } else {
-        docs.experience = Number(xp[trade.user]);
-      }
-      
-      Historictrades.find({ user: trade.user }, function (err, trades) {
+            Historictrades.find({ user: trade.user }, function (err, historic) {
         if (err) throw (err);
-        var percentage = 50, i, w, l;
-        async.each( trades, function ( item ) {
+    
+        var achievements = {}, experience, percentage = 50, i, w, l;
+
+        async.each( historic, function ( item ) {
           i++;
           if ( item.outcome == 'Win' ) w++;
           if ( item.outcome == 'Lose' ) l++;
-          percentage = l/w*100; 
-          achievements.percentage = Number(percentage);
         });
+
+        trade.amount = Number( trade.amount );
+        trade.offer = Number( trade.offer );
+
+        if (!x[trade.user]) x[trade.user] = 0;
+        if (!y[trade.user]) y[trade.user] = 0;
+        if (!z[trade.user]) z[trade.user] = 0;
+
+        if (trade.outcome == 'Win') { w++;
+          x[trade.user] = Number(+x[trade.user] + (+trade.amount+(trade.amount*trade.offer)));
+          xp[trade.user] = Number(+Number(xp[trade.user]) + +Number(keys.site.experience.win));
+        } else if (trade.outcome == 'Tie') {
+          y[trade.user] = Number(+y[trade.user] + trade.amount);
+          xp[trade.user] = Number(+Number(xp[trade.user]) + +Number(keys.site.experience.tie));
+        } else if (trade.outcome == 'Lose') { l++;
+          z[trade.user] = Number(+z[trade.user] + trade.amount);
+          xp[trade.user] = Number(+Number(xp[trade.user]) + +Number(keys.site.experience.loss));
+        }
+
+        if (user.experience) {
+          experience = Number(+Number(user.experience) + +Number(xp[trade.user]));
+        } else {
+          experience = Number(xp[trade.user]);
+        }
+
+          percentage = w/l*100; 
+          achievements.percentage = Number(percentage);
+          //achievements.experience = Number(experience);
+
+          for (var i = keys.site.levels.length - 1; i >= 0; i--) {
+            if ( keys.site.levels[i].xp < achievements.experience ) {
+              if ( keys.site.levels[i++].xp > achievements.experience ) {
+                currentlevel[trade.user] = level.name;
+                if (keys.site.levels[i--]) {
+                  lastlevel[trade.user] = keys.site.levels[i--].xp;
+                } else {
+                  levellevel[trade.user] = 0;
+                }
+                nextlevel[trade.user] = keys.site.levels[i++].xp;
+
+              }
+            }
+          }
+
+          User.findOneAndUpdate({ username: trade.user }, achievements, {upsert: true}, function (err) {
+            if (err) throw (err);
+          });
+          console.log('Trade outcome for ' + trade.user + ' Won:' + x[trade.user] + ' Tied:' + y[trade.user] + ' Lost:' + z[trade.user]);
+          io.sockets.emit('tradeoutcome',  { user: trade.user, x: x[trade.user], y: y[trade.user], z: z[trade.user], xp: xp[trade.user], level: currentlevel[trade.user], lastlevel: lastlevel[trade.user], nextlevel: nextlevel[trade.user] } );
       });
-      
-      achievements.experience = Number(docs.experience)
-      
-      User.findOneAndUpdate({ username: trade.user }, achievements, {upsert: true}, function (err) {
-        if (err) throw (err);
-      });
-      
-    });
-    console.log('Trade outcome for ' + trade.user + ' Won:' + x[trade.user] + ' Tied:' + y[trade.user] + ' Lost:' + z[trade.user]);
-    io.sockets.emit('tradeoutcome',  { user: trade.user, x: x[trade.user], y: y[trade.user], z: z[trade.user], xp: xp[trade.user] } );  
+    });    
   });
 }
 

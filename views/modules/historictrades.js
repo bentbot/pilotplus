@@ -1,23 +1,32 @@
-function showhistoric(data, user, trim) {
-    if (!trim) trim = 0;
+function showhistoric(data, append) {
     var twins = 0;
     var tpush = 0;
     var tlosses = 0;
     var tid = 0;
     $('.historictrades').html('');
     var tradehtml = '';
-    if (trim==0) tradehtml = tradehtml+ '<div class="userblock"><div class="header" data-translate="historictrades">Historic Trades <span style="float:right"><span class="green twins">x</span> / <span class="orange tpush">y</span> / <span class="red tlosses">z</span></span></div>';    
-    if (trim>0) tradehtml = tradehtml+ '<div class="userblock"><div class="header" data-translate="lasttrades">Last Trades </div>';    
+    tradehtml = tradehtml+ '<div class="userblock"><div class="header" data-translate="historictrades">Historic Trades <span style="float:right"><span class="green twins">x</span> / <span class="orange tpush">y</span> / <span class="red tlosses">z</span></span></div>';     
     if (data) {
     tradehtml = tradehtml + '<div class="row-fluid"><div class="span12"><div><table class="table" id="historictrades">';
     tradehtml = tradehtml + '<tbody>';
+
+     var definingrow = '<tr class="historictrade definingrow">' +
+                    '<td class="symbol">Symbol</td>'+
+                    '<td class="time">Time of Trade</td>'+
+                    '<td class="trade">Direction and Price</td>'+
+                    '<td class="price">Closing Price</td>'+
+                    '<td class="outcome">Outcome</td>'+
+                    '<td class="currency">Amount</td>';
+                    //'<td title="Expires: '+thisdate+' '+thistime+'">'+thistime+'</td>'+
+                    //'<td class="bold" title="Expires: '+thisdate+' '+thistime+'">Trade in: <span class="expiretime"></span></td>'+
+                  tradehtml = tradehtml + '</tr>';
+
     var index;
     for (index = 0; index < data.length; ++index) {
       entry = data[index];
 
       entry.symbol = symbolSwitch(entry.symbol);
 
-      if (entry.user == user) {
         var possiblewin = (+entry.amount+(entry.amount*entry.offer));
         possiblewin = possiblewin.toFixed(2);
         entry.price = Number(entry.price);
@@ -43,7 +52,6 @@ function showhistoric(data, user, trim) {
         entrydate = entrydate.customFormat( "#DD#/#MM#/#YYYY#" );
         iodate = iodate.toISOString();
 
-        if (tid <= trim) {
         if (entry.outcome == 'Win') {
           twins++;
           var thumbhtml = '<span class="green" data-translate="won">Won</span>';
@@ -59,13 +67,13 @@ function showhistoric(data, user, trim) {
         if (entry.currency == 'BTC') { 
           currencyicon = 'm<i class="fa fa-btc"></i>'; 
         } else if (entry.currency == 'CAD') {
-          currencyicon = 'CAD <i class="fa fa-dollar"></i>'; 
+          currencyicon = '<span class="hideinmobile">CAD</span> <i class="fa fa-dollar"></i>'; 
         } else if (entry.currency == 'EUR') {
-          currencyicon = 'EUR <i class="fa fa-eur"></i>'; 
+          currencyicon = '<span class="hideinmobile">EUR</span> <i class="fa fa-eur"></i>'; 
         } else if (entry.currency == 'GBP') {
-          currencyicon = 'GBP <i class="fa fa-gbp"></i>';
+          currencyicon = '<span class="hideinmobile">GBP</span> <i class="fa fa-gbp"></i>';
         } else if (entry.currency == 'USD') {
-          currencyicon = 'USD <i class="fa fa-dollar"></i>';
+          currencyicon = '<span class="hideinmobile">USD</span> <i class="fa fa-dollar"></i>';
         } else {
           currencyicon = '<i class="fa fa-dollar"></i>';
         }
@@ -81,37 +89,42 @@ function showhistoric(data, user, trim) {
                     //'<td title="Expires: '+thisdate+' '+thistime+'">'+thistime+'</td>'+
                     //'<td class="bold" title="Expires: '+thisdate+' '+thistime+'">Trade in: <span class="expiretime"></span></td>'+
                   tradehtml = tradehtml + '</tr>';
-        if (trim > 0) tid++;
-      } 
     }
-  }
-}
+
     tradehtml = tradehtml + '</div></div></div></tbody></table></div>';
     $('.historictrades').html(tradehtml);
+    $('.recenttrades').html(tradehtml);
     $('.twins').html(twins);
     $('.tpush').html(tpush);
     $('.tlosses').html(tlosses);
+  }
 }
-function showallhistoric(data, user, trim){
+
+function historicTrades (data) {
     var twins = 0;
     var tpush = 0;
     var tlosses = 0;
-    if (!trim) trim = 0;
     var tid = 0;
     $('.allhistorictrades').html('');
     var tradehtml = '';
-    if (trim==0) tradehtml = tradehtml+ '<div class="userblock"><div class="header" data-translate="historictrades">Historic Trades <span style="float:right"><span class="green twins">x</span> / <span class="orange tpush">y</span> / <span class="red tlosses">z</span></span></div>';    
-    if (trim>0) tradehtml = tradehtml+ '<div class="userblock"><div class="header" data-translate="lasttrades">Last Trades</div>';    
+    tradehtml = tradehtml+ '<div class="userblock"><div class="header" data-translate="historictrades">Historic Trades <span style="float:right"><span class="green twins">x</span> / <span class="orange tpush">y</span> / <span class="red tlosses">z</span></span></div>';
     if (data) {
     tradehtml = tradehtml + '<div class="row-fluid"><div class="span12"><div><table class="table" id="historictrades">';
     tradehtml = tradehtml + '<tbody>';
+ var definingrow = '<tr class="historictrade definingrow">' +
+    '<td class="symbol">Symbol</td>'+
+    '<td class="trade">Direction and Price</td>'+
+    '<td class="time">Time of Trade</td>'+
+    '<td class="price">Closing Price</td>'+
+    '<td class="amount">Amount</td>'+
+    '<td class="outcome">Outcome</td>'+
+    '<td class="currency">Closing Amount</td>';
     var index;
     for (index = 0; index < data.length; ++index) {
       entry = data[index];
        //console.log(entry.symbol);
       entry.symbol = symbolSwitch(entry.symbol);
 
-      if (entry.user == user) {
         var possiblewin = (+entry.amount+(entry.amount*entry.offer));
         possiblewin = possiblewin.toFixed(2);
         entry.price = Number(entry.price);
@@ -136,7 +149,7 @@ function showallhistoric(data, user, trim){
         entrydate = entrydate.customFormat( "#DD#/#MM#/#YYYY#" );
         iodate = iodate.toISOString();
 
-        if (tid <= trim) {
+
         if (entry.outcome == 'Win') {
           twins++;
           var thumbhtml = '<span class="green" data-translate="won">Won</span>';
@@ -162,6 +175,11 @@ function showallhistoric(data, user, trim){
         } else {
           currencyicon = '<i class="fa fa-dollar"></i>';
         }
+              //'<td title="Expires: '+thisdate+' '+thistime+'">'+thistime+'</td>'+
+              //'<td class="bold" title="Expires: '+thisdate+' '+thistime+'">Trade in: <span class="expiretime"></span></td>'+
+            tradehtml = tradehtml + '</tr>';
+
+        if (index == 0) tradehtml = tradehtml + definingrow;
 
         tradehtml = tradehtml + '<tr class="historictrade" id="'+entry._id+'">' +
                     '<td class="symbol">'+entry.symbol+'</td>'+
@@ -175,13 +193,11 @@ function showallhistoric(data, user, trim){
                     if (entry.winnings == 0) { tradehtml = tradehtml + '<td class="currency">'+currencyicon+' '+entry.amount+'</td>'; }
                     //'<td class="bold" title="Expires: '+thisdate+' '+thistime+'">Trade in: <span class="expiretime"></span></td>'+
                   tradehtml = tradehtml + '</tr>';
-        if (trim > 0) tid++;
-      } 
-    }
+ 
   }
 }
     tradehtml = tradehtml + '</div></div></div></tbody></table></div>';
-    $('.allhistorictrades').html(tradehtml);
+    $('.allhistorictrades').append(tradehtml);
     $('.twins').html(twins);
     $('.tpush').html(tpush);
     $('.tlosses').html(tlosses);
