@@ -114,17 +114,33 @@ $(".globalheader").on("click",".keystones li a",function(e) {
 
 $(".menu").on("click",".keystonesidebar",function(e) {
   e.preventDefault();
-  $(".keystonesidebar").removeClass('selected');
   $(this).addClass('selected');
   var symbol = [$(this).attr('data-symbol')];
   if (lastitem != symbol) {
     page('trade',symbol);
     showSymbols();
     lastitem = symbol;
-    selectedsymbol = symbol;
+    selectedsymbols.push(symbol);
     location.hash = symbol;
   }
 });
+
+$(".menu").on("click", ".sidebar-search .fa-search", function (e) {
+  e.preventDefault();
+  $('.symbolsearch').focus();
+});
+
+// $(".menu").on("keyup",".symbolsearch", function(e) {
+//   e.preventDefault();
+//   var s = $(this).val();
+//   if (s.length > 0) {
+//     $('.sidebar-symbols .sidebar-title').slideUp();
+//   } else {
+//     $('.sidebar-symbols .sidebar-title').slideDown();
+//   }
+//   $('.sidebar-symbols .keystone').find(".name:not(:contains(" + s + "))").parent().slideUp();
+//   $('.sidebar-symbols .keystone').find(".name:contains(" + s + ")").parent().slideDown();
+// });
 
 var scroll;
 $('.scroller').mouseover( function() {
@@ -162,48 +178,56 @@ $(".globalheader").on("click",".keystones .seeall",function(e) {
 
 
 //console.log('loaded ui jquery');
-  $(".right").on("keyup","#username",function(e) {
+  $(".topright").on("keyup","#username",function(e) {
     if(e.keyCode == 13) {
       $('.loginbtn').html('Working');
       login();
     }
   });
-  $(".right").on("keyup","#password",function(e) {
+  $(".topright").on("keyup","#password",function(e) {
     if(e.keyCode == 13) {
       $('.loginbtn').html('Working');
       login();
     }
   });
 
-  $(".right").on("click",".loginbtn",function(e) {
+  $(".topright").on("click",".loginbtn",function(e) {
+    $('.loginform').addClass('open');
+    $('#username').focus();
     login();
   });
 
   var showlogin = false;
    var showfinances = false;
-  $(".right").on("click",".username",function(e) {
+  $(".topright").on("click keypress",".username",function(e) {
     if (showlogin == false) {
       showAccount();
       page('security');
       showAccount();
       showlogin = true;
       lastitem = 'account';
+      $(this).addClass('btn-success');
+      $('.userbal').removeClass('btn-success').removeClass('btn-warning').removeClass('btn-blue');
     } else {
+      $(this).removeClass('btn-success');
       showSymbols();
       showlogin = false;
     }
   });
  
-  $(".right").on("click",".userbal",function(e) {
-    
+  $(".topright").on("click keypress",".userbal",function(e) {
+    e.preventDefault();
     if (showfinances == false) {
       showFinances();
       page('deposit');
       showfinances = true;
       lastitem = 'finances';
+      $(this).addClass('btn-blue');
+      $('.btnuser').removeClass('btn-success').removeClass('btn-warning').removeClass('btn-blue');
     } else {
       showSymbols();
       showfinances = false;
+      $(this).removeClass('btn-blue');
     }
     
   }); 
@@ -234,25 +258,24 @@ $(".globalheader").on("click",".keystones .seeall",function(e) {
    var symbol = $(this).parent().data('symbol');
     if (autotrader[symbol]) {
       $(this).removeClass('fa-toggle-on').addClass('fa-toggle-off');
-      $('.trademode').html('Manual').css('opacity', 1);
-      setTimeout( function() { $('.trademode').css('opacity', 0); }, 2500);
-      $('.auto').addClass('hide');
-      $('.manual').removeClass('hide');
-      $('.callbtn').addClass('btn-success').removeClass('btn-default');
-      $('.putbtn').addClass('btn-danger').removeClass('btn-default');
-      $('.keystone-btn').addClass('btn-default').removeClass('btn-yellow');
-      $('.applyautotrade').addClass('btn-warning').removeClass('btn-success').addClass('btn-success').html('Apply');
+      $('.chart-'+symbol+' .trademode').html('Manual').css('opacity', 1);
+      setTimeout( function() { $('.chart-'+symbol+' .trademode').css('opacity', 0); }, 2500);
+      $('.chart-'+symbol+' .auto').addClass('hide');
+      $('.chart-'+symbol+' .manual').removeClass('hide');
+      $('.chart-'+symbol+' .callbtn').addClass('btn-success').removeClass('btn-default');
+      $('.chart-'+symbol+' .putbtn').addClass('btn-danger').removeClass('btn-default');
+      $('.chart-'+symbol+' .keystone-btn').addClass('btn-default').removeClass('btn-blue');
       autotrader[symbol] = false;
     } else {
       $(this).removeClass('fa-toggle-off').addClass('fa-toggle-on');
       $('.trademode').html('Automatic').css('opacity', 1);
-      setTimeout( function() { $('.trademode').css('opacity', 0); }, 2500);
-      $('.auto').removeClass('hide');
-      $('.manual').addClass('hide');
-      $('.callbtn').addClass('btn-success').removeClass('btn-default');
-      $('.putbtn').addClass('btn-danger').removeClass('btn-default');
-      $('.keystone-btn').removeClass('btn-default').addClass('btn-yellow');
-      $('.applyautotrade').removeClass('btn-warning').removeClass('btn-success').addClass('btn-success').html('Start');
+      setTimeout( function() { $('.chart-'+symbol+' .trademode').css('opacity', 0); }, 2500);
+      $('.chart-'+symbol+' .auto').removeClass('hide');
+      $('.chart-'+symbol+' .manual').addClass('hide');
+      $('.chart-'+symbol+' .callbtn').addClass('btn-success').removeClass('btn-default');
+      $('.chart-'+symbol+' .putbtn').addClass('btn-danger').removeClass('btn-default');
+      $('.chart-'+symbol+' .keystone-btn').removeClass('btn-default').addClass('btn-blue');
+      $('.chart-'+symbol+' .applyautotrade').removeClass('btn-warning').removeClass('btn-success').removeClass('btn-default').addClass('btn-success').html('Start');
       uitradeico(symbol,2);
       autotrader[symbol] = true;
     }
@@ -262,8 +285,13 @@ $(".globalheader").on("click",".keystones .seeall",function(e) {
     var time = $(this).data('time');
     var symbol = $(this).parent().data('symbol');
     socket.emit('chart', { symbol: symbol, time: time });
-    $('.chart-time').removeClass('active');
+    $('.chart-'+symbol+' .chart-time').removeClass('active');
     $(this).addClass('active');
+  });
+
+  $('.hook').on('click', '.close-chart', function (e) {
+    var symbol = $(this).parent().data('symbol');
+    $('.chart-'+symbol).remove();
   });
 
   var expanded = false;
@@ -302,6 +330,17 @@ $(".globalheader").on("click",".keystones .seeall",function(e) {
     }
   });
 
+  var flagsenabled = true;
+  $('.hook').on('click', '.chart-flags', function (e) {
+    if (flagsenabled) {
+      flagsenabled = false;
+      $(this).removeClass('active');
+    } else {
+      flagsenabled = true;
+      $(this).addClass('active');
+    }
+  });
+
   $('.hook').on('click', '.chart-ellipsis', function (e) {
     e.preventDefault();
     $(this).toggleClass('active');
@@ -315,13 +354,15 @@ $(".globalheader").on("click",".keystones .seeall",function(e) {
         var symbol = $(this).attr('data-symbol');
         var direction = $('.'+symbol+' .action').val();
         var amount = Number($('.'+symbol+' .info .amount .amountfield').val());
+        var tradetime = $('.'+symbol+' .time').val();
         amount = amount.toFixed(2);
         //user = userid;
-        if (symbol && direction && amount) {
+        if (symbol && direction != 'none' && amount > 0) {
           socket.emit('trade', {
             symbol : symbol,
             amount : amount,
             direction : direction,
+            time : tradetime,
             user : user
           });
           applyingtrade = true;
@@ -375,7 +416,6 @@ $(".globalheader").on("click",".keystones .seeall",function(e) {
     var offer = $('.'+symbol+' .info .details .rawoffer').html();
     var amount = $('.'+symbol+' .info .trader .amount .amountfield').val();
     if (amount > 0) {
-      amount = 1;
       var possiblewin = (+amount+(amount*offer));
       $('.'+symbol+' .info .manual .details h1').html(currencysymbol + possiblewin.toFixed(2));
     } else { // keep amount above zero
@@ -387,7 +427,6 @@ $(".globalheader").on("click",".keystones .seeall",function(e) {
     var offer = $('.'+symbol+' .info .details .rawoffer').html();
     var amount = $('.'+symbol+' .info .trader .amount .amountfield').val();
     if (amount > 0) {
-      amount = 1;
       var possiblewin = (+amount+(amount*offer));
       $('.'+symbol+' .info .manual .details h1').html(currencysymbol + possiblewin.toFixed(2));
     } else { // keep amount above zero
@@ -469,10 +508,10 @@ $(".globalheader").on("click",".keystones .seeall",function(e) {
 
   $(".hook").on("click",".callbtn",function() {
     var symbol = $(this).attr('data-symbol');
-    $('.apply'+symbol).removeClass('btn-danger').removeClass('btn-default').addClass('btn-warning').html('Apply');
+    $('.apply'+symbol).removeClass('btn-danger').removeClass('btn-default').removeClass('btn-blue').addClass('btn-warning').html('Apply');
     $('.put'+symbol).removeClass('btn-danger').addClass('btn-default');
     $('.call'+symbol).removeClass('btn-default').addClass('btn-success');
-    $('.keystone-btn').addClass('btn-default').removeClass('btn-yellow');
+    $('.keystone-btn').addClass('btn-default').removeClass('btn-blue');
     uitradeico(symbol, 1, 1);
     $('.'+symbol+' .action').val('Call');
     //$('.controls .price .lock').html('<span class="glyphicon glyphicon-lock"></span>');
@@ -481,10 +520,10 @@ $(".globalheader").on("click",".keystones .seeall",function(e) {
   });
   $(".hook").on("click",".putbtn",function() {
     var symbol = $(this).attr('data-symbol');
-    $('.apply'+symbol).removeClass('btn-default').removeClass('btn-danger').addClass('btn-warning').html('Apply');
+    $('.apply'+symbol).removeClass('btn-default').removeClass('btn-danger').removeClass('btn-blue').addClass('btn-warning').html('Apply');
     $('.put'+symbol).addClass('btn-danger').removeClass('btn-default');
     $('.call'+symbol).addClass('btn-default').removeClass('btn-success');
-    $('.keystone-btn').addClass('btn-default').removeClass('btn-yellow');
+    $('.keystone-btn').addClass('btn-default').removeClass('btn-blue');
     uitradeico(symbol, 0, 1);
     $('.'+symbol+' .action').val('Put');
     //$('.controls .price .lock').html('<span class="glyphicon glyphicon-lock"></span>');
@@ -496,15 +535,25 @@ $(".globalheader").on("click",".keystones .seeall",function(e) {
     uitradeico(symbol, 2);
     if (autotrader[symbol]) {
       updatekeystones = false;
-      $(this).removeClass('btn-default').addClass('btn-yellow').html('Auto');
+      $(this).removeClass('btn-default').addClass('btn-blue').html('Auto');
       setTimeout( function() { updatekeystones = true; }, 1000)
     }
     $('.put'+symbol).removeClass('btn-default').addClass('btn-danger');
     $('.call'+symbol).removeClass('btn-default').addClass('btn-success');
     $('.'+symbol+' .action').val('Auto');
+    $('.applytrade').removeClass('btn-warning').removeClass('btn-default').removeClass('btn-default').removeClass('btn-success').addClass('btn-blue').html('Apply');
     $('.applyautotrade').removeClass('btn-warning').removeClass('btn-default').addClass('btn-success').html('Start');
     var direction = 'auto';
   });
+
+$(".hook").on("click",".expires .add",function() {
+  var symbol = $(this).attr('data-symbol');
+
+});
+$(".hook").on("click",".expires .subtract",function() {
+  var symbol = $(this).attr('data-symbol');
+  
+});
 
 
 
@@ -557,19 +606,23 @@ $(".globalheader").on("click",".keystones .seeall",function(e) {
   //   $(this).next().toggleClass('hideme');
   // });
 
+
 var currentsymbol, sidebarpin;
-$('.btnlogo').click(function() {
+$('.btnlogo').on('click keypress', function(e) {
+  e.preventDefault();
   showSymbols();
   if ($('.menu').hasClass('open')  && !sidebarpin) {
+    $('.btnuser').removeClass('btn-success').removeClass('btn-warning').removeClass('btn-blue');
+    $('.btnfinance').removeClass('btn-success').removeClass('btn-warning').removeClass('btn-blue');
     $('.menu').removeClass('open');
     $('.hook').removeClass('open');
+    $(this).removeClass('open');
   } else {
+    $('.btnuser').removeClass('btn-success').removeClass('btn-warning').removeClass('btn-blue');
+    $('.btnfinance').removeClass('btn-success').removeClass('btn-warning').removeClass('btn-blue');
     $('.menu').addClass('open');
     $('.hook').addClass('open');
-  }
-  if (selectedsymbol != currentsymbol) {
-    page('trade', [selectedsymbol]);
-    currentsymbol = selectedsymbol;
+    $(this).addClass('open');
   }
 });
 
@@ -581,6 +634,7 @@ $(".menu").on('click', '.sidebar-pin', function (e) {
     $(this).find('i').addClass('fa-toggle-off').removeClass('fa-toggle-on');
     $('.menu').removeClass('open');
     $('.hook').removeClass('open');
+    $('.btnlogo').removeClass('open');
   } else {
     sidebarpin = true;
     $(this).find('i').addClass('fa-toggle-on').removeClass('fa-toggle-off');
@@ -592,6 +646,7 @@ $('.hook').click(function() {
   if ( $('.menu').hasClass('open') && !sidebarpin ) {
     $('.menu').removeClass('open');
     $('.hook').removeClass('open');
+    $('.btnlogo').removeClass('open');
   }
 });
 

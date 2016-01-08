@@ -1,153 +1,21 @@
-var h = new Array();
-var chartinit = {};
-var chartbusy = false;
-
-function updateChart(symbol, data) {
-  symbol = symbolSwitch(symbol);
-  if($("#" + symbol + "_container").length == 1 && !chartbusy) {
-    if (h[symbol]) {
-      var time = $('.chart-time.active').data('time');
-      if ( Number( date.getTime() - h[symbol].series[0].data[0].x ) > time ) {
-        //h[symbol].series[0].data[0].remove(false, false);
-      }
-      h[symbol].series[0].addPoint(data);
-      // Currently this code can only handle the display of one live chart at a time
-    }
-  } 
-}
+var charts = new Array();
 
 function loadChart(data) {
-  // create the chart
-// she can not be tamed
+	console.log(data);
+	symbol = symbolSwitch(data.symbol);
 
-var chartbusy = true;
+	var canvas = document.getElementById(data.symbol+"_chart");
+	var ctx = canvas.getContext("2d");
 
-symbol = symbolSwitch(data.symbol);
-if($("#" + symbol + "_container").length == 1) {
-  
-  var timeoffset = 5*60; // 5 hour offset
-  if (prefs.timezone) timeoffset = prefs.timezone;
+	var linechartData = {
+		"datasets": [{
+			"data": data.chart,
+			"pointStrokeColor": "#fff",
+            "fillColor": "rgba(220,220,220,0.5)",
+            "pointColor": "rgba(220,220,220,1)",
+            "strokeColor": "rgba(220,220,220,1)"
+		}]
+	};
 
-//console.log(symbol);
-  Highcharts.setOptions({
-    global: {
-      useUTC: true,
-      timezoneOffset: timeoffset
-    }
-  });
-
-  var container = symbol + "_container";
-  h[data.symbol] = new Highcharts.Chart({
-      chart: {
-        animation: true,
-        renderTo: container,
-        zoomType: 'x',
-        panning: true,
-        panKey: 'shift',
-          resetZoomButton: {
-              theme: {
-                  fill: 'rgba(238, 238, 238, 0.3)',
-                  stroke: 'rgba(238, 238, 238, 0.7)',
-                  style: {
-                    color: 'rgba(0, 0, 0, 0.5)'
-                  },
-                  r: 0,
-                  states: {
-                      hover: {
-                          fill: '#eee',
-                          stroke: '#adadad',
-                          style: {
-                              color: 'black',
-                          }
-                      }
-                  }
-              }
-          },
-          style: {
-           fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
-            fontSize: '15px'
-          }
-      },
-      xAxis: {
-          type: 'datetime',
-          tickPixelInterval: 150,
-          lineColor: '#eee'
-      },
-    yAxis : {
-      title : {
-        text : ' '
-      },
-      gridLineColor: '#eee'
-    },
-      title : {
-      text : ' '
-      },
-      legend: {
-          enabled: false
-      },
-      plotOptions: {
-        line: {
-          animation: false
-        },
-        series: {
-          lineWidth: data.properties.lineWidth,
-          states: {
-            hover: {
-              enabled: true,
-              lineWidth: data.properties.lineWidthHover
-            }
-          },
-          marker: {
-            enabled: false,
-            radius: 2,
-            states: {
-              hover: {
-                enabled: true,
-                lineWidth: data.properties.lineWidth
-              }
-            }
-          },
-        },
-      },
-      series : [
-        {
-          type : data.properties.type,
-          color: data.properties.lineColor,
-          turboThreshold: 10000,
-          name : data.symbol,
-          data : data.chart
-        }
-      //  ,{
-      //   type : 'flags',
-      //   data : [{
-      //     x : 1393696469543,
-      //     y : 568.12,
-      //     title : " ",
-      //     shape : "url(http://64.90.187.148/assets/img/down.png)",
-      //     text : 'Put at 568.12'
-      //   }, {
-      //     x : 1393696359543,
-      //     y : 568.6,
-      //     title : " ",
-      //     shape : "url(http://64.90.187.148/assets/img/up.png)",
-      //     text : 'Call at 568.6'
-      //   }],
-      //   color : '#5F86B3',
-      //   fillColor : '#5F86B3',
-      //   onSeries : 'dataseries',
-      //   width : 1,
-      //   style : {// text style
-      //     color : 'white'
-      //   },
-      //   states : {
-      //     hover : {
-      //       fillColor : '#395C84' // darker
-      //     }
-      //   }
-      // }
-      ]
-  });
-  chartinit[symbol] = true;
-}
-chartbusy = false;
+	charts[data.symbol] = new Chart(ctx, { type: 'line', data: linechartData, animationSteps: 15 });
 }

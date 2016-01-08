@@ -2,34 +2,36 @@ var option = new Array();
 function displayOptions(displaysymbols, guest) {
   var percentage = offer*100,
   mode = 'Manual';
+  displaySymbols.push(displaysymbols);
   //$(".trading").html('<div style="text-align:center;">Loading '+displaysymbols+'</div>');
   if (displaysymbols) {
     $.each(displaysymbols, function( index, symbol ) {
     symbol = symbolSwitch(symbol);
     //console.log('displayOptions: '+symbol);
-    var show = '<div class="controls" id="'+symbol+'">';
+    var show = '<div class="controls" data-symbol="'+symbol+'">';
         
-      if ( prefs.symbolratios != false ) {
-        show = show + '<div class="progress progress'+symbol+' vertical">'+
-            '<div class="progress-bar progress-bar-success" role="progressbar" aria-valuetransitiongoal="50"></div>'+
-        '</div>';
-      }
+      // if ( prefs.symbolratios != false ) {
+      //   show = show + '<div class="progress progress'+symbol+' vertical">'+
+      //       '<div class="progress-bar progress-bar-success" role="progressbar" aria-valuetransitiongoal="50"></div>'+
+      //   '</div>';
+      // }
 
         show = show + '<div class="btn-group-vertical callputcontainer">'+
             '<button type="button" class="btn btn-success callbtn call'+symbol+'" data-symbol="'+symbol+'">'+
              ' <span class="glyphicon glyphicon-arrow-up"></span>'+
-              '<span data-translate="call">Call</span>'+
+              '<span data-translate="call" class="button-text">Up</span>'+
             '</button>'+
              '<button type="button" class="keystone btn keystone-btn btn-default keystone'+symbol+'" data-symbol="'+symbol+'" style="font-weight: bold;">'+
               '--.--'+
             '</button>'+
             '<button type="button" class="btn btn-danger putbtn put'+symbol+'" data-symbol="'+symbol+'">'+
-              '<span data-translate="put">Put</span>'+
               '<span class="glyphicon glyphicon-arrow-down"></span>'+
+              '<span data-translate="put" class="button-text">Down</span>'+
             '</button>'+
           '</div>'+
           '<div class="trademode">'+mode+'</div>'+
           '<input type="hidden" name="action" class="action" value="none" />'+
+          '<input type="hidden" name="action" class="time" value="60000" />'+
           '<div class="info">'+
                 '<div class="manual">'+
 
@@ -39,7 +41,18 @@ function displayOptions(displaysymbols, guest) {
                      '<!--  <span class="bold rate">Payout if</span><br /> -->'+
                       '<span class="direction bold"><span class="option">'+symbol+'</span> <span class="tradeicon glyphicon icon'+symbol+' green glyphicon-arrow-up"></span></span><br />'+
                       '<span class="price"><span data-translate="from">From:</span> <span class="keystone keystone'+symbol+'"> --.--</span> <span class="lock"></span></span><br />'+
-                      '<span class="expires bold"><span data-translate="in">In:</span> <span class="expiretime"></span></span>'+  
+                      '<div class="expires">'+
+                        '<div class="btn-group">'+
+                            '<button type="button" class="btn btn-xs btn-default subtract" data-symbol="'+symbol+'" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">'+
+                              '<i class="fa fa-minus"></i>'+
+                            '</button>'+
+                            '<button type="button" class="btn btn-xs btn-default timefield"><ul class="'+symbol+'_tradetimes">';
+                            show = show + '</ul></button>'+
+                            '<button type="button" class="btn btn-xs btn-default add" data-symbol="'+symbol+'" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">'+                            
+                              '<i class="fa fa-plus"></i>'+
+                            '</button>'+
+                          '</div>'+
+                      '</div>'+
                   '</div>'+
 
                   '<div class="trader">' +
@@ -47,7 +60,7 @@ function displayOptions(displaysymbols, guest) {
                           '<span class="input-group-addon">'+currencysymbol+'</span>'+
                           '<input type="number" class="form-control amountfield" data-symbol="'+symbol+'" placeholder="">'+
                     '</div>'+
-                    '<button type="button" data-translate="apply" data-symbol="'+symbol+'" class="btn btn-default applytrade apply'+symbol+'">Apply</button>'+
+                    '<button type="button" data-translate="apply" data-symbol="'+symbol+'" class="btn btn-blue applytrade apply'+symbol+'">Apply</button>'+
                   '</div>'+
 
                   '</div>'+
@@ -88,6 +101,7 @@ function displayOptions(displaysymbols, guest) {
     }
 
      var controls = '<div class="chart-controls" data-symbol="'+symbol+'">'+
+     '<i  class="close-chart fa fa-times"></i>'+
      '<i class="trade-switch fa fa-toggle-off"></i>'+
      '<i class="chart-expand fa fa-expand"></i>'+
       '<span class="chart-time downplay vanish" data-time="300000">5m</span>'+
@@ -101,26 +115,22 @@ function displayOptions(displaysymbols, guest) {
       '<span class="chart-time downplay vanish" data-time="43200000">12h</span>'+
       '<span class="chart-time downplay vanish" data-time="86400000">24h</span>'+
       '<i class="chart-ellipsis fa fa-ellipsis-h"></i>'+
+      '<i class="chart-flags fa fa-flag"></i>'+
       '<div class="chat-more"></div>'+
     '</div>';
 
-    if (index > 0){
-      var header = '<div class="header" style="border-top: 1px solid #eee;" data-symbol="'+symbol+'">'+symbol+controls+'</div>';
-    } else {
-      var header = '<div class="header" data-symbol="'+symbol+'">'+symbol+controls+'</div>';
-    }
+      var header = '<li class="trading symbols chart-'+symbol+'" data-symbol="'+symbol+'" data-row="'+index+'" data-col="1" data-sizex="4" data-sizey="2"><div class="header" data-symbol="'+symbol+'">'+symbol+controls+'</div>';
 
     option = header + '<div class="'+symbol+'">'+
       // '<div class="header">'+symbol+'</div>'+
       '<div class="numbotron" id="'+symbol+'_container">'+
+      '<canvas id="'+symbol+'_chart" height="100%" width="100%"></canvas>'+
       '</div>'+
         renderoffer +
         '<div style="clear:both;"></div>'+
-     '</div>';
+     '</div></li>';
 
-      $(".trading").append(option);
-
-      $(".trading").addClass('symbols');
+      $(".grid").prepend(option);
 
   });
   }

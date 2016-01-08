@@ -85,7 +85,22 @@ function showWallet(data) {
             '</div>'+
             '<div class="method bank">'+
                 '<div class="input-group">'+
-                  '<span class="input-group-addon"><a href="https://stripe.com" target="_blank"><i class="fa fa-bank"></i></a></span>'+
+                  '<div class="dropdown">'+
+                    '<button class="btn btn-blue dropdown-toggle" type="button" id="benkdropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">'+
+                      '<i class="fa fa-bank"></i><span class="caret"></span>'+
+                    '</button>'+
+                    '<ul class="dropdown-menu bank-country-dropdown" aria-labelledby="benkdropdown">'+
+                      '<li data-country="US"><img src="/assets/img/flags/US.png"></img></li>'+
+                      '<li data-country="AU"><img src="/assets/img/flags/AU.png"></img></li>'+
+                      '<li data-country="CA"><img src="/assets/img/flags/CA.png"></img></li>'+
+                      '<li data-country="DK"><img src="/assets/img/flags/DK.png"></img></li>'+
+                      '<li data-country="FI"><img src="/assets/img/flags/FI.png"></img></li>'+
+                      '<li data-country="GB"><img src="/assets/img/flags/GB.png"></img></li>'+
+                      '<li data-country="JP"><img src="/assets/img/flags/JP.png"></img></li>'+
+                      '<li data-country="NO"><img src="/assets/img/flags/NO.png"></img></li>'+
+                    '</ul>'+
+                  '</div>'+
+                  '<input type="hidden" class="form-control country" id="country" value="none" />'+
                   '<input type="text" class="form-control" id="routing" placeholder="Routing #" autocomplete="off">'+
                   '<input type="text" class="form-control" id="account" placeholder="Account #" autocomplete="off">'+
                     '<button class="btn btn-success sendbank">'+
@@ -108,34 +123,6 @@ function showWallet(data) {
 
     $(".wallet").html(html);
 }
-function showCards(data) {
-  if (data) {
-    var html = '', make, colors = ['blue', 'green', 'teal', 'orange', 'yellow', 'lime', 'purple'], a = 0;
-   
-    if (data.paypal) {
-      html = html + '<div class="card paypal '+colors[a]+'"><div class="paypal"></div><div class="label"><i class="fa fa-paypal"></i></div><div class="numbers"><span>'+data.paypal+'</span></div></div>'
-      a++;
-    }
-
-    if (data.stripe.data) {
-      
-      $.each(data.stripe.data, function (i, card) { a++;
-        var brand = card.brand;
-        brand = brand.toLowerCase();
-        switch ( brand ) {
-          case 'american express':
-            brand = 'amex';
-          break;
-        }
-
-        html = html + '<div class="card '+colors[i]+'"><div class="stripe"></div><div class="label"><i class="fa fa-cc-'+brand+'"></i></div><div class="value">'+card.country+'</div><i class="fa fa-cc-stripe"></i><div class="numbers"><span>xxxx</span><span>xxxx</span><span>xxxx</span><span>'+card.last4+'</span></div><div class="valid"><i class="fa fa-clock-o"></i> '+card.exp_month+' / '+card.exp_year+'</div><div class="secure">••• <i class="fa fa-lock"></i></div></div>'
-      });
-    }
-
-    $('.addcard').removeClass('nocards');
-    $('.cards').removeClass('no').append(html);
-  }
-}
 
 function btcWalletUpdate(data) {  
   //bal = bal.toFixed(8);
@@ -154,7 +141,37 @@ function btcWalletUpdate(data) {
       });
   }
 }
+function showCards(data) {
+  if (data) {
+    var html = '', selected = '', make, colors = ['blue', 'green', 'teal', 'orange', 'yellow', 'lime', 'purple'], a = 0;
 
+    if (data.paypal) {
+      selected = '';
+      if (data.selected == data.paypal) selected = ' selected';
+      html = html + '<div data-card='+data.paypal+' class="card paypal '+colors[a]+' '+selected+'"><div class="remove"><i class="fa fa-times"></i><div class="confirm"></div></div><div class="paypal"></div><div class="label"><i class="fa fa-paypal"></i></div><div class="numbers"><span>'+data.paypal+'</span></div></div>'
+      a++;
+    }
+    console.log(data);
+    if (data.stripe.data) {
+      $.each(data.stripe.data, function (i, card) { a++;
+        var brand = card.brand;
+        brand = brand.toLowerCase();
+        switch ( brand ) {
+          case 'american express':
+            brand = 'amex';
+          break;
+        }
+        selected = '';
+        if (data.selected == card.id) selected = ' selected';
+        html = html + '<div data-card='+card.id+' class="card '+colors[a]+' '+selected+'"><div class="remove"><i class="fa fa-times"></i><div class="confirm"></div></div><div class="stripe"></div><div class="label"><i class="fa fa-cc-'+brand+'"></i></div><div class="value">'+card.country+'</div><i class="fa fa-cc-stripe"></i><div class="numbers"><span>xxxx</span><span>xxxx</span><span>xxxx</span><span>'+card.last4+'</span></div><div class="valid"><i class="fa fa-clock-o"></i> '+card.exp_month+' / '+card.exp_year+'</div><div class="secure">••• <i class="fa fa-lock"></i></div></div>';
+      });
+    }
+
+    card = data.selected;
+    $('.addcard').removeClass('nocards');
+    $('.cards').removeClass('no').append(html);
+  }
+}
 
 $(document).ready(function() {
 
@@ -175,6 +192,11 @@ $(document).ready(function() {
       $(this).addClass('active');
       var method = $(this).attr('data-method');
       $('.addcard').addClass('opened');
+      if (method == 'cc') {
+        $('.addcard').addClass('larger');
+      } else {
+        $('.addcard').removeClass('larger');
+      }
       $('.addfunds').fadeOut();
       if (selectedmethod) {
         $('.fundsinput .method').removeClass('showmethod');
@@ -187,6 +209,13 @@ $(document).ready(function() {
     }
   });
 
+
+  $('.hook').on('click', '.card', function (e) {
+    $('.card').removeClass('selected');
+    $(this).addClass('selected');
+    card = $(this).attr('data-card');
+    socket.emit('set-pref', { pref: 'card', setting: card });
+  });
 
   // Validate CC Number
   $('.hook').on('keyup', '#number', function (e) {
@@ -275,7 +304,32 @@ $('.hook').on('click', '.sendbank', function (e) {
     var routing = $('#routing').val();
     var country = $('#country').val();
     $('.bank').css('width', '100%');
-    if ( Stripe.validateRoutingNumber(routing, country) != true ) {
+    if ( !country || country == 'none' ) {
+      $('#account').css('color', '#D83300');
+      $('#routing').css('color', '#D83300');
+      var btntxt = $('.sendbank').html();
+      $('.sendbank').html('Bank Country <i class="fa fa-times"></i>').removeClass('btn-success').addClass('btn-danger');
+      setTimeout( function() {
+        $('.sendbank').html(btntxt).removeClass('btn-danger').addClass('btn-success');
+      }, 2000);
+    } else if ( !routing ) {
+      // Invalid Routing
+      $('#routing').css('color', '#D83300');
+      var btntxt = $('.sendbank').html();
+      $('.sendbank').html('Routing Number <i class="fa fa-times"></i>').removeClass('btn-success').addClass('btn-danger');
+      setTimeout( function() {
+        $('.sendbank').html(btntxt).removeClass('btn-danger').addClass('btn-success');
+      }, 2000);
+    } else if ( !account ) {
+      $('#account').css('color', '#D83300');
+      $('#routing').css('color', '#D83300');
+      $('#country').css('color', '#D83300');
+      var btntxt = $('.sendbank').html();
+      $('.sendcc').html('Account Number <i class="fa fa-times"></i>').removeClass('btn-success').addClass('btn-danger');
+      setTimeout( function() {
+        $('.sendbank').html(btntxt).removeClass('btn-danger').addClass('btn-success');
+      }, 2000);
+    } else if ( Stripe.validateRoutingNumber(routing, country) != true ) {
       // Invalid Routing
       $('#routing').css('color', '#D83300');
       var btntxt = $('.sendbank').html();
@@ -377,6 +431,19 @@ $('.hook').on('click', '.sendbank', function (e) {
     }
   });
 
+  $('.hook').on('click', '.bank-country-dropdown li', function (e) {
+    var flag = $(this).find('img').attr('src');
+    $('.country').val( $(this).attr('data-country') );
+    $('.dropdown-toggle').html('<img src="'+flag+'"></img>').removeClass('btn-blue').addClass('btn-default');
+  });
+
+  $('.hook').on("click", ".remove", function(e) {
+    $(this).parent().append('<div class="dialog"><div class="dialog-title" data-translate="are-you-sure">Are you sure?</div><div class="btn-group" role="remove" aria-label="Confirm card removal"><button type="button" class="btn btn-xs btn-danger dontremove" style="margin-right: 5px;" data-translate="No">No</button><button type="button" class="btn btn-xs btn-success" data-translate"yes">Yes</button></div></div>');
+    setTimeout( function() { $('.dialog').fadeOut('slow'); }, 4000 );
+  });
+  $('.hook').on("click", ".dontremove", function(e) {
+    $('.dialog').fadeOut('fast');
+  });
   // Selection BTC Accress
   $(".hook").on("click",".btcaddress",function(e) {    
     select_all(this);
@@ -384,11 +451,7 @@ $('.hook').on('click', '.sendbank', function (e) {
     clientText.setText( add );
   });
   // Selection of CC Numbers
-  $(".hook").on("click",".numbers",function(e) {    
-    select_all(this);
-    var add = $(this).html();
-    clientText.setText( add );
-  });
+
 
   // Show security page
   $(".hook").on("click",".showsecuirtypage",function(e) {    

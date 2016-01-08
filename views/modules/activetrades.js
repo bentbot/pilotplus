@@ -1,5 +1,4 @@
 function showactive(data, nexttrade) {
-    //console.log(data);
     $('.tradesbody').html('');
     if (data && data[0] != null) {
       var tradehtml = '<div class="usertrades userblock"><div class="header"><span data-translate="activetrades">Active Trades</span> <span style="float:right;"><span class="expiretime">'+nexttrade[0]+':'+nexttrade[1]+'</span> <i class="fa fa-clock-o hide"></i></span></div>';
@@ -37,30 +36,40 @@ function showactive(data, nexttrade) {
 
         if (data.direction == 'Call') {
           var arrowhtml = '<span class="green glyphicon glyphicon-arrow-up"></span>';
+          if (price[data.symbol] > data.price) {
+            var currentoutcome = '<span data-translate="winning" class="trade-control green"><i class="fa fa-circle"></i></span>';
+          } else if (price[data.symbol] < data.price) {
+            var currentoutcome = '<span data-translate="losing" class="trade-control red"><i class="fa fa-circle"></i></span>';
+          } else {
+            var currentoutcome = '<span data-translate="tied" class="trade-control orange"><i class="fa fa-circle"></i></span>';
+          } 
         } else if (data.direction == 'Put') {
           var arrowhtml = '<span class="red glyphicon glyphicon-arrow-down"></span>';
+          if (price[data.symbol] < data.price) {
+            var currentoutcome = '<span data-translate="winning" class="trade-control green"><i class="fa fa-circle"></i></span>';
+          } else if (price[data.symbol] > data.price) {
+            var currentoutcome = '<span data-translate="losing" class="trade-control red"><i class="fa fa-circle"></i></span>';
+          } else {
+            var currentoutcome = '<span data-translate="tied" class="trade-control orange"><i class="fa fa-circle"></i></span>';
+          } 
         }
 
-        if (data.currency == 'BTC') { 
-          currencyicon = '<td>m<i class="fa fa-btc"></i>'; 
-        } else if (data.currency == 'CAD') {
-          currencyicon = '<td><span class="hideinmobile">CAD</span> <i class="fa fa-dollar"></i>'; 
-        } else if (data.currency == 'EUR') {
-          currencyicon = '<td><span class="hideinmobile">EUR</span> <i class="fa fa-eur"></i>'; 
-        } else if (data.currency == 'GBP') {
-          currencyicon = '<td><span class="hideinmobile">GBP</span> <i class="fa fa-gbp"></i>'; 
-        } else if (data.currency == 'USD') {
-          currencyicon = '<td><span class="hideinmobile">USD</span> <i class="fa fa-dollar"></i>'; 
-        } else {
-          currencyicon = '<td><i class="fa fa-dollar"></i>'; 
+        switch (data.currency) { 
+          case 'BTC': currencyicon = '<td>m<i class="fa fa-btc"></i>'; break;
+          case 'CAD': currencyicon = '<td><span class="hideinmobile">CAD</span> <i class="fa fa-dollar"></i>'; break;
+          case 'EUR': currencyicon = '<td><span class="hideinmobile">EUR</span> <i class="fa fa-eur"></i>'; break;
+          case 'GBP': currencyicon = '<td><span class="hideinmobile">GBP</span> <i class="fa fa-gbp"></i>'; break;
+          case 'USA': currencyicon = '<td><span class="hideinmobile">USD</span> <i class="fa fa-dollar"></i>'; break;
+          default: currencyicon = '<td><i class="fa fa-dollar"></i>'; break;
         }
-
 
         tradehtml = tradehtml + '<tr class="bgtransition usertrade" id="trade'+index+'">';
-        tradehtml = tradehtml + '<td class="symbol"><a class="keystonelink" id="'+data.symbol+'">'+data.symbol+':<span class="keystone keystone'+data.symbol+'">'+price[data.symbol]+'</span></a></td>';
+        tradehtml = tradehtml + '<td class="symbol"><a class="keystonelink" data-symbol="'+data.symbol+'">'+data.symbol+' : <span class="keystone keystone'+data.symbol+'">'+price[data.symbol]+'</span></a></td>';
         tradehtml = tradehtml + '<td>'+arrowhtml+' <span class="direction">'+data.direction+'</span><span class="from"> from</span> <span class="tradeprice">'+data.price+'</span></td>';
         tradehtml = tradehtml + '<td>'+currencyicon+data.amount+'</td>';
         tradehtml = tradehtml + '<td>'+currencyicon+possiblewin+'</td>';
+        tradehtml = tradehtml + '<td><span class="tradetime">'+data.expiry+'</span></td>';
+        tradehtml = tradehtml + '<td>'+currentoutcome+'</td>';
                     //'<td title="Expires: '+thisdate+' '+thistime+'">'+thistime+'</td>'+
                     // if (nexttrade[0] == 0 && nexttrade[1] < 60) {
                     // tradehtml = tradehtml + '<td><i class="fa fa-lock"></i></td>';
@@ -96,26 +105,37 @@ $( ".usertrade" ).each(function( index ) {
       //console.log(tradeid + ',' + symbolprice + ',' + tradeprice + ',' + direction);
       if (direction == 'Put') {
         if (symbolprice < tradeprice) {
-          $('#'+tradeid+'').css('background-color', 'hsl(113, 100%, 35%, 0.15)');
+          $('#'+tradeid+'').removeClass('redbg').addClass('greenbg');
           $('#'+tradeid+' .outcomeindicator').removeClass('fa-hand-o-up').addClass('fa-hand-o-down');
-          //$('#'+tradeid+'').effect("highlight", {color: 'hsl(113, 100%, 35%, 0.15)'}, 2030, "easeInOutCirc");
+          // $('#'+tradeid+'').effect("highlight", {color: 'hsl(113, 100%, 35%, 0.15)'}, 2030, "easeInOutCirc");
         } else if (symbolprice > tradeprice) {
-          $('#'+tradeid+'').css('background-color', 'hsl(360, 100%, 35%, 0.25)');
+          $('#'+tradeid+'').addClass('redbg').removeClass('greenbg');
           $('#'+tradeid+' .outcomeindicator').removeClass('fa-hand-o-down').addClass('fa-hand-o-up');
-          //$('#'+tradeid+'').effect("highlight", {color: 'hsl(360, 100%, 35%, 0.25)'}, 2030, "easeInOutCirc");
+          // $('#'+tradeid+'').effect("highlight", {color: 'hsl(360, 100%, 35%, 0.25)'}, 2030, "easeInOutCirc");
         } else {
           //
         }
       } else if (direction == 'Call') {
         if (symbolprice > tradeprice) {
-          $('#'+tradeid+'').css('background-color', 'hsl(113, 100%, 35%, 0.15)');
-          //$('#'+tradeid+'').effect("highlight", {color: 'hsl(113, 100%, 35%, 0.15)'}, 2030, "easeInOutCirc");
+          $('#'+tradeid+'').removeClass('redbg').addClass('greenbg');
+          // $('#'+tradeid+'').effect("highlight", {color: 'hsl(113, 100%, 35%, 0.15)'}, 2030, "easeInOutCirc");
         } else if (symbolprice < tradeprice) {
-          $('#'+tradeid+'').css('background-color', 'hsl(360, 100%, 35%, 0.25)');
-          //$('#'+tradeid+'').effect("highlight", {color: 'hsl(360, 100%, 35%, 0.25)'}, 2030, "easeInOutCirc");
+          $('#'+tradeid+'').addClass('redbg').removeClass('greenbg');
+          // $('#'+tradeid+'').effect("highlight", {color: 'hsl(360, 100%, 35%, 0.25)'}, 2030, "easeInOutCirc");
         } else {
-          //$('#'+tradeid+'').effect("highlight", {color: 'hsl(360, 100%, 35%, 0.25)'}, 1530, "easeInOutCirc");
+          // $('#'+tradeid+'').effect("highlight", {color: 'hsl(360, 100%, 35%, 0.25)'}, 1530, "easeInOutCirc");
         }
         }
    });
 }
+$(function() {
+
+  $('.trade-repeat').on('click', function (e) {
+    if ($(this).hasClass('active')) {
+      $(this).removeClass('fa-spin');
+    } else {
+      $(this).addClass('fa-spin');
+    }
+  });
+
+});

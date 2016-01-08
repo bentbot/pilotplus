@@ -113,34 +113,7 @@ function showWalletSend(data) {
   }
 
 }
-function showCards(data) {
-  if (data) {
-    var html = '', make, colors = ['blue', 'green', 'teal', 'orange', 'yellow', 'lime', 'purple'], a = 0;
-   
-    if (data.paypal) {
-      html = html + '<div class="card paypal '+colors[a]+'"><div class="paypal"></div><div class="label"><i class="fa fa-paypal"></i></div><div class="numbers"><span>'+data.paypal+'</span></div></div>'
-      a++;
-    }
 
-    if (data.stripe.data) {
-      
-      $.each(data.stripe.data, function (i, card) { a++;
-        var brand = card.brand;
-        brand = brand.toLowerCase();
-        switch ( brand ) {
-          case 'american express':
-            brand = 'amex';
-          break;
-        }
-
-        html = html + '<div class="card '+colors[i]+'"><div class="stripe"></div><div class="label"><i class="fa fa-cc-'+brand+'"></i></div><div class="value">'+card.country+'</div><i class="fa fa-cc-stripe"></i><div class="numbers"><span>xxxx</span><span>xxxx</span><span>xxxx</span><span>'+card.last4+'</span></div><div class="valid"><i class="fa fa-clock-o"></i> '+card.exp_month+' / '+card.exp_year+'</div><div class="secure">••• <i class="fa fa-lock"></i></div></div>'
-      });
-    }
-
-    $('.addcard').removeClass('nocards');
-    $('.cards').removeClass('no').append(html);
-  }
-}
 function walletSendUpdate(data) {
   //bal = bal.toFixed(8);
   if (data.currency == 'BTCUSD') {

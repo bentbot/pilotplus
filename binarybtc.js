@@ -233,7 +233,7 @@ var schema = new mongoose.Schema({ username: 'string', createdAt: { type: Date, 
 var Userfirewall = mongoose.model('userfirewall', schema);
 var schema = new mongoose.Schema({ ip: 'string', time: 'string', handle: 'string' });
 var Pageviews = mongoose.model('pageviews', schema);
-var schema = new mongoose.Schema({ symbol: 'string', price: 'string', offer: 'string', amount: 'string', direction: 'string', time: 'string', user: 'string', currency: 'string' });
+var schema = new mongoose.Schema({ symbol: 'string', price: 'string', offer: 'string', amount: 'string', direction: 'string', time: 'string', expires: 'string', user: 'string', currency: 'string' });
 var Activetrades = mongoose.model('activetrades', schema);
 var schema = new mongoose.Schema({ symbol: 'string', price: 'string', offer: 'string', amount: 'string', direction: 'string', timeplaced: 'string', time: 'string', finalprice: 'string', outcome: 'string', winnings: 'string', user: 'string', currency: 'string', outcome: 'string' });
 var Historictrades = mongoose.model('historictrades', schema);
@@ -249,7 +249,7 @@ var schema = new mongoose.Schema({ username: 'string', phone: 'string', id: 'str
 var Userauth = mongoose.model('userauth', schema);
 var schema = new mongoose.Schema({ direction: 'string', username: 'string', address: 'string', amount: 'string', status: 'string', confirmations: 'string', tx: 'string', to: 'string', time: 'string'});
 var Usertx = mongoose.model('usertx', schema);
-var schema = new mongoose.Schema({ user: 'string', preference: 'string', setting: Boolean });
+var schema = new mongoose.Schema({ user: 'string', preference: 'string', setting: 'string' });
 var Userprefs = mongoose.model('userprefs', schema);
 var schema = new mongoose.Schema({ key: 'string', email: 'string' });
 var Userverify = mongoose.model('userverify', schema);
@@ -376,6 +376,7 @@ var symbolUpdater = setInterval(function() {
     var item = {};
     item.name = symbol.name;
     item.symbol = symbol.symbol;
+    item.type = symbol.type;
     item.price = price[symbol.symbol];
     items.push(item);
   });
@@ -414,13 +415,14 @@ var put = 0;
 var call = 0;
 var maxamount = keys.site.maxamount; // the max amount a user can set for any one trade
 var maxoffset = keys.site.offset;
-var cuttrading = 0; // seconds before trading where the user is locked out from adding a trade (zero to disable)
+var cuttrading = keys.site.stoptrading; // seconds before trading where the user is locked out from adding a trade (zero to disable)
 var offer = keys.site.offers.default;
 var tradeevery = keys.site.tradeevery; // Defaut time in minutes before trading again
 var userNumber = 1;
 var trades = new Array();
 var signupsopen = keys.site.allowsignup; // Allow signups?
 var tradingopen = keys.site.allowtrading; // Allow trading? -proto
+var lasttrade = 0;
 var userbalance = {};
 var diff = {};
 var users = {};
@@ -510,6 +512,7 @@ function trade() {
 
     // Trade loop
      var loopedtrades = new Array(), t=0;
+     var payments = {};
     trades.forEach(function (trade){
       var winnings = 0;
       t++;
@@ -542,6 +545,19 @@ function trade() {
         } 
       }
 
+      payments.find(function ( payment ) { 
+        if ( payment.currency == trade.currency && payment.user == trade.user ) {
+          payment.amount = Number(payment.amount + trade.winnings);
+        } else {
+          var payment = {
+            user: trade.user,
+            currency: trade.currency,
+            amount: winnings
+          }          
+        }
+        payments.push(payment);
+      });
+
       var historictrade = {
         user: trade.user,
         symbol: trade.symbol,
@@ -565,22 +581,8 @@ function trade() {
       ratio[trade.symbol] = 50;
     });//foreach trade loop
 
-    // Pay loop
-    var payable = new Array();
-    for (var i = loopedtrades.length - 1; i >= 0; i--) {
-      var loop = loopedtrades[i];
-      if (loop.winnings > 0) {
-        payable.push({
-          user: loop.user,
-          currency: loop.currency,
-          winnings: loop.winnings
-        });
-      }
-    };
-
-
-    for (var i = payable.length - 1; i >= 0; i--) {
-      var loop = payable[i];
+    for (var i = payments.length - 1; i >= 0; i--) {
+      var loop = payments[i];
       console.log(loop.user, loop.currency, loop.winnings);
     };
     
@@ -596,6 +598,7 @@ function trade() {
   totalcall = {};
   totalput = {};
   trades = new Array();
+  lasttrade = time;
   Activetrades.remove({}, function(err) {
     if (err) console.log(err);
   });
@@ -603,7 +606,7 @@ function trade() {
 
 
 // Add a trade for a user
-function addTrade(symbol, amount, direction, user, socket) {
+function addTrade(symbol, amount, direction, user, expiry, socket) {
   var err = {};
 
   symbol = symbolswitch(symbol);
@@ -612,10 +615,12 @@ function addTrade(symbol, amount, direction, user, socket) {
     if (err) throw (err);  
     currency = docs.currency;
 
+    console.log(nexttradesecs)
+
     // Make sure required fields are met
     if (symbol && amount && direction) {
     // Check if the trade is closing
-    if (nexttradesecs > keys.site.stoptrading) {
+    if (nexttradesecs[0] > keys.site.stoptrading) {
     // Check the amount
     if (amount > 0) {
     // Check the direction and make sure price[symbol] exists
@@ -678,6 +683,8 @@ function addTrade(symbol, amount, direction, user, socket) {
             // Create a ratio percentage
             ratio[symbol] = round(Number(totalcall.symbol) / Number(t) * 100);
 
+            expiry = Number( now+Number(expiry) );
+
             var trade = {
               symbol: symbol,
               price: price[symbol],
@@ -686,6 +693,7 @@ function addTrade(symbol, amount, direction, user, socket) {
               currency: currency,
               direction: direction,
               time: now,
+              expires: expiry,
               finalprice: price[symbol],
               user: user,
               winnings: 0
@@ -762,30 +770,62 @@ function addTrade(symbol, amount, direction, user, socket) {
     }
   });
 }
+var nexttrade = new Array(), nexttradesecs = new Array(),nexttrademins = new Array(),nexttradehrs = new Array(), hrs = new Array(),  mins = new Array(), secs = new Array();
 
-var nexttrade = new Array();
-var nexttradesecs = tradeevery*60;
-// Calculate the next trade
 function checknextTrade() {
-  // Get minutes in the global date object [10:01:02AM]
-  var mins = date.getMinutes(); // [01]
-    mins = (59-mins) % tradeevery; // Trade every % ten minutes
-  // Get seconds
-  var secs = date.getSeconds(); // [02]
-  if (secs != 60){
-    secs = (59-secs) % 60;
-  } else {
-    secs = 00;
-  }
-  nexttrade = [Number(mins),Number(secs)];  // Put the next trade in an array [8:58]
-  nexttradesecs = (mins*60)+secs;
+  for (var i = keys.site.tradeevery.length - 1; i >= 0; i--) {
+    tradeevery = keys.site.tradeevery;
+    nexttradesecs[i] = tradeevery[i].minutes*60;
+    nexttrademins[i] = tradeevery[i].minutes;
+
+    if (tradeevery[i].hours){
+      nexttradehrs[i] = tradeevery[i].hours;
+      hrs[i] = date.getHours();
+      hrs[i]=(12-hrs[i]) % nexttradehrs[i];
+      nexttradesecs[i] = tradeevery[i].hours*3600;
+      nexttrademins[i] = tradeevery[i].hours*60;      
+    }
+    mins[i] = date.getMinutes();
+    mins[i]=(59-mins[i]) % nexttrademins[i];
+    secs[i] = date.getSeconds();
+    if (secs[i] != 60){
+      secs[i] = (59-secs[i]) % 60;
+    } else {
+      secs[i] = 00;
+    }
+     if (hrs[i] > 0 ) {
+      nexttrade[i] = {
+        label: tradeevery[i].label, 
+        hrs: Number(hrs[i]),
+        mins: Number(mins[i]),
+        secs: Number(secs[i]),
+        seconds: Number( (hrs[i]*3600)+(mins[i]*60)+secs[i] ),
+        time: Number( nexttradesecs[i] )
+      };
+    } else {
+      nexttrade[i] = {
+        label: tradeevery[i].label,
+        mins: Number(mins[i]),
+        secs: Number(secs[i]),
+        seconds: Number( (mins[i]*60)+secs[i] ),
+        time: Number( nexttradesecs[i] )
+      };
+    }
+
+    if ( !mins[i] ) mins[i] = 0;
+    if ( !hrs[i] ) hrs[i] = 0;
+
+    nexttradesecs[i] = Number( Number(hrs[i]*3600)+Number(mins[i]*60)+Number(secs[i]));
+
+      console.log(hrs[i],mins[i],secs[i], nexttradesecs[i]);
+
+     if (nexttradesecs[i] == 0) trade();
+
+  };
+
   //console.log(nexttradesecs);
-  io.sockets.emit('nexttrade', { next: nexttrade, stoptrading: keys.site.stoptrading }); // Emit to chrome
-  //console.log(mins+':'+secs);
+  io.sockets.emit('nexttrade', { next: nexttrade, last: lasttrade, stoptrading: keys.site.stoptrading }); // Emit to chrome
   // If it's time to trade
-  if (nexttrade[0] == 0 && nexttrade[1] == 0){
-    trade();
-  }
 }
 
 // Proto trade shaping
@@ -952,8 +992,9 @@ function checktx(doc){
 var tradeupdater = setInterval(function() {
 
   async.each(symbols,function (symbol) {
-      getPrice(symbol.symbol);
-  
+
+      getPrice(symbol);
+
       Usertx.find({}, function(err, docs) {
         if (docs.confirmations < 10 && docs.status != 'confirmed') {
           async.each(docs,function (doc, callback) {
@@ -1014,9 +1055,13 @@ io.sockets.on('connection', function (socket) {
   socket.on('page', function (data) {
     userpage[myName] = data.page;
     //console.log(chart[data.symbol]);
+    Activetrades.find({ user: myName }).sort({time:-1}).find(function(err, activetrades) {
+      socket.emit('activetrades', activetrades);
+      trades = activetrades;
+    });
     socket.emit('loadpage', {page: data.page, symbol: data.symbol, guest: data.guest});
     socket.emit(data.symbol+'_price', price[data.symbol]);
-    socket.emit('nexttrade', { next: nexttrade, stoptrading: keys.site.stoptrading });
+    //socket.emit('nexttrade', { next: nexttrade, stoptrading: keys.site.stoptrading });
   });
 
   socket.on('chart', function (data) {
@@ -1031,6 +1076,35 @@ io.sockets.on('connection', function (socket) {
       socket.emit('chart', { symbol: data.symbol, chart: points, properties: properties });
     });
   });
+
+  socket.on('flags', function (data) {
+    if (data.time) {
+      var flagtime = data.time;
+    } else {
+      var flagtime = 1800000;
+    }
+    
+    if (!data.user) {
+      var flaguser = myName;
+    } else {
+      var flaguser = data.user;
+    }
+    var userflags = new Array();
+    Historictrades.find({ user: flaguser }).where('time').gte(time-flagtime).sort({ time: -1 }).exec(function (err, docs) {
+      if (err) throw (err);
+      for (var i = docs.length - 1; i >= 0; i--) {
+          userflags.push(docs[i]);
+        };
+      Activetrades.find({ user: flaguser }).where('time').gte(time-flagtime).sort({ time: -1 }).exec(function (err, docs) {
+        if (err) throw (err);
+        for (var i = docs.length - 1; i >= 0; i--) {
+          userflags.push(docs[i]);
+        };
+        socket.emit('flags', userflags);
+      });
+
+    });
+  }); 
 
     socket.on('movingaverage', function (data) {
       if (!data.time) data.time = 1800000;
@@ -1286,7 +1360,7 @@ io.sockets.on('connection', function (socket) {
       if (re.test(data.amount)) { console.log('Illegal trade input from '+myName); } else {
         // Push data to addTrade
         //console.log('add trade for ' + data.user);
-        addTrade(data.symbol, data.amount, data.direction, data.user, socket);
+        addTrade(data.symbol, data.amount, data.direction, data.user, data.time, socket);
         // Emit active trades again
         Activetrades.find({ user: myName }).sort({time:-1}).find(function(err, activetrades) {
           socket.emit('activetrades', activetrades);
@@ -1368,7 +1442,17 @@ io.sockets.on('connection', function (socket) {
         if (customer.paypal) {
           paypal = customer.paypal;
         }
-        socket.emit('cards', { stripe: stripecards, paypal: paypal });
+
+        Userprefs.findOne({ user: data.user, preference: 'card' }, function (err, docs) {
+          if (err) throw (err);
+            // socket.emit('cards', { stripe: stripecards, paypal: paypal });  
+            if (docs){
+              socket.emit('cards', { stripe: stripecards, paypal: paypal, selected: docs.setting });
+            } else {
+              socket.emit('cards', { stripe: stripecards, paypal: paypal });
+            }
+        });
+        
     });
   });
 
@@ -1385,10 +1469,10 @@ io.sockets.on('connection', function (socket) {
     // Emit trade objects
     socket.emit('username', myName); // Update userbalance
     socket.emit('messages', messages); // Update userbalance
-    Activetrades.find({ user: myName }).sort({time:-1}).find(function(err, activetrades) {
-      socket.emit('activetrades', activetrades);
-      trades = activetrades;
-    });
+    // Activetrades.find({ user: myName }).sort({time:-1}).find(function(err, activetrades) {
+    //   socket.emit('activetrades', activetrades);
+    //   trades = activetrades;
+    // });
 
     io.sockets.emit('tradingopen', tradingopen); // Update trading status
     io.sockets.emit('ratios', ratio); // Update ratios
@@ -1425,15 +1509,34 @@ io.sockets.on('connection', function (socket) {
               bal = 0;
             }
 
-            var paypal, customerid, customercards;
+            var paypal, customerid, customercards, selectedcard;
             Customers.findOne({ username: myName }, function(err, docs) {
               if (err) throw (err);
-              if (docs.paypal) paypal = docs.paypal;
-              if (docs.stripe) {
-                customerid = docs.stripe;
-                stripe.customers.listCards(customerid, function(err, cards) {
-                  if (err) throw (err);
-                  customercards = cards;
+              Userprefs.findOne({ user: myName, preference: 'card' }, function (err, card) {
+              if (err) throw (err);
+                if (card) {
+                  selectedcard = card.setting;
+                } else {
+                  selectedcard = false;
+                }
+                if (docs.paypal) paypal = docs.paypal;
+                if (docs.stripe) {
+                  customerid = docs.stripe;
+                  stripe.customers.listCards(customerid, function (err, cards) {
+                    if (err) throw (err);
+                    customercards = cards;
+                    socket.emit('wallet', {
+                    name: myName, 
+                    currency: currency, 
+                    address: docs.btc, 
+                    balance: bal, 
+                    currencies: usercurrencies,
+                    paypal: paypal,
+                    stripe: customercards,
+                    selected: selectedcard
+                  }); // Update useraddress
+                  });
+                } else {
                   socket.emit('wallet', {
                     name: myName, 
                     currency: currency, 
@@ -1441,21 +1544,11 @@ io.sockets.on('connection', function (socket) {
                     balance: bal, 
                     currencies: usercurrencies,
                     paypal: paypal,
-                    stripe: customercards
+                    stripe: customercards,
+                    selected: selectedcard
                   }); // Update useraddress
-                });
-              } else {
-                socket.emit('wallet', {
-                  name: myName, 
-                  currency: currency, 
-                  address: docs.btc, 
-                  balance: bal, 
-                  currencies: usercurrencies,
-                  paypal: paypal,
-                  stripe: false
-                }); // Update useraddress
-              }
-              
+                }
+              });
             });
             socket.emit('ratio', docs.ratio);
             socket.emit('percentage', docs.percentage);
@@ -1473,7 +1566,7 @@ io.sockets.on('connection', function (socket) {
       if (err) throw (err);
       socket.emit('wallettx', data);
     });
-  },750); // Run every second
+  },1000); // Run every second
 
   // User functions
 
@@ -1537,7 +1630,7 @@ io.sockets.on('connection', function (socket) {
 
     Userprefs.findOneAndUpdate( {user: myName, preference: data.pref}, {setting:data.setting}, {upsert:true}, function(err) {
       if (err) throw (err);
-      socket.emit('get-pref', { pref: data.pref, setting: data.setting });  
+      socket.emit('get-pref', { pref: data.pref, setting: data.setting });
     });
     
   });
@@ -2469,115 +2562,122 @@ var btceoptions = {
 
 function getPrice(symbol, callback) {
   var err = 0;var data = null;
+  switch (symbol.type) {
+    case 'Crypto':
+      var symbol = symbol.symbol;
+      if (symbol == 'BTCUSD') {
+        var symb = symbol.match(/.{3}/g);
+        var symb = symbol.toLowerCase();
+        symb = symb[0];
+        btceoptions.path = '/api/2/btc_usd/ticker';
+        var req = https.get(btceoptions, function(resp){
+          var decoder = new StringDecoder('utf8');
+          resp.on('data', function(chunk){
+            chunk = decoder.write(chunk);
+            //console.log(chunk)
+            var data = chunk.split(',');
+            var datas = data[7].split(':');
+            data = datas[1];
 
-  if (symbol == 'BTCUSD') {
-  var symb = symbol.match(/.{3}/g);
-  var symb = symbol.toLowerCase();
-  symb = symb[0];
-  btceoptions.path = '/api/2/btc_usd/ticker';
-  var req = https.get(btceoptions, function(resp){
-    var decoder = new StringDecoder('utf8');
-    resp.on('data', function(chunk){
-      chunk = decoder.write(chunk);
-      //console.log(chunk)
-      var data = chunk.split(',');
-      var datas = data[7].split(':');
-      data = datas[1];
+            if(isNumber(data)) {
+            data = Number(data);
+            data = data.toFixed(2);
+            updatePrice(data, symbol);
+            price[symbol] = data;
+            }else {
+              lag = lag+2;
+            }
+          });
+        }).on("error", function(e){
+          //console.log("Got "+btceoptions.host+" error: " + e.message);
+          lag = lag+2;
+        }); // if symbol is a currency, we run it through for the exchange rate
+      } else if (symbol == 'LTCUSD') {
+        var symb = symbol.match(/.{3}/g);
+        var symb = symbol.toLowerCase();
+        symb = symb[0];
+        btceoptions.path = '/api/2/ltc_usd/ticker';
+        var req = https.get(btceoptions, function(resp){
+          var decoder = new StringDecoder('utf8');
+          resp.on('data', function(chunk){
+            chunk = decoder.write(chunk);
+            //console.log(chunk)
+            var data = chunk.split(',');
+            var datas = data[7].split(':');
+            data = datas[1];
 
-      if(isNumber(data)) {
-      data = Number(data);
-      data = data.toFixed(2);
-      updatePrice(data, symbol);
-      price[symbol] = data;
-      }else {
-        lag = lag+2;
+            if(isNumber(data)) {
+            data = Number(data);
+            data = data.toFixed(2);
+            //console.log(data);
+            updatePrice(data, symbol);
+            price[symbol] = data;
+            }else {
+              lag = lag+2;
+            }
+          });
+        }).on("error", function(e){
+          //console.log("Got "+btceoptions.host+" error: " + e.message);
+          lag = lag+2;
+        }); // if symbol is a currency, we run it through for the exchange rate
       }
-    });
-  }).on("error", function(e){
-    //console.log("Got "+btceoptions.host+" error: " + e.message);
-    lag = lag+2;
-  }); // if symbol is a currency, we run it through for the exchange rate
-  }  else if (symbol == 'LTCUSD' || symbol == 'NMCUSD' || symbol == 'NVCUSD' || symbol == 'NVCUSD') { 
-  var symb = symbol.match(/.{3}/g);
-  var symb = symbol.toLowerCase();
-  symb = symb[0];
-  btceoptions.path = '/api/2/ltc_usd/ticker';
-  var req = https.get(btceoptions, function(resp){
-    var decoder = new StringDecoder('utf8');
-    resp.on('data', function(chunk){
-      chunk = decoder.write(chunk);
-      //console.log(chunk)
-      var data = chunk.split(',');
-      var datas = data[7].split(':');
-      data = datas[1];
-
-      if(isNumber(data)) {
-      data = Number(data);
-      data = data.toFixed(2);
-      //console.log(data);
-      updatePrice(data, symbol);
-      price[symbol] = data;
-      }else {
-        lag = lag+2;
-      }
-    });
-  }).on("error", function(e){
-    //console.log("Got "+btceoptions.host+" error: " + e.message);
-    lag = lag+2;
-  }); // if symbol is a currency, we run it through for the exchange rate
-  } else if ( symbol.length == 6 ) {
-  var options = {
-    host: 'download.finance.yahoo.com',
-    port: 80,
-    path: '/d/quotes.csv?s='+symbol+'=X&f=sl1d1t1c1ohgv&e=.csv'
-  };
-  http.get(options, function(res){
-    var decoder = new StringDecoder('utf8');
-    res.on('data', function(chunk){
-      chunk = decoder.write(chunk);
-      data = chunk.split(',');
-      data = data[1];
-      //console.log(symbol+':'+data);
-      if(isNumber(data)) { // is this data even numeric?
-        //console.log(symbol+':'+data);
-        //data = data.toFixed(2);
-        updatePrice(data, symbol);
-        price[symbol] = data;
-      }else {
-        lag = lag+2;
-      }
-    });
-  }).on("error", function(e){
-    console.log("Got "+options.host+" error: " + e.message);
-    err++;
-  });
-  // if symbol is a stock, run it through for the price
-  }else {
-  var options = {
-    host: 'download.finance.yahoo.com',
-    port: 80,
-    path: '/d/quotes.csv?s='+symbol+'&f=sl1d1t1c1ohgv&e=.csv'
-  };
-  http.get(options, function(res){
-    var decoder = new StringDecoder('utf8');
-    res.on('data', function(chunk){
-      chunk = decoder.write(chunk);
-      data = chunk.split(',');
-      data = data[1];
-      //console.log(symbol, data);
-      if(isNumber(data)) { // is this data even numeric?
-        //data = data.toFixed(2);
-        updatePrice(data, symbol);
-        price[symbol] = data;
-      }else {
-        lag = lag+5;
-      }
-    });
-  }).on("error", function(e){
-    console.log("Got "+options.host+" error: " + e.message);
-    err++;
-  });
-  }// jump over third-party gates
+    break;
+    case 'Exchange':
+      var symbol = symbol.symbol;
+      var options = {
+        host: 'download.finance.yahoo.com',
+        port: 80,
+        path: '/d/quotes.csv?s='+symbol+'=X&f=sl1d1t1c1ohgv&e=.csv'
+      };
+      http.get(options, function(res){
+        var decoder = new StringDecoder('utf8');
+        res.on('data', function(chunk){
+          chunk = decoder.write(chunk);
+          data = chunk.split(',');
+          data = data[1];
+          //console.log(symbol+':'+data);
+          if(isNumber(data)) { // is this data even numeric?
+            //console.log(symbol+':'+data);
+            //data = data.toFixed(2);
+            updatePrice(data, symbol);
+            price[symbol] = data;
+          }else {
+            lag = lag+2;
+          }
+        });
+      }).on("error", function(e){
+        console.log("Got "+options.host+" error: " + e.message);
+        err++;
+      });
+    break;
+    case 'Stock':
+      var symbol = symbol.symbol;
+      var options = {
+        host: 'download.finance.yahoo.com',
+        port: 80,
+        path: '/d/quotes.csv?s='+symbol+'&f=sl1d1t1c1ohgv&e=.csv'
+      };
+      http.get(options, function(res){
+        var decoder = new StringDecoder('utf8');
+        res.on('data', function(chunk){
+          chunk = decoder.write(chunk);
+          data = chunk.split(',');
+          data = data[1];
+          //console.log(symbol, data);
+          if(isNumber(data)) { // is this data even numeric?
+            //data = data.toFixed(2);
+            updatePrice(data, symbol);
+            price[symbol] = data;
+          }else {
+            lag = lag+5;
+          }
+        });
+      }).on("error", function(e){
+        console.log("Got "+options.host+" error: " + e.message);
+        err++;
+      });
+    break;
+  }
 }
 
 function addressbalance(account, cb) {
