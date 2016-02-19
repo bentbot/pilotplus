@@ -26,7 +26,9 @@ db.addUser("nodemongo", "WYd224Oa612h147")
 ```
 
 ### 2. Create the necessary key file `keys.json`
-Edit the default keys.json file and edit the following options.
+
+Edit the default keys.json file and edit the following options as they are required for proper operation.
+
 ```
 $ nano keys.json
 
@@ -75,7 +77,7 @@ An index of options included in `keys.json`:
 
 ### 3. Install NodeJS both locally and remotely to start the servers
 
-If you already have Node and NPM installed, start the server with `node binarybtc.js`
+If you already have Node and NPM installed, start the server with `node binarybtc.js` or `nodemon`
 
 If you need to install Node.Js, run these commands.
 ```
@@ -91,3 +93,21 @@ $ npm update
 $ nodemon binarybtc.js
 
 ```
+Connect to the webserver
+
+### Troubleshooting
+
+Diagnosing any and all errors which the console may output is important, because they can pile up and crash the webserver.
+
+Common Errors Include:
+
+	* Could not connect to MongoDB 
+		Use `mongo` in the console to check if MongoDB is correctly installed.
+		Refer to section 1 to create a MongoDB collection with a user and password
+		Add the correct username and password as a MongoDB link inside `keys.json`
+		`mongo:	"mongodb://[user]:[pass]@localhost/[collection]",`
+	* Redis connection errors
+		Make sure `redis-server` is installed and running by using `top` in the console.
+		Check your Redis config file `sudo nano /etc/redis/redis.conf` for an authentication password
+		Open keys.json and edit the Redis password line
+		`"redis": "169buildinglsbonr3memb3rproud789",`
