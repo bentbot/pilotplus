@@ -1,4 +1,4 @@
-# Bitcoin Binary Options
+# [Pilot.Plus](https://pilot.plus/) Binary Options
 
 ## Setup
 
