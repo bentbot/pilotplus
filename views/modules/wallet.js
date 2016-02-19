@@ -48,15 +48,34 @@ function showWallet(data) {
       break;
       default:
 
-      html = html + '<div class="no cards">'+
+      html = html + '<div class="';
+      if ( !card ) html = html + 'no';
+      html=html+' cards">'+
       //'<div class="card green"><div class="stripe"></div><div class="label"><i class="fa fa-cc-visa"></i></div><div class="value">'+data.currency+'</div><i class="fa fa-cc-stripe"></i><div class="numbers"><span>3759</span><span>xxxx</span><span>xxxx</span><span>3456</span></div><div class="valid"><i class="fa fa-clock-o"></i> 10 / 20</div><div class="secure">123 <i class="fa fa-lock"></i></div></div>'+
       //'<div class="card blue"><div class="stripe"></div><div class="label"><i class="fa fa-cc-visa"></i></div><div class="value">'+data.currency+'</div><i class="fa fa-cc-stripe"></i><div class="numbers"><span>3759</span><span>xxxx</span><span>xxxx</span><span>3456</span></div><div class="valid"><i class="fa fa-clock-o"></i> 10 / 20</div><div class="secure">123 <i class="fa fa-lock"></i></div></div>'+
       //'<div class="card purple"><div class="stripe"></div><div class="label"><i class="fa fa-cc-visa"></i></div><div class="value">'+data.currency+'</div><i class="fa fa-cc-stripe"></i><div class="numbers"><span>3759</span><span>xxxx</span><span>xxxx</span><span>3456</span></div><div class="valid"><i class="fa fa-clock-o"></i> 10 / 20</div><div class="secure">123 <i class="fa fa-lock"></i></div></div>'+
       '</div>'+
+      '<div class="addfunds alert alert-info" style="margin-top: 20px;">'+
+        '<div class="center">'+
+          '<div class="fundssource" data-translate="addfunds"><span>Add Funds</span></div>'+
+          '<div class="addfundsnow">'+
+            '<div class="showmethod method cc">'+
+                '<div class="input-group">'+
+                  '<span class="input-group-addon"><i class="fa fa-usd"></i></span>'+
+                  '<input type="number" class="form-control amount" id="amount" placeholder="0.00" autocomplete="off">'+
+                '</div>'+
+                '<div class="addingfunds">Adding funds from Visa <span class="fundingcvc">••••</span> <span class="fundingcvc">4242</span></div>'+
+                '<button class="btn btn-success addpayment">'+
+                  'Add Funds <i class="fa fa-plus-circle"></i>'+
+                '</button>'+
+            '</div>'+
+          '</div>'+
+        '</div>'+
+      '</div>'+
       '<div class="addcard nocards alert alert-info" style="margin-top: 20px;'+
         '">'+
         '<div class="center">'+
-          '<div class="paymentmethod" data-translate="paymentmethod"><span>Add a Payment</span></div>'+
+          '<div class="paymentmethod" data-translate="addapayment"><span>Add a Payment</span></div>'+
           '<div class="btn-group" role="group" aria-label="Payment type">'+
             '<button type="button" class="btn btn-method btn-group-xs" data-method="cc">Credit Card</button>'+
             '<button type="button" class="btn btn-method btn-group-xs" data-method="paypal">PayPal</button>'+
@@ -91,11 +110,11 @@ function showWallet(data) {
                     '</button>'+
                     '<ul class="dropdown-menu bank-country-dropdown" aria-labelledby="benkdropdown">'+
                       '<li data-country="US"><img src="/assets/img/flags/US.png"></img></li>'+
-                      '<li data-country="AU"><img src="/assets/img/flags/AU.png"></img></li>'+
                       '<li data-country="CA"><img src="/assets/img/flags/CA.png"></img></li>'+
+                      '<li data-country="AU"><img src="/assets/img/flags/AU.png"></img></li>'+
+                      '<li data-country="GB"><img src="/assets/img/flags/GB.png"></img></li>'+
                       '<li data-country="DK"><img src="/assets/img/flags/DK.png"></img></li>'+
                       '<li data-country="FI"><img src="/assets/img/flags/FI.png"></img></li>'+
-                      '<li data-country="GB"><img src="/assets/img/flags/GB.png"></img></li>'+
                       '<li data-country="JP"><img src="/assets/img/flags/JP.png"></img></li>'+
                       '<li data-country="NO"><img src="/assets/img/flags/NO.png"></img></li>'+
                     '</ul>'+
@@ -109,18 +128,13 @@ function showWallet(data) {
                   '</div>'+
             '</div>'+
           '</div>';
-          if (data.stripe || data.paypal) {
-            html = html + '<div class="addfunds notice">'+
-              '<i class="fa fa-info-circle"></i> <span data-translate="selectacard">Please select a card to add funds.</span>'
-            '</div>';
-          }
         html = html + '</div>'+
         '</div>'+
       '</div>';
 
       break;
     }
-
+    showCards(data);
     $(".wallet").html(html);
 }
 
@@ -151,7 +165,6 @@ function showCards(data) {
       html = html + '<div data-card='+data.paypal+' class="card paypal '+colors[a]+' '+selected+'"><div class="remove"><i class="fa fa-times"></i><div class="confirm"></div></div><div class="paypal"></div><div class="label"><i class="fa fa-paypal"></i></div><div class="numbers"><span>'+data.paypal+'</span></div></div>'
       a++;
     }
-    console.log(data);
     if (data.stripe.data) {
       $.each(data.stripe.data, function (i, card) { a++;
         var brand = card.brand;

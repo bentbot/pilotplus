@@ -9,7 +9,7 @@ html( lang="en" )
 			meta( http-equiv="Refresh" content="#{reload}" )
 		script( src="https://code.jquery.com/jquery-2.1.4.min.js" )
 		script( src="//code.jquery.com/ui/1.10.4/jquery-ui.js" )
-		script( src="//vbit.io:3030/socket.io/socket.io.js" )
+		script( src="//pilot.plus:3030/socket.io/socket.io.js" )
 		script( src="https://js.stripe.com/v2/" )
 		script( src="/assets/js/highstock.js" )
 		script( src="/assets/js/buzz.min.js" )
@@ -66,12 +66,13 @@ html( lang="en" )
 			m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
 			})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
 
-			ga('create', 'UA-45768290-2', 'vbit.io');
+			ga('create', 'UA-45768290-2', 'pilot.plus');
 			ga('send', 'pageview');
 		meta( name="google-site-verification" content="lbfuC8bQfP-_LB-V-wshHNptSmp4YT1cIxHtnVKzrZo" )
 	body
 
 		div( class="globalheader" )
+			div( class="lights" )
 			div( class="topleft btnlogo" tabindex="1")
 				div.bars
 					div( class="line one" )
@@ -106,29 +107,26 @@ html( lang="en" )
 								a( href="#" ) History
 							li( id="referrals" )
 								a( href="#" ) Referrals
-					div( class="announcesplit" )
-						div( class="container" )
-							div( class="x" )
-							div( class="y" )
-							div( class="z" )
-							div( class="xp" )
-								div.x
-								div.y
-					div( class="announcexp" )
-						div( class="container" )
-							div( class="y" )
-					div( class="announcesuccess" )
-						div( class="container" )
-							ul
-								li
-									a( href="#" )
-							span( class="label label-warning" )
-					div( class="announcedanger" )
-						div( class="container" )
-							ul
-								li
-									a( href="#" )
-							span( class="label label-warning" )
+				div( class="announcesplit" )
+					div( class="container" )
+						div( class="x" )
+						div( class="y" )
+						div( class="z" )
+				div( class="announcexp" )
+					div( class="container" )
+						div( class="xpbar" )
+				div( class="announcesuccess" )
+					div( class="container" )
+						ul
+							li
+								a( href="#" )
+						span( class="label label-warning" )
+				div( class="announcedanger" )
+					div( class="container" )
+						ul
+							li
+								a( href="#" )
+						span( class="label label-warning" )
 		div( class="menu" )
 			div( class="sidebar-title" ) 
 				span( data-translate="search" class="sidebar-search" )
@@ -143,4 +141,4 @@ html( lang="en" )
 			div( class="alert alert-!{alert.color}" style="margin: 0px auto 0px auto; width: 100%; padding: 10px; text-align: center;") #{alert.message}
 		footer( class="footer" )
 			p.
-				Welcome to <a href="http://vbit.io">vBit.io</a>, the fastest binary trading system. Legally trade currencies in a secure environment, earning profitable returns. Please read the <a href="http://vbit.io/tos">Terms of Use</a> before using this website.
+				Welcome to <a href="http://pilot.plus">pilot.plus</a>, the fastest binary trading system. Legally trade currencies in a secure environment, earning profitable returns. Please read the <a href="http://pilot.plus/tos">Terms of Use</a> before using this website.

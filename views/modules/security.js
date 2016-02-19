@@ -172,13 +172,14 @@ function auth(e) {
           console.log(html);
           if (html.token == 'is valid') {
               $("#authbtn").removeClass('btn-blue').removeClass('btn-danger').addClass('btn-success');
-              $(".csecsecure").removeClass('fa-lock').removeClass('fa-key').addClass('fa-unlock-alt');
+              $(".csecsecure .fa").removeClass('fa-lock').removeClass('fa-key').removeClass('fa-check').addClass('fa-unlock-alt');
             setTimeout(function() {
-              $(".csecsecure").removeClass('fa-unlock-alt').removeClass('fa-key').addClass('fa-lock');
+              $(".csecsecure .fa").removeClass('fa-unlock-alt').removeClass('fa-key').removeClass('fa-check').addClass('fa-lock');
               $("#authbtn").removeClass('btn-danger').removeClass('btn-success').addClass('btn-blue');
               $("#auth").val('');
-            },20000);
+            },5000);
           } else {
+            $(".csecsecure .fa").removeClass('fa-unlock-alt').removeClass('fa-key').removeClass('fa-check').addClass('fa-lock');
             $("#authbtn").removeClass('btn-success').removeClass('btn-blue').addClass('btn-danger');
             $(".securestatus").removeClass('fa-key').addClass('fa-lock');
           }

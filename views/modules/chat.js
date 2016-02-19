@@ -2,7 +2,7 @@ var globalchats = new Array();
 
 function showChat() {
   $('.chat').html('');
-  var chathtml = '<div class="userblock"><div class="header" data-translate="noactivetrades">Chat</div>';
+  var chathtml = '<div class="chatblock"><div class="header" data-translate="noactivetrades">Chat</div>';
   chathtml = chathtml + '<div class="row-fluid"><div class="span12 ">';
   if (globalchats.length > 0) { 
     chathtml = chathtml + '<div class="chatcontainer">'; 
@@ -60,7 +60,7 @@ function newChat(from,to,message,errors) {
         '<span class="'+chatclasses+'" style="color:'+chatcolour+'">'+message+'</span>'+
       '</td>'+
     '</tr>';
-    $('.chatmessages').append(chathtml);
+    $('.chatmessages').append(chathtml).animate({ scrollTop: $('.chatmessages').height() }, "slow");;
     $('.say').val('');
   }
 }

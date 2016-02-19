@@ -14,11 +14,11 @@ var smtpTransport = nodemailer.createTransport("SMTP",{
 function sendConfirmation(to) {
 
 var mailOptions = {
-    from: "vBit <mail@vbit.io>",
+    from: "Pilot+ <mail@pilot.plus>",
     to: to,
     subject: "Confirm your Account",
-    text: "Please visit this address to confirm your account with us: http://vbit.io/confirm/"+confirm,
-    html: "<b>Vbit"
+    text: "Please visit this address to confirm your account with us: http://pilot.plus/confirm/"+confirm,
+    html: "<b>Pilot+"
 }
 smtpTransport.sendMail(mailOptions, function(error, response){
     if(error){

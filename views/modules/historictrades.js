@@ -1,3 +1,4 @@
+var selectedtrade;
 function showhistoric(data, append) {
     var twins = 0;
     var tpush = 0;
@@ -5,7 +6,7 @@ function showhistoric(data, append) {
     var tid = 0;
     $('.historictrades').html('');
     var tradehtml = '';
-    tradehtml = tradehtml+ '<div class="userblock"><div class="header" data-translate="historictrades">Historic Trades <span style="float:right"><span class="green twins">x</span> / <span class="orange tpush">y</span> / <span class="red tlosses">z</span></span></div>';     
+    tradehtml = tradehtml+ '<div class="historicblock"><div class="header" data-translate="historictrades">Historic Trades <span style="float:right"><span class="green twins">x</span> / <span class="orange tpush">y</span> / <span class="red tlosses">z</span></span></div>';     
     if (data) {
     tradehtml = tradehtml + '<div class="row-fluid"><div class="span12"><div><table class="table" id="historictrades">';
     tradehtml = tradehtml + '<tbody>';
@@ -77,18 +78,25 @@ function showhistoric(data, append) {
         } else {
           currencyicon = '<i class="fa fa-dollar"></i>';
         }
+        
+        var classes;
+        if (selectedtrade == entry._id) classes = classes + ' selected';
 
-        tradehtml = tradehtml + '<tr class="historictrade" data-symbol="'+entry._id+'">' +
-                    '<td class="symbol keystonelink" data-symbol="'+entry.symbol+'">'+entry.symbol+'</td>'+
-                    '<td class="time"><i style="opacity: 0.7"  class="fa fa-clock-o"></i> <time class="timeago" datetime="'+iodate+'">'+entrytime+'</time></td>'+
-                    '<td class="trade">'+arrowhtml+' <span class="tradeprice">'+entry.price+'</span></td>'+
-                    '<td class="price"><i style="opacity: 0.7"  class="fa fa-bell"></i> <span class="tradeprice">'+entry.finalprice+'</span></td>'+
-                    '<td class="outcome">'+thumbhtml+'</td>';
-                    if (entry.winnings > 0) { tradehtml = tradehtml + '<td class="currency">'+currencyicon+' '+entry.winnings+'</td>'; }
-                    if (entry.winnings == 0) { tradehtml = tradehtml + '<td class="currency">'+currencyicon+' '+entry.amount+'</td>'; }
-                    //'<td title="Expires: '+thisdate+' '+thistime+'">'+thistime+'</td>'+
-                    //'<td class="bold" title="Expires: '+thisdate+' '+thistime+'">Trade in: <span class="expiretime"></span></td>'+
-                  tradehtml = tradehtml + '</tr>';
+        // Historic Trade Row
+        tradehtml = tradehtml + '<tr class="historictrade '+classes+'" data-id="'+entry._id+'">' +
+          '<td class="symbol keystonelink" data-symbol="'+entry.symbol+'">'+entry.symbol+'</td>'+
+          '<td class="time"><i style="opacity: 0.7"  class="fa fa-clock-o"></i> <time class="timeago" datetime="'+iodate+'">'+entrytime+'</time></td>'+
+          '<td class="trade">'+arrowhtml+' <span class="tradeprice">'+entry.price+'</span></td>'+
+          '<td class="price"><i style="opacity: 0.7"  class="fa fa-bell"></i> <span class="tradeprice">'+entry.finalprice+'</span></td>'+
+          '<td class="outcome">'+thumbhtml+'</td>';
+          if (entry.winnings > 0) { tradehtml = tradehtml + '<td class="currency">'+currencyicon+' '+entry.winnings+'</td>'; }
+          if (entry.winnings == 0) { tradehtml = tradehtml + '<td class="currency">'+currencyicon+' '+entry.amount+'</td>'; }
+          //'<td title="Expires: '+thisdate+' '+thistime+'">'+thistime+'</td>'+
+          //'<td class="bold" title="Expires: '+thisdate+' '+thistime+'">Trade in: <span class="expiretime"></span></td>'+
+
+        tradehtml = tradehtml + '</tr>';
+
+       
     }
 
     tradehtml = tradehtml + '</div></div></div></tbody></table></div>';
@@ -100,14 +108,14 @@ function showhistoric(data, append) {
   }
 }
 
-function historicTrades (data) {
+function historicTrades(data) {
     var twins = 0;
     var tpush = 0;
     var tlosses = 0;
     var tid = 0;
     $('.allhistorictrades').html('');
     var tradehtml = '';
-    tradehtml = tradehtml+ '<div class="userblock"><div class="header" data-translate="historictrades">Historic Trades <span style="float:right"><span class="green twins">x</span> / <span class="orange tpush">y</span> / <span class="red tlosses">z</span></span></div>';
+    tradehtml = tradehtml+ '<div class="historicblock"><div class="header" data-translate="historictrades">Historic Trades <span style="float:right"><span class="green twins">x</span> / <span class="orange tpush">y</span> / <span class="red tlosses">z</span></span></div>';
     if (data) {
     tradehtml = tradehtml + '<div class="row-fluid"><div class="span12"><div><table class="table" id="historictrades">';
     tradehtml = tradehtml + '<tbody>';
@@ -179,9 +187,11 @@ function historicTrades (data) {
               //'<td class="bold" title="Expires: '+thisdate+' '+thistime+'">Trade in: <span class="expiretime"></span></td>'+
             tradehtml = tradehtml + '</tr>';
 
+        var classes = '';
         if (index == 0) tradehtml = tradehtml + definingrow;
+        if (selectedtrade == entry._id) classes = classes + ' selected';
 
-        tradehtml = tradehtml + '<tr class="historictrade" id="'+entry._id+'">' +
+        tradehtml = tradehtml + '<tr class="historictrade '+classes+'" id="'+entry._id+'">' +
                     '<td class="symbol">'+entry.symbol+'</td>'+
                     '<td class="trade">'+arrowhtml+' <span class="tradeprice">'+entry.price+'</span></td>'+
                     '<td class="time"><i style="opacity: 0.7"  class="fa fa-clock-o"></i> <time class="timeago" datetime="'+iodate+'">'+entrydate+' '+entrytime+'</time></td>'+
@@ -194,6 +204,28 @@ function historicTrades (data) {
                     //'<td class="bold" title="Expires: '+thisdate+' '+thistime+'">Trade in: <span class="expiretime"></span></td>'+
                   tradehtml = tradehtml + '</tr>';
  
+     if (selectedtrade == entry._id) {
+          if (entry.winnings > 0) { 
+            amount = entry.winnings;
+          } else { 
+            amount = entry.amount;
+          }
+          tradehtml = tradehtml + '<tr class="historicdetails selected" data-id="'+entry._id+'">'+
+          '<td class="historicchart">  </td>'+
+          '<td class="historicoutcome">'+
+            '<div class="outcomeamount">'+amount+'</div>'+
+            '<div class="outcomemessage">'+thumbhtml+' Trade</div>'+
+            
+            '<table class="outcomeprices"><tbody>'+
+              '<tr class="outcomeopening"><td>Opening</td><td class="outcomeclosing">Closing</td></tr>'+
+              '<tr><td class="outcomeopeningprice">'+entry.price+'</td><td class="outcomeclosingprice">'+entry.finalprice+'</td></tr>'+
+            '</tbody></table>'+
+
+          '</td>';
+          tradehtml = tradehtml + '</tr>';
+        }
+
+
   }
 }
     tradehtml = tradehtml + '</div></div></div></tbody></table></div>';
@@ -202,3 +234,14 @@ function historicTrades (data) {
     $('.tpush').html(tpush);
     $('.tlosses').html(tlosses);
 }
+
+// Operations
+$(function() { 
+  $('.hook').on( 'click', '.historictrade', function(e) {
+    e.preventDefault();
+    $('.historictrade').removeClass('selected');
+    $(this).addClass('selected');
+    selectedtrade = $(this).attr('id');
+  });
+
+});

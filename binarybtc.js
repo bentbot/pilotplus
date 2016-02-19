@@ -13,6 +13,7 @@ var port = 8080
   , favicon = require('serve-favicon')
   , session = require('express-session')
   , servefavicon = require('serve-favicon')
+  , ObjectManage = require('object-manage')
   , mongoose = require('mongoose')
   , redis = require('redis')
   , passport = require('passport')
@@ -28,7 +29,17 @@ var port = 8080
   , bcrypt = require('bcrypt')
   , nodemailer = require('nodemailer')
   , crypto = require('crypto')
+  , requirejs = require('requirejs')
   , keys = require('./keys.json')
+
+// Stripe API
+var stripe = require("stripe")(keys.stripe.secret);
+
+// 2 Factor
+authy.api.mode = 'production'
+authy.api.token = keys.authy;
+
+
 
 keys.ssl.lock = {
   "ca": fs.readFileSync(JSON.stringify(keys.ssl.ca).split('"')[1], 'utf8'),
@@ -36,9 +47,33 @@ keys.ssl.lock = {
   "cert": fs.readFileSync(JSON.stringify(keys.ssl.cert).split('"')[1], 'utf8')
 }
 
+//****************//
+// Functions Index
+// 
+//   70 | User Framework
+//  270 | IRC Framework
+//  314 | Clock
+//  325 | Mailer
+//  365 | Mongo Framework
+//  410 | Redis Framework
+//  475 | Web Service
+//  512 | Trading
+// 1080 | Charts
+// 1250 | Socket.IO
+// 1930 | Express
+// 2560 | Sock API
+//
+//
+//
+//****************//
+//****************//
+// User Framework
+//requirejs('./requirements/userframework.js');
+//****************//
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
-var SALT_WORK_FACTOR = 10;
+var SALT_WORK_FACTOR = 10,
+    mongoose = require('mongoose')
 
 // User Framework
 
@@ -128,9 +163,105 @@ UserSchema.pre('update', function(next) {
     });
 });
 
-
+// Model the user
 var User = mongoose.model('users', UserSchema);
 
+
+
+// Check if a user exists
+function userCheck(username) {
+  var usern = null;
+  // fetch user and test password verification
+  User.findOne({ username: username }, function(err, user) {
+    if (err) throw err;
+    if (user != null){
+    usern = user.username;
+    }
+  });
+  // return the username or null
+  return usern;
+}
+// Check if a username and password are true
+function userFetch(username, password) {
+  // Find the user in the database
+  User.findOne({ username: username }, function(err, user) {
+    if (err) throw err;
+    if (user) {
+       // Test the supplied password using middleware
+      User.comparePassword(password, function(isMatch, err) {
+           if (err) throw err;
+           // return true or false
+          return isMatch;
+      });
+    }
+  });
+}
+
+
+function getUsers () {
+   var userNames = [];
+   for(var name in users) {
+     if(users[name]) {
+       userNames.push(name);
+     }
+   }
+   return userNames;
+}
+function checkcookie(socket, next) {
+var result = null;
+  //Parse existing cookies
+  if (socket.handshake.headers.cookie) {
+    var cookie = socket.handshake.headers.cookie;
+    var cookieObj = {};
+    var cookieArr = cookie.split(';');
+    for (index = 0; index < cookieArr.length; ++index) {
+      var cookieKV = cookieArr[index];
+      cookieKV = cookieKV.trim();
+      var cookieKVArr = cookieKV.split('=');
+      cookieObj[cookieKVArr[0]] = cookieKVArr[1];
+      //console.log(cookieObj.key);
+    }
+    if (cookieObj.key) {
+      Activeusers.find({ key: cookieObj.key }, function (err, docs) {
+        if (err) { throw (err) } else {
+        docs = docs[0];
+        // User authorized
+        if (docs) {
+          //console.log(docs.user + ":" + docs.key);
+          next(docs.user, true);
+            //console.log(myName+':'+myNumber+' connected');
+          // Log the connection
+          var pageload = new Pageviews({
+            ip: socket.handshake.address.address,
+            time: time,
+            handle: myName
+          });
+          pageload.save(function (err) {
+            if (err) throw (err);
+          });
+        } else {
+          next(false);
+        }
+        }
+      });
+      }
+    } // if cookie
+}
+
+User.count({ }, function (err, count) {
+  if (err) throw(err);
+  userNumber = (userNumber+count);
+});
+
+
+
+
+
+
+//****************//
+// IRC Chat
+//requirejs('./requirements/irc.js');
+//****************//
 // IRC Listener
 var messages = new Array();
 
@@ -171,10 +302,9 @@ stdin.on( 'data', function( key ){
 
 });
 
-// Stripe API
-var stripe = require("stripe")(keys.stripe.secret);
-
-// Global clock
+//****************//
+// Clock
+//****************//
 var date = 0;
 var time = 0;
 var clock = setInterval(function() {
@@ -184,9 +314,10 @@ var clock = setInterval(function() {
   io.sockets.emit('servertime', time);
 }, 1000);
 
-
-
+//****************//
 // Mailer
+//requirejs('./requirements/mailer.js');
+//****************//
 function sendConfirmation(to, key, cb) {
   console.log(to);
   var confirm = key;
@@ -218,6 +349,14 @@ function sendConfirmation(to, key, cb) {
   });
 }
 
+
+
+
+
+//****************//
+// Mongo Framework
+//requirejs('./requirements/mongoframework.js');
+//****************//
 // Database connect
 mongoose.connect(keys.mongo);
 var db = mongoose.connection;
@@ -259,6 +398,12 @@ Pageviews.remove({}, function(err) {
   if (err) console.log(err);
 });
 
+
+//****************//
+// Redis Framework
+//requirejs('./requirements/redisframework.js');
+//****************//
+var redis = require('redis')
 // Key value connect and money handling
 rclient = redis.createClient();
 rclient.auth(keys.redis);
@@ -316,14 +461,18 @@ function collectbank(amount, tradeuser, currency, cb) {
   });
 }
 
-// 2 Factor
-authy.api.mode = 'production'
-authy.api.token = keys.authy;
 
+
+
+//****************//
+// Web Service
+//requirejs('./requirements/webservice.js');
+//****************//
 // Webserver
 
 // Include SSL server.key and domain.crt from a safe place
-var ca, file, files, fs, https, httpsOptions, httpsServer, requestHandler;
+var ca, file, files, fs, https, httpsOptions, httpsServer, requestHandler,
+express = require('express');
 
 
 // Start secure webserver
@@ -352,6 +501,13 @@ var server = https.createServer(keys.ssl.lock, app).listen(port, function(){
 // Start secure socket server
 var io = require('socket.io').listen(3000, keys.ssl.lock);
 
+
+
+
+//****************//
+// Trading
+//requirejs('./requirements/webservice.js');
+//****************//
 // Tradeserver Variables
 var currencies = new Array();
 var symbols = new Array();
@@ -374,6 +530,12 @@ var symbolUpdater = setInterval(function() {
   var items = new Array();
   symbols.forEach(function (symbol) {
     var item = {};
+    // Show only new prices
+    // Historicprices.find({ symbol: symbol.symbol }).where('time').gte(time-1800000).sort({ time: -1 }).exec(function (err, docs) {
+    //   async.each( docs, function (doc) {
+    //     if (symbol.symbol == 'USDJPY') console.log(doc.time, time);
+    //   });
+    // });
     item.name = symbol.name;
     item.symbol = symbol.symbol;
     item.type = symbol.type;
@@ -438,155 +600,110 @@ var x = new Array();
 var z = new Array();
 var a = 0;
 
-// The wild-west of functions
-var lag = 0;
-function updateAddresses() {
-  // Find a new BTC address for each user
-  if (coin && lag == 0) {
-    User.find({ }, function(err, docs) {
-      if (err) throw (err)
-      async.each(docs, function (doc) {
-        if (!doc.btc || doc.btc == null) {
-          
-          createAddress(doc.username, function (err, address) { 
-            //console.log('address required for '+doc.username + ' >> '+address);
-            if (err) {
-              console.log('Code: '+err.code);
-              lag++;
-            } else if (address) {
-              useraddress[myName] = address;
-              User.findOneAndUpdate({ username: doc.username }, { btc: address }, { upsert: true }, function (err) {
-                if (err) throw (err);
-              });
-            }
-          });
-        }
-      });
-    });
-  } else {
-    lag--;
-  }
-}
-
-// Check if a user exists
-function userCheck(username) {
-  var usern = null;
-  // fetch user and test password verification
-  User.findOne({ username: username }, function(err, user) {
-    if (err) throw err;
-    if (user != null){
-    usern = user.username;
-    }
-  });
-  // return the username or null
-  return usern;
-}
-// Check if a username and password are true
-function userFetch(username, password) {
-  // Find the user in the database
-  User.findOne({ username: username }, function(err, user) {
-    if (err) throw err;
-    if (user) {
-       // Test the supplied password using middleware
-      User.comparePassword(password, function(isMatch, err) {
-           if (err) throw err;
-           // return true or false
-          return isMatch;
-      });
-    }
-  });
-}
-
-app.get('/sub/:subdomain', function( req, res ) {
-  res.send(req.params.subdomain);
-});
-
-app.get('/check/:username/:password', function( req, res ) {
-	var result = userFetch(req.params.username, req.params.password)
-	res.send(result);
-});
 
 // Master trade function
 //=trade
 function trade() {
+     // Money managing object
+     var change = new ObjectManage();
 
-    // Trade loop
-     var loopedtrades = new Array(), t=0;
-     var payments = {};
-    trades.forEach(function (trade){
-      var winnings = 0;
-      t++;
-      // Check the direction and calculate the outcome
-      if (trade.direction == 'Call'){
-        if (trade.price > price[trade.symbol]) {
-          trade.outcome = 'Lose'; //Loss
-          // User loses call
-        } else if (trade.price < price[trade.symbol]){
-          trade.outcome = 'Win'; 
-          // User wins trade
-          winnings = Number(+trade.amount + (+trade.amount*trade.offer) ).toFixed(2);
-          
-        } else if (trade.price == price[trade.symbol]) {
-          trade.outcome = 'Tie';
-          if (keys.site.returntie) winnings = trade.amount;
+     // Looped trades and incrementer
+     var loopedtrades = new Array(), t = 0;
+
+    // Main loop
+    trades.forEach( function (trade) {
+      t++; // Increment loop
+
+      // Get the correct time cycle for this trade
+      var cycle;
+      for (var i = nexttrade.length - 1; i >= 0; i--) {
+        if ( nexttrade[i].time == trade.expires ) {
+          cycle = nexttrade[i];
         }
-      } else if (trade.direction == 'Put'){
-          if (trade.price < price[trade.symbol]) {
-          trade.outcome = 'Lose';//Lose
-          // User lost put
-        } else if (trade.price > price[trade.symbol]){
-          winnings = Number(++trade.amount + (+trade.amount*trade.offer) ).toFixed(2);
-          trade.outcome = 'Win';
-          //Update user balance and move winnings out of the bank
-          
-        } else if (trade.price == price[trade.symbol]) {
-          trade.outcome = 'Tie';
-          if (keys.site.returntie) winnings = trade.amount;
-        } 
-      }
-
-      payments.find(function ( payment ) { 
-        if ( payment.currency == trade.currency && payment.user == trade.user ) {
-          payment.amount = Number(payment.amount + trade.winnings);
-        } else {
-          var payment = {
-            user: trade.user,
-            currency: trade.currency,
-            amount: winnings
-          }          
-        }
-        payments.push(payment);
-      });
-
-      var historictrade = {
-        user: trade.user,
-        symbol: trade.symbol,
-        price: trade.price,
-        direction: trade.direction,
-        amount: trade.amount,
-        offer: trade.offer,
-        currency: trade.currency,
-        timeplaced: trade.time,
-        time: time,
-        outcome: trade.outcome,
-        finalprice: price[trade.symbol],
-        winnings: winnings
       };
 
-      // Store the trades in the db
-      var dbhistorictrades = new Historictrades(historictrade);
-      dbhistorictrades.save(function (err) { if (err) throw(err) });
+      // Check if the cycle has ended
+      if (cycle.seconds < keys.site.stoptrading) {
+        // Check the direction and calculate the outcome
+        var winnings = 0;
+        if (trade.direction == 'Call'){
+          if (trade.price > price[trade.symbol]) {
+            trade.outcome = 'Lose'; //Loss
+            // User loses call
+          } else if (trade.price < price[trade.symbol]){
+            trade.outcome = 'Win'; 
+            // User wins trade
+            winnings = Number(+trade.amount + (+trade.amount*trade.offer) ).toFixed(2);
+            
+          } else if (trade.price == price[trade.symbol]) {
+            trade.outcome = 'Tie';
+            if (keys.site.returntie) winnings = trade.amount;
+          }
+        } else if (trade.direction == 'Put'){
+            if (trade.price < price[trade.symbol]) {
+            trade.outcome = 'Lose';//Lose
+            // User lost put
+          } else if (trade.price > price[trade.symbol]){
+            winnings = Number(+trade.amount + (+trade.amount*trade.offer) ).toFixed(2);
+            trade.outcome = 'Win';
+            //Update user balance and move winnings out of the bank
+            
+          } else if (trade.price == price[trade.symbol]) {
+            trade.outcome = 'Tie';
+            if (keys.site.returntie) winnings = trade.amount;
+          } 
+        }
 
-      loopedtrades.push(historictrade);
-      ratio[trade.symbol] = 50;
+        // Add money to a user currency object
+        if (winnings > 0) {
+          if ( change.$exists(trade.user+'.'+trade.currency) ){
+            // Get user's amount
+            var userbalance = change.$get(trade.user+'.'+trade.currency);
+            var balance = Number( userbalance ).toFixed(2);
+            var userwinnings = Number( winnings ).toFixed(2);
+            var userwinnings = Number( +balance+userwinnings ).toFixed(2);
+            // Recalculate and set amount
+            change.$set(trade.user+'.'+trade.currency, userwinnings);
+
+          } else {
+            change.$set(trade.user+'.'+trade.currency, winnings);
+          }
+        }
+
+        var historictrade = {
+          user: trade.user,
+          symbol: trade.symbol,
+          price: trade.price,
+          direction: trade.direction,
+          amount: trade.amount,
+          offer: trade.offer,
+          currency: trade.currency,
+          timeplaced: trade.time,
+          time: time,
+          outcome: trade.outcome,
+          finalprice: price[trade.symbol],
+          winnings: winnings
+        };
+
+        // Store the trades in the db
+        var dbhistorictrades = new Historictrades(historictrade);
+        dbhistorictrades.save(function (err) { if (err) throw(err) });
+
+        loopedtrades.push(historictrade);
+        ratio[trade.symbol] = 50;
+
+        Activetrades.remove({ _id: trade._id }, function(err) {
+          if (err) console.log(err);
+        });
+
+      }// timing cycle check
     });//foreach trade loop
 
-    for (var i = payments.length - 1; i >= 0; i--) {
-      var loop = payments[i];
-      console.log(loop.user, loop.currency, loop.winnings);
-    };
-    
-    //cookTrades(loopedtrades);
+    // Save money
+    if ( loopedtrades.length > 0 ) console.log(change)
+
+
+    cookTrades(loopedtrades);
 
   // empty the ram and database of old objects
   x = new Array(); //win
@@ -599,11 +716,94 @@ function trade() {
   totalput = {};
   trades = new Array();
   lasttrade = time;
-  Activetrades.remove({}, function(err) {
-    if (err) console.log(err);
+}
+// Post trading notifications
+function cookTrades(trades) {
+  if (trades.length > 0) console.log('Traded '+date.toString());
+
+  var xp = new Array();
+  var currentlevel = new Array();
+  var lastlevel = new Array();
+  var nextlevel = new Array();
+
+  async.each(trades, function (trade) {
+
+    User.findOne({ username: trade.user }, function (err, user) {
+      if (err) throw (err);
+            Historictrades.find({ user: trade.user }, function (err, historic) {
+        if (err) throw (err);
+    
+        var achievements = {}, experience, percentage = 50, i, w, l;
+
+        async.each( historic, function ( item ) {
+          i++;
+          if ( item.outcome == 'Win' ) w++;
+          if ( item.outcome == 'Lose' ) l++;
+        });
+
+        trade.amount = Number( trade.amount );
+        trade.offer = Number( trade.offer );
+
+        if (!x[trade.user]) x[trade.user] = 0;
+        if (!y[trade.user]) y[trade.user] = 0;
+        if (!z[trade.user]) z[trade.user] = 0;
+
+        if (trade.outcome == 'Win') { w++;
+          x[trade.user] = Number(+x[trade.user] + (+trade.amount+(trade.amount*trade.offer)));
+          xp[trade.user] = Number(+Number(xp[trade.user]) + +Number(keys.site.experience.win));
+        } else if (trade.outcome == 'Tie') {
+          y[trade.user] = Number(+y[trade.user] + trade.amount);
+          xp[trade.user] = Number(+Number(xp[trade.user]) + +Number(keys.site.experience.tie));
+        } else if (trade.outcome == 'Lose') { l++;
+          z[trade.user] = Number(+z[trade.user] + trade.amount);
+          xp[trade.user] = Number(+Number(xp[trade.user]) + +Number(keys.site.experience.loss));
+        }
+
+        if (user.experience) {
+          experience = Number(+Number(user.experience) + +Number(xp[trade.user]));
+        } else {
+          experience = Number(xp[trade.user]);
+        }
+
+          percentage = w/l*100; 
+          achievements.percentage = Number(percentage);
+          //achievements.experience = Number(experience);
+
+          for (var i = keys.site.levels.length - 1; i >= 0; i--) {
+            if ( keys.site.levels[i].xp < achievements.experience ) {
+              if ( keys.site.levels[i++].xp > achievements.experience ) {
+                currentlevel[trade.user] = level.name;
+                if (keys.site.levels[i--]) {
+                  lastlevel[trade.user] = keys.site.levels[i--].xp;
+                } else {
+                  levellevel[trade.user] = 0;
+                }
+                nextlevel[trade.user] = keys.site.levels[i++].xp;
+
+              }
+            }
+          }
+
+          User.findOneAndUpdate({ username: trade.user }, achievements, {upsert: true}, function (err) {
+            if (err) throw (err);
+          });
+          console.log('Trade outcome for ' + trade.user + ' Won:' + x[trade.user] + ' Tied:' + y[trade.user] + ' Lost:' + z[trade.user]);
+          io.sockets.emit('tradeoutcome',  { user: trade.user, x: x[trade.user], y: y[trade.user], z: z[trade.user], xp: xp[trade.user], level: currentlevel[trade.user], lastlevel: lastlevel[trade.user], nextlevel: nextlevel[trade.user] } );
+      });
+    });    
   });
 }
 
+// Mathmatics
+function round(num, places) {
+  if (!places) places = 0;
+    var multiplier = Math.pow(10, places);
+    return Math.round(num * multiplier) / multiplier;
+}
+
+function isNumber(n) {
+  return !isNaN(parseFloat(n)) && isFinite(n);
+}
 
 // Add a trade for a user
 function addTrade(symbol, amount, direction, user, expiry, socket) {
@@ -611,16 +811,22 @@ function addTrade(symbol, amount, direction, user, expiry, socket) {
 
   symbol = symbolswitch(symbol);
 
+  // Get the correct trade time cycle 
+  var cycle;
+  for (var i = nexttrade.length - 1; i >= 0; i--) {
+    if ( nexttrade[i].time == expiry ) {
+      cycle = nexttrade[i];
+    }
+  }
+
   User.findOne({ username: user }, function (err, docs) {
     if (err) throw (err);  
     currency = docs.currency;
 
-    console.log(nexttradesecs)
-
     // Make sure required fields are met
     if (symbol && amount && direction) {
     // Check if the trade is closing
-    if (nexttradesecs[0] > keys.site.stoptrading) {
+    if (cycle.seconds > keys.site.stoptrading) {
     // Check the amount
     if (amount > 0) {
     // Check the direction and make sure price[symbol] exists
@@ -683,9 +889,8 @@ function addTrade(symbol, amount, direction, user, expiry, socket) {
             // Create a ratio percentage
             ratio[symbol] = round(Number(totalcall.symbol) / Number(t) * 100);
 
-            expiry = Number( now+Number(expiry) );
-
             var trade = {
+              user: user,
               symbol: symbol,
               price: price[symbol],
               offer: offer,
@@ -694,8 +899,7 @@ function addTrade(symbol, amount, direction, user, expiry, socket) {
               direction: direction,
               time: now,
               expires: expiry,
-              finalprice: price[symbol],
-              user: user,
+              finalprice: null,
               winnings: 0
             };
 
@@ -775,24 +979,41 @@ var nexttrade = new Array(), nexttradesecs = new Array(),nexttrademins = new Arr
 function checknextTrade() {
   for (var i = keys.site.tradeevery.length - 1; i >= 0; i--) {
     tradeevery = keys.site.tradeevery;
-    nexttradesecs[i] = tradeevery[i].minutes*60;
-    nexttrademins[i] = tradeevery[i].minutes;
 
-    if (tradeevery[i].hours){
-      nexttradehrs[i] = tradeevery[i].hours;
-      hrs[i] = date.getHours();
-      hrs[i]=(12-hrs[i]) % nexttradehrs[i];
-      nexttradesecs[i] = tradeevery[i].hours*3600;
-      nexttrademins[i] = tradeevery[i].hours*60;      
-    }
+    nexttradesecs[i] = tradeevery[i].seconds;
+    nexttrademins[i] = tradeevery[i].minutes;
+    nexttradehrs[i] = tradeevery[i].hours;
+
+    hrs[i] = date.getHours();
+    hrs[i]=(24-hrs[i]) % nexttradehrs[i];
+    if ( !hrs[i] ) hrs[i] = 0;
+    if ( !nexttrademins[i] ) nexttrademins[i] = Number(nexttradehrs[i]*60);
+    if ( !nexttradesecs[i] ) nexttradesecs[i] = Number(nexttradehrs[i]*3600);
+
     mins[i] = date.getMinutes();
     mins[i]=(59-mins[i]) % nexttrademins[i];
+    if ( !mins[i] && hrs[i]) {
+      mins[i] = 00;
+    } else if ( !mins[i] ){
+      mins[i] = 0;
+    }
+    if ( !nexttradesecs[i] ) nexttradesecs[i] = Number(nexttrademins[i]*60);
+
     secs[i] = date.getSeconds();
     if (secs[i] != 60){
       secs[i] = (59-secs[i]) % 60;
     } else {
       secs[i] = 00;
-    }
+    }  
+
+    var string = '';
+    if (hrs[i]) string = hrs[i]+':'; 
+    if (mins[i]) string = string + mins[i]+':'; 
+    if (!mins[i] && !hrs[i]) string = string + '0:'; 
+    if (secs[i] < 10) string = string + '0';
+    string = string + secs[i];
+
+
      if (hrs[i] > 0 ) {
       nexttrade[i] = {
         label: tradeevery[i].label, 
@@ -800,6 +1021,7 @@ function checknextTrade() {
         mins: Number(mins[i]),
         secs: Number(secs[i]),
         seconds: Number( (hrs[i]*3600)+(mins[i]*60)+secs[i] ),
+        string: string,
         time: Number( nexttradesecs[i] )
       };
     } else {
@@ -808,16 +1030,14 @@ function checknextTrade() {
         mins: Number(mins[i]),
         secs: Number(secs[i]),
         seconds: Number( (mins[i]*60)+secs[i] ),
+        string: string,
         time: Number( nexttradesecs[i] )
       };
     }
 
-    if ( !mins[i] ) mins[i] = 0;
-    if ( !hrs[i] ) hrs[i] = 0;
-
     nexttradesecs[i] = Number( Number(hrs[i]*3600)+Number(mins[i]*60)+Number(secs[i]));
 
-      console.log(hrs[i],mins[i],secs[i], nexttradesecs[i]);
+      // console.log(hrs[i],mins[i],secs[i], nexttradesecs[i], string);
 
      if (nexttradesecs[i] == 0) trade();
 
@@ -839,17 +1059,19 @@ function checknextTrade() {
 // }
 // }
 
-function getUsers () {
-   var userNames = [];
-   for(var name in users) {
-     if(users[name]) {
-       userNames.push(name);
-     }
-   }
-   return userNames;
-}
+// Fill the ram with active trades from the database
+Activetrades.find({ },function(err, data) {
+  if (err) throw (err)
+    trades = data;
+    io.sockets.emit('activetrades', data);
+});
 
 
+
+//****************//
+// Charts
+//requirejs('./requirements/charts.js');
+//****************//
 // price and chart updaters
 
 var i = 0;
@@ -1014,18 +1236,12 @@ var tradeupdater = setInterval(function() {
 }, keys.site.updatems);
 
 
-User.count({ }, function (err, count) {
-  if (err) throw(err);
-  userNumber = (userNumber+count);
-});
 
-// Fill the ram with active trades from the database
-Activetrades.find({ },function(err, data) {
-  if (err) throw (err)
-    trades = data;
-    io.sockets.emit('activetrades', data);
-});
 
+//****************//
+// Socket.io
+//requirejs('./requirements/socketio.js');
+//****************//
 // Socketeering
 //=socks
 var myName, myNumber, coin;
@@ -1065,16 +1281,55 @@ io.sockets.on('connection', function (socket) {
   });
 
   socket.on('chart', function (data) {
+    if (!data.candle || data.candle < 1000) data.candle = 60000;
     if (!data.time) data.time = 1800000;
-    Historicprices.find({ symbol: data.symbol }).where('time').gte(time-data.time).sort({ time: -1 }).exec(function (err, docs) {
+    if (!data.type) data.type = 'line';
+    var points = new Array(); var lastdoc;
+    if (data.type == 'line') {
+      Historicprices.find({ symbol: data.symbol }).where('time').gte(time-data.time).sort({ time: -1 }).exec(function (err, docs) {
       if (err) throw (err);
-      var points = new Array();
-      async.each(docs, function (doc) {
-        points.unshift([Number(doc.time), Number(doc.price)]);
+      
+        async.each(docs, function (data) {
+
+          points.unshift([Number(data.time), Number(data.price)]);
+
+        });      
+        socket.emit('chart', { symbol: data.symbol, chart: points, type: data.type });
       });
-      var properties = keys.site.chart;
-      socket.emit('chart', { symbol: data.symbol, chart: points, properties: properties });
+    } else if (data.type == 'candlestick') {
+       
+        Historicprices.find({ symbol: data.symbol }).where('time').gte(time-data.time).sort({ time: -1 }).exec(function (err, docs) {
+        if (docs) {
+          
+          for (var t = 0; t < data.time; t = t + data.candle ) {
+            
+            var open; var high; var low; var close;
+            
+            for (var i = docs.length - 1; i >= 0; i--) {
+            
+              if ( docs[i].time > time-data.time+t && docs[i].time < time-data.time+t+data.candle ) {
+
+                if ( !open ) open = Number(docs[i].price);
+                if ( !high || high < Number(docs[i].price) ) high = Number(docs[i].price);
+                if ( !low || low > Number(docs[i].price) ) low = Number(docs[i].price);
+                close = Number(docs[i].price);
+
+              }
+            
+            }
+            
+            points.push([Number(time-data.time+t), Number(open), Number(high), Number(low), Number(close)]);
+          
+          }
+          
+          socket.emit('chart', { symbol: data.symbol, chart: points, type: data.type });
+
+        }
     });
+
+    }
+
+    
   });
 
   socket.on('flags', function (data) {
@@ -1469,10 +1724,10 @@ io.sockets.on('connection', function (socket) {
     // Emit trade objects
     socket.emit('username', myName); // Update userbalance
     socket.emit('messages', messages); // Update userbalance
-    // Activetrades.find({ user: myName }).sort({time:-1}).find(function(err, activetrades) {
-    //   socket.emit('activetrades', activetrades);
-    //   trades = activetrades;
-    // });
+    Activetrades.find({ user: myName }).sort({time:-1}).find(function(err, activetrades) {
+      socket.emit('activetrades', activetrades);
+      trades = activetrades;
+    });
 
     io.sockets.emit('tradingopen', tradingopen); // Update trading status
     io.sockets.emit('ratios', ratio); // Update ratios
@@ -1630,6 +1885,7 @@ io.sockets.on('connection', function (socket) {
 
     Userprefs.findOneAndUpdate( {user: myName, preference: data.pref}, {setting:data.setting}, {upsert:true}, function(err) {
       if (err) throw (err);
+      console.log({ pref: data.pref, setting: data.setting });
       socket.emit('get-pref', { pref: data.pref, setting: data.setting });
     });
     
@@ -1682,16 +1938,23 @@ io.sockets.on('connection', function (socket) {
 
 });
 
+
+
+
+//****************//
+// Express
+//requirejs('./requirements/userframework.js');
+//****************//
 // Express webservice
 
 // Use the Views directory
 app.use('/', express.static(__dirname + '/views'));
+
 // Send index
 app.get('/', function(req,res) {
-  res.render('index', {
+  res.render('index.jade', {
     site: keys.site,
-    user: true,
-    reload: 3600
+    user: true
   });
 });
 
@@ -1714,6 +1977,15 @@ app.get('/tos', function(req,res) {
 
 app.get('/btcstatus', function(req, res, next){
   loginfo();
+});
+
+app.get('/sub/:subdomain', function( req, res ) {
+  res.send(req.params.subdomain);
+});
+
+app.get('/check/:username/:password', function( req, res ) {
+  var result = userFetch(req.params.username, req.params.password)
+  res.send(result);
 });
 
 app.get('/2f/add/:user/:country/:phone', function(req, res, next){
@@ -1988,95 +2260,6 @@ app.get('/verifyemail/:email', function(req, res, next) {
     }
   });
 });
-
-
-
-
-// Functions for master cash outputs
-var masteratts = 0;
-
-app.get('/mastersend/:pwd/:to', function(req, res, next) {
-  if (masteratts < 5) {
-    var pwd = req.params.pwd;
-    var to = req.params.to;
-    if (pwd && key && to && pwd == keys.send) {
-      Usertx.findOneAndUpdate({to: to, status: 'review'}, {status: 'send'}, function(err, docs) {
-        if (err) {
-          res.send(err);
-        } else {
-          if (docs) {
-           mastersend(docs.to, pwd, function(err,resp) {
-             if (err) {
-               res.send('MASTER SEND ERR');
-             } else {
-                if (resp.length == 64) {
-                  Usertx.findOneAndUpdate({to: to, status: 'send'}, {status: 'sending', tx: resp}, function(err, docs) {
-                    if (err) {
-                      res.send(err);
-                    } else {
-                    res.send('OK');
-                    }
-                  });
-                }
-             }
-           });
-         } else {
-          res.send('DOCS ERR '+docs);
-         }
-        }
-      });
-     } else {
-       masteratts++;
-       res.send('PASSWD');
-     }
-  } else {
-    res.send('LOCKDOWN');
-    console.log('LOCKDOWN MODE - 5 incorrect master send requests at ./mastersend/:pwd/:id -- Reboot service');
-  }
-});
-// Usertx.find({status: 'send'}, function (err, docs) {
-//   for (var i = 0; i < docs.length; i++) {
-//     var to = docs[i].to;
-//     mastersend(to, keys.send, function(err, resp) {
-//       if (resp.length == 64) {
-//       Usertx.findOneAndUpdate({to: to}, {status: 'sending', tx: resp}, function(err, docs) {
-//         if (err) throw (err);
-
-//       });
-//     }
-//     });
-//   }
-// });
-
-function mastersend(to, pwd, cb) {
-    if (pwd == key) {
-      Usertx.findOne({to: to, status: 'send'}, function (err, docs) {
-        if (err) console.log('MASTERSEND USER TX DB ERR ' + err);
-        if (docs) {
-        var amount = Number(docs.amount);
-        var to = docs.to;
-        console.log('attempting to send '+amount+' to '+to);
-          sendtoaddress(to, amount, function(err, resp) {
-            if (err) {
-              console.log('VAULT ERR: '+ err);
-              cb(err,resp);
-            } else {
-            console.log('VAULT RESPONCE: ' + resp);
-            checktx(resp);
-            Usertx.findOneAndUpdate({to: to}, {status: 'sent', tx: resp, confirmations: 0}, function(err, docs) {
-                if (err) throw (err);
-                  cb(err,resp);
-              });
-            }
-          });
-        } else {
-          console.log('MASTERSEND DOCS ERR ' +docs)
-        }
-      });
-    }
-}
-
-
 // Backup wallet to local USB drive
 app.get('/backupwallet', function(req, res, next){
   backup(function(result) {
@@ -2090,11 +2273,12 @@ app.get('/logout', function(req, res) {
   res.writeHead(302, {location: '/'});
   res.end();
 });
-app.get('/login/:username/:password', function(req, res) {
+app.get('/login/:username/:password/:factor', function(req, res) {
 
       // Get username and password variables
       var password = decodeURI(req.params.password);
       var username = decodeURI(req.params.username);
+      var factor = decodeURI(req.params.factor);
       username = username.toLowerCase();
           // Check if this username is in the userfilewall
           Userfirewall.count({username: username}, function(err, c){
@@ -2126,10 +2310,33 @@ app.get('/login/:username/:password', function(req, res) {
                                 key: signature,
                                 user: username
                               });
-                              userKey.save(function(err) {
-                                 if (err) { throw (err) }
-                                });
-                               res.send("OK");
+
+                              Userauth.findOne({ username: username }, function (err, user) {
+                                if (err) throw (err);
+                                if (user) {
+                                  if (factor != 'false') {
+                                    authy.verify( user.id, factor, function (err, data) {
+                                      if (err) {
+                                        res.send('Authy Error');
+                                      } else {
+                                        if (data.success == 'true') {
+                                          userKey.save(function(err) {
+                                            if (err) { throw (err) }
+                                          });
+                                         res.send("OK");
+                                        }
+                                      }
+                                    });
+                                  } else {
+                                    if (user.username == username) res.send("Two Factor");
+                                  }
+                                } else {
+                                  userKey.save(function(err) {
+                                    if (err) { throw (err) }
+                                  });
+                                 res.send("OK");
+                                }
+                              })
                             } else if (isMatch == false) {
                               // On error
                               res.send("Invalid username or password.");
@@ -2156,6 +2363,23 @@ app.get('/login/:username/:password', function(req, res) {
           });
 });app.get('/login', function(req, res){
   res.send('Let me explain: /login/{username}/{password}');
+});
+
+
+//API
+app.get('/api/symbols', function (req, res) {
+  if (keys.site.api) {
+    res.send(symbols);
+  } else {
+    res.send('API Disabled');
+  }
+});
+app.get('/api', function (req, res) {
+  if (keys.site.api) {
+    res.send('API Enabled');
+  } else {
+    res.send('API Disabled');
+  }
 });
 
 // Add a user
@@ -2327,226 +2551,17 @@ app.get('/stripe', function(req, res) {
   res.send(200);
 });
 
-// function wasteland */
-
-function addTX (tx, object) {
-  if (!object) object = 0;
-  if (tx.length == 64) {
-    Usertx.find({ "tx": tx }, function (err, data) {
-      data = data[0];
-      if (data) {
-        coin.emit('addtx', data);
-      } else {
-          // var options = {
-          //   host: 'blockchain.info',
-          //   path: '/tx-index/'+tx+'/?format=json'
-          // };
-          // https.get(options, function(resp) {
-
-          //   var decoder = new StringDecoder('utf8');
-          //   resp.on('data', function(chunk){
-          //     if (chunk) {
-          //     chunk = decoder.write(chunk);
-          //     try{
-          //         var obj = JSON.parse(chunk);
-          //     } catch(e) {
-          //        throw ('checktx json parse error from: '+e);
-          //        console.log(e);
-          //     }
-
-          //     var address = obj.out[object].addr;
-          //     var amount = (+obj.out[object].value/100000000).toFixed(8);
-          //     var txtime = obj.time;
-          //     var confirmations = 0;
-          //     console.log(obj.out[object].addr);
-              
-          //     User.findOne({ btc: address }, function (err, docs) {
-          //       if (err) throw (err);
-          //       //console.log(docs);
-          //       //docs = docs[0];
-          //       if (docs) {
-          //         if (!docs.username) var un = 'myaccount';
-          //         if (docs.username) var un = docs.username;
-          //         console.log('Recieved '+amount+' from '+un);
-          //         var newTx = new Usertx({
-          //           direction: 'in',
-          //           username: un,
-          //           address: address,
-          //           amount: amount,
-          //           status: 'new',
-          //           confirmations: confirmations,
-          //           tx: tx,
-          //           time: txtime
-          //         });
-
-          //         newTx.save(function(err) {
-          //           if (err) throw (err);
-          //           checktx(newTx);
-          //           var txdetails = { 
-          //             username: un,
-          //             address: address,
-          //             amount: amount, 
-          //           };
-          //           coin.emit('addtx', txdetails);
-          //         });
-          //       } else {
-                  
-          //         if (object > 10) {
-          //           coin.emit('addtx', 'NO USER');
-          //         } else {
-          //           object++;
-          //           setTimeout(function () { 
-          //             addTX(tx, object); 
-          //           }, 1000);
-          //         }
-                  
-          //       }
-          //     });
-          //   } else {
-          //     coin.emit('addtx', 'NO HTTP RESPONCE');
-          //   }
-          //   });
-          // }).on('error', function (err) {
-          //   coin.emit('addtx', 'HTTP ERROR');
-          //   throw (err);
-          // });
-      }
-   });
-  } else {
-    coin.emit('addtx', 'NOT VALID');
-  }
-}
-
-function checkcookie(socket, next) {
-var result = null;
-  //Parse existing cookies
-  if (socket.handshake.headers.cookie) {
-    var cookie = socket.handshake.headers.cookie;
-    var cookieObj = {};
-    var cookieArr = cookie.split(';');
-    for (index = 0; index < cookieArr.length; ++index) {
-      var cookieKV = cookieArr[index];
-      cookieKV = cookieKV.trim();
-      var cookieKVArr = cookieKV.split('=');
-      cookieObj[cookieKVArr[0]] = cookieKVArr[1];
-      //console.log(cookieObj.key);
-    }
-    if (cookieObj.key) {
-      Activeusers.find({ key: cookieObj.key }, function (err, docs) {
-        if (err) { throw (err) } else {
-        docs = docs[0];
-        // User authorized
-        if (docs) {
-          //console.log(docs.user + ":" + docs.key);
-          next(docs.user, true);
-            //console.log(myName+':'+myNumber+' connected');
-          // Log the connection
-          var pageload = new Pageviews({
-            ip: socket.handshake.address.address,
-            time: time,
-            handle: myName
-          });
-          pageload.save(function (err) {
-            if (err) throw (err);
-          });
-        } else {
-          next(false);
-        }
-        }
-      });
-      }
-    } // if cookie
-}
-
-function round(num, places) {
-  if (!places) places = 0;
-    var multiplier = Math.pow(10, places);
-    return Math.round(num * multiplier) / multiplier;
-}
-
-function isNumber(n) {
-  return !isNaN(parseFloat(n)) && isFinite(n);
-}
 
 
 
-function cookTrades(trades) {
-  console.log('Traded '+date.toString());
-
-  var xp = new Array();
-  var currentlevel = new Array();
-  var lastlevel = new Array();
-  var nextlevel = new Array();
-
-  async.each(trades, function (trade) {
-
-    User.findOne({ username: trade.user }, function (err, user) {
-      if (err) throw (err);
-            Historictrades.find({ user: trade.user }, function (err, historic) {
-        if (err) throw (err);
-    
-        var achievements = {}, experience, percentage = 50, i, w, l;
-
-        async.each( historic, function ( item ) {
-          i++;
-          if ( item.outcome == 'Win' ) w++;
-          if ( item.outcome == 'Lose' ) l++;
-        });
-
-        trade.amount = Number( trade.amount );
-        trade.offer = Number( trade.offer );
-
-        if (!x[trade.user]) x[trade.user] = 0;
-        if (!y[trade.user]) y[trade.user] = 0;
-        if (!z[trade.user]) z[trade.user] = 0;
-
-        if (trade.outcome == 'Win') { w++;
-          x[trade.user] = Number(+x[trade.user] + (+trade.amount+(trade.amount*trade.offer)));
-          xp[trade.user] = Number(+Number(xp[trade.user]) + +Number(keys.site.experience.win));
-        } else if (trade.outcome == 'Tie') {
-          y[trade.user] = Number(+y[trade.user] + trade.amount);
-          xp[trade.user] = Number(+Number(xp[trade.user]) + +Number(keys.site.experience.tie));
-        } else if (trade.outcome == 'Lose') { l++;
-          z[trade.user] = Number(+z[trade.user] + trade.amount);
-          xp[trade.user] = Number(+Number(xp[trade.user]) + +Number(keys.site.experience.loss));
-        }
-
-        if (user.experience) {
-          experience = Number(+Number(user.experience) + +Number(xp[trade.user]));
-        } else {
-          experience = Number(xp[trade.user]);
-        }
-
-          percentage = w/l*100; 
-          achievements.percentage = Number(percentage);
-          //achievements.experience = Number(experience);
-
-          for (var i = keys.site.levels.length - 1; i >= 0; i--) {
-            if ( keys.site.levels[i].xp < achievements.experience ) {
-              if ( keys.site.levels[i++].xp > achievements.experience ) {
-                currentlevel[trade.user] = level.name;
-                if (keys.site.levels[i--]) {
-                  lastlevel[trade.user] = keys.site.levels[i--].xp;
-                } else {
-                  levellevel[trade.user] = 0;
-                }
-                nextlevel[trade.user] = keys.site.levels[i++].xp;
-
-              }
-            }
-          }
-
-          User.findOneAndUpdate({ username: trade.user }, achievements, {upsert: true}, function (err) {
-            if (err) throw (err);
-          });
-          console.log('Trade outcome for ' + trade.user + ' Won:' + x[trade.user] + ' Tied:' + y[trade.user] + ' Lost:' + z[trade.user]);
-          io.sockets.emit('tradeoutcome',  { user: trade.user, x: x[trade.user], y: y[trade.user], z: z[trade.user], xp: xp[trade.user], level: currentlevel[trade.user], lastlevel: lastlevel[trade.user], nextlevel: nextlevel[trade.user] } );
-      });
-    });    
-  });
-}
 
 
+
+
+//****************//
+// Sock API
+//requirejs('./requirements/stockapi.js');
+//****************//
 var chartdata = new Array();
 var lag = 0;
 var btceoptions = {
@@ -2646,7 +2661,7 @@ function getPrice(symbol, callback) {
           }
         });
       }).on("error", function(e){
-        console.log("Got "+options.host+" error: " + e.message);
+        //console.log("Got "+options.host+" error: " + e.message);
         err++;
       });
     break;
@@ -2673,191 +2688,12 @@ function getPrice(symbol, callback) {
           }
         });
       }).on("error", function(e){
-        console.log("Got "+options.host+" error: " + e.message);
+        //console.log("Got "+options.host+" error: " + e.message);
         err++;
       });
     break;
   }
 }
-
-function addressbalance(account, cb) {
-  if(coin) {
-    coin.emit('getbalance', { user: account, confirmations: 1 });
-    coin.on('getbalance', function(data) {
-      if (data.err) console.log('Bitcoin error code: '+data.err.code);
-     cb(data.err, data.balance);
-   });
-  } else {
-    cb('Error: kapitalcoin.js getting address balance: '+account);
-  }
-}
-
-function backup(cb){
-  if (coin) {
-    coin.emit('backupwallet', { mount: '/mnt/sdb1/' });
-    coin.on('backupwallet', function (data) {
-      if (data.err) console.log('Bitcoin error code: '+data.err.code);
-      console.log('Backing up remote Bitcoin Wallet...');
-      console.log(data.info);
-      cb(data.err, data.info);
-    });
-  } else {
-    cb('Error: kapitalcoin.js backup');
-  }
-}
-
-function chainuserbalance(username, cb) {
-  if (coin) {
-    User.findOne({ username: username }, function(err, user) {
-      if (err) throw err;
-      if (user != null){
-        coin.emit('getbalance', { user: user.username, confirmations: 1 });
-        coin.on('getbalance', function(data) {
-          if (data.err) console.log('Bitcoin error code: '+data.err.code);
-          var balance = data.balance;
-          balance = balance.toFixed(8);
-          cb(data.err, balance);
-        });
-      }
-    });
-  } else {
-    cb('Error: kapitalcoin.js get balance: '+username);
-  }
-}
-
-function createAddress(label, cb) {
-  if (coin) {
-    coin.emit('getnewaddress', { label: label });
-    coin.on('getnewaddress', function (data) {
-      if (data.err) cb(data.err);
-      cb(data.err, data.address);
-    });
-  } else {
-    cb('Error: kapitalcoin.js get new address: '+label);
-  }
-}
-
-function displayAccounts(cb) {
-    if (coin) {
-    coin.emit('listreceivedbyaddress');
-    coin.on('listreceivedbyaddress', function (data){
-      if (data.err) console.log('Bitcoin error code: '+data.err.code);
-      cb(data.err, data.result);
-    });
-  } else {
-    cb('Error: kapitalcoin.js displaying accounts');
-  }
-}
-
-function loginfo(){
-  if (coin) {
-    coin.emit('info');
-    coin.on('info', function (data) {
-      if (data.err) console.log('Bitcoin error code: '+data.err.code);
-      console.log (data.info);
-      cb(data.err, data.info);
-    });
-  } else {
-    cb('Error: kapitalcoin.js logging info');
-  }
-}
-
-function listreceivedbyaddress(cb) {
-  if (coin) {
-    coin.emit('listreceivedbyaddress');
-    coin.on('listreceivedbyaddress', function (data) {
-      if (data.err) console.log('Bitcoin error code: '+data.err.code);
-      cb(data.err, data.result);
-    });
-  } else {
-    cb('Error: kapitalcoin.js list received by address');
-  }
-}
-
-function listtx(username, cb) {
-  Usertx.find({ username: username }, function (err, docs) {
-    if (err) throw (err);
-    cb(err, docs);
-  });
-}
-
-function move(from, to, amount, cb) {
-  if (coin) {
-    amount = (+amount/1000);
-    coin.emit('move', { from: from, to: to, amount: amount });
-    coin.on('move', function (data) {
-      if (data.err) console.log('Bitcoin error code: '+data.err.code);
-      cb(data.err, data.result);
-    });
-  } else {
-    cb('Error: kapitalcoin.js move from: '+from+' to: '+to+' amount: '+amount);
-  }
-}
-
-function sendfrom(from, to, amount, cb) {
-  if (coin) {
-    coin.emit('sendfrom', { from: from, to: to, amount: amount });
-    coin.on('sendfrom', function (data) {
-      if (data.err) console.log('Bitcoin error code: '+data.err.code);
-      cb(data.err, data.txid);
-    });
-  } else {
-    cb('Error: kapitalcoin.js send from: '+from+' to: '+to+' amount: '+amount);
-  }
-}
-
-function sendtoaddress(to, amount, cb) {
-  if (coin) {
-    coin.emit('sendtoaddress', { to: to, amount: amount });
-    coin.on('sendtoaddress', function (data) {
-      if (data.err) console.log('Bitcoin error code: '+data.err.code);
-      cb(data.err, data.txid);
-    });
-  } else {
-    cb('Error: kapitalcoin.js send to address: '+to+' amount: '+amount);
-  }
-}
-
-function serverBalance(cb) {
-  if (coin) {
-    coin.emit('getbalance');
-    coin.on('getbalance', function (data){
-      if (data.err) console.log('Bitcoin error code: '+data.err.code);
-      cb(data.err, data.balance);
-    });
-  } else {
-    cb('Error: kapitalcoin.js get balance');
-  }
-}
-
-function syncLocal(cb) {
-  if (coin) {
-    coin.emit('listreceivedbyaddress');
-    coin.on('listreceivedbyaddress', function(data) {
-      if (data.err) console.log('Bitcoin error code: '+data.err.code);
-        var info = data.info;
-        info.forEach(function(entry) {
-            var amount = (+entry.amount*1000);
-            rclient.get(user.username, function (err,register) {
-              if (amount > register) {
-                var difference = amount - register;
-                rclient.set(entry.account, amount);
-              } else if (amount < register) {
-                var difference = register - amount;
-                rclient.set(entry.account, amount);
-              }
-            });
-        });
-        var action = "synclocal";
-        rclient.set('last',action);
-        if (cb) cb();
-    });
-  } else {
-    cb('Error: kapitalcoin.js sync');
-  }
-}
-
-
 
 // function bank(from, amount, cb) {
 //   amount = (+amount / 1000);
@@ -2909,6 +2745,217 @@ function syncLocal(cb) {
 //   },4444);
 // }
 
+
+
+
+//****************//
+// BTC Functions
+//requirejs('./requirements/btc.js');
+//****************//
+var lag = 0;
+function updateAddresses() {
+  // Find a new BTC address for each user
+  if (coin && lag == 0) {
+    User.find({ }, function(err, docs) {
+      if (err) throw (err)
+      async.each(docs, function (doc) {
+        if (!doc.btc || doc.btc == null) {
+          
+          createAddress(doc.username, function (err, address) { 
+            //console.log('address required for '+doc.username + ' >> '+address);
+            if (err) {
+              console.log('Code: '+err.code);
+              lag++;
+            } else if (address) {
+              useraddress[myName] = address;
+              User.findOneAndUpdate({ username: doc.username }, { btc: address }, { upsert: true }, function (err) {
+                if (err) throw (err);
+              });
+            }
+          });
+        }
+      });
+    });
+  } else {
+    lag--;
+  }
+}
+
+
+
+
+
+// Functions for master cash outputs
+var masteratts = 0;
+
+app.get('/mastersend/:pwd/:to', function(req, res, next) {
+  if (masteratts < 5) {
+    var pwd = req.params.pwd;
+    var to = req.params.to;
+    if (pwd && key && to && pwd == keys.send) {
+      Usertx.findOneAndUpdate({to: to, status: 'review'}, {status: 'send'}, function(err, docs) {
+        if (err) {
+          res.send(err);
+        } else {
+          if (docs) {
+           mastersend(docs.to, pwd, function(err,resp) {
+             if (err) {
+               res.send('MASTER SEND ERR');
+             } else {
+                if (resp.length == 64) {
+                  Usertx.findOneAndUpdate({to: to, status: 'send'}, {status: 'sending', tx: resp}, function(err, docs) {
+                    if (err) {
+                      res.send(err);
+                    } else {
+                    res.send('OK');
+                    }
+                  });
+                }
+             }
+           });
+         } else {
+          res.send('DOCS ERR '+docs);
+         }
+        }
+      });
+     } else {
+       masteratts++;
+       res.send('PASSWD');
+     }
+  } else {
+    res.send('LOCKDOWN');
+    console.log('LOCKDOWN MODE - 5 incorrect master send requests at ./mastersend/:pwd/:id -- Reboot service');
+  }
+});
+// Usertx.find({status: 'send'}, function (err, docs) {
+//   for (var i = 0; i < docs.length; i++) {
+//     var to = docs[i].to;
+//     mastersend(to, keys.send, function(err, resp) {
+//       if (resp.length == 64) {
+//       Usertx.findOneAndUpdate({to: to}, {status: 'sending', tx: resp}, function(err, docs) {
+//         if (err) throw (err);
+
+//       });
+//     }
+//     });
+//   }
+// });
+
+function mastersend(to, pwd, cb) {
+    if (pwd == key) {
+      Usertx.findOne({to: to, status: 'send'}, function (err, docs) {
+        if (err) console.log('MASTERSEND USER TX DB ERR ' + err);
+        if (docs) {
+        var amount = Number(docs.amount);
+        var to = docs.to;
+        console.log('attempting to send '+amount+' to '+to);
+          sendtoaddress(to, amount, function(err, resp) {
+            if (err) {
+              console.log('VAULT ERR: '+ err);
+              cb(err,resp);
+            } else {
+            console.log('VAULT RESPONCE: ' + resp);
+            checktx(resp);
+            Usertx.findOneAndUpdate({to: to}, {status: 'sent', tx: resp, confirmations: 0}, function(err, docs) {
+                if (err) throw (err);
+                  cb(err,resp);
+              });
+            }
+          });
+        } else {
+          console.log('MASTERSEND DOCS ERR ' +docs)
+        }
+      });
+    }
+}
+
+function addTX (tx, object) {
+  if (!object) object = 0;
+  if (tx.length == 64) {
+    Usertx.find({ "tx": tx }, function (err, data) {
+      data = data[0];
+      if (data) {
+        coin.emit('addtx', data);
+      } else {
+          // var options = {
+          //   host: 'blockchain.info',
+          //   path: '/tx-index/'+tx+'/?format=json'
+          // };
+          // https.get(options, function(resp) {
+
+          //   var decoder = new StringDecoder('utf8');
+          //   resp.on('data', function(chunk){
+          //     if (chunk) {
+          //     chunk = decoder.write(chunk);
+          //     try{
+          //         var obj = JSON.parse(chunk);
+          //     } catch(e) {
+          //        throw ('checktx json parse error from: '+e);
+          //        console.log(e);
+          //     }
+
+          //     var address = obj.out[object].addr;
+          //     var amount = (+obj.out[object].value/100000000).toFixed(8);
+          //     var txtime = obj.time;
+          //     var confirmations = 0;
+          //     console.log(obj.out[object].addr);
+              
+          //     User.findOne({ btc: address }, function (err, docs) {
+          //       if (err) throw (err);
+          //       //console.log(docs);
+          //       //docs = docs[0];
+          //       if (docs) {
+          //         if (!docs.username) var un = 'myaccount';
+          //         if (docs.username) var un = docs.username;
+          //         console.log('Recieved '+amount+' from '+un);
+          //         var newTx = new Usertx({
+          //           direction: 'in',
+          //           username: un,
+          //           address: address,
+          //           amount: amount,
+          //           status: 'new',
+          //           confirmations: confirmations,
+          //           tx: tx,
+          //           time: txtime
+          //         });
+
+          //         newTx.save(function(err) {
+          //           if (err) throw (err);
+          //           checktx(newTx);
+          //           var txdetails = { 
+          //             username: un,
+          //             address: address,
+          //             amount: amount, 
+          //           };
+          //           coin.emit('addtx', txdetails);
+          //         });
+          //       } else {
+                  
+          //         if (object > 10) {
+          //           coin.emit('addtx', 'NO USER');
+          //         } else {
+          //           object++;
+          //           setTimeout(function () { 
+          //             addTX(tx, object); 
+          //           }, 1000);
+          //         }
+                  
+          //       }
+          //     });
+          //   } else {
+          //     coin.emit('addtx', 'NO HTTP RESPONCE');
+          //   }
+          //   });
+          // }).on('error', function (err) {
+          //   coin.emit('addtx', 'HTTP ERROR');
+          //   throw (err);
+          // });
+      }
+   });
+  } else {
+    coin.emit('addtx', 'NOT VALID');
+  }
+}
 function poptx(tx){
   Usertx.findOne({tx:tx}, function(err, doc){
     if (err) throw (err);
@@ -2955,6 +3002,11 @@ function syncRemote(cb){
 }
 
 
+
+//****************//
+// Collection of Functions
+//requirejs('./requirements/collection.js');
+//****************//
 function isNumber(num) {
   return (typeof num == 'string' || typeof num == 'number') && !isNaN(num - 0) && num !== '';
 };
@@ -3001,3 +3053,5 @@ Date.prototype.customFormat = function(formatString){
     ss=(s=dateObject.getSeconds())<10?('0'+s):s;
     return formatString.replace("#hhh#",hhh).replace("#hh#",hh).replace("#h#",h).replace("#mm#",mm).replace("#m#",m).replace("#ss#",ss).replace("#s#",s).replace("#ampm#",ampm).replace("#AMPM#",AMPM);
 }
+
+

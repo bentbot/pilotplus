@@ -17,14 +17,14 @@ require(['modules/chat']);
 require(['modules/xp']);
 require(['modules/referrals']);
 
-var socket = io.connect('https://vbit.io:3030', {secure: true});
+var socket = io.connect('https://pilot.plus:3030', {secure: true});
 var user, email, currency, dualfactor, verified, userid, option, price, expires, direction, userdeposit, ratio, percentage, xp, level, specialtitle;
 var $users = $('#users ul');
 var $chatOutput = $('.messages');
 var $chatInput = $('#chat input');
 var $messagesOutput = $('.messages');
 var $messagesInput = $('#chat input');
-var sitetitle = 'vBit.io';
+var sitetitle = 'Pilot+';
 var status = true;
 var lastpass = false;
 var userpage = true;
@@ -48,6 +48,7 @@ var tradeevery = 5;
 var minsx, progress, symbols;
 var price = new Array();
 var updatekeystones = true;
+var publictrades = false;
 var date, percentagecomplete;
 
 socket.on('stripe', function (data) {
@@ -97,25 +98,30 @@ socket.on('servertime', function (data) {
   $('.servertime').html(date.customFormat( "#hhh#:#mm#:#ss#" ));
 });
 
+var selectedtime;
 socket.on('nexttrade', function (data) {
   stoptrading = data.stoptrading;
   tradeevery = data.next;
   nexttrade = data;
-  var show = '', selectedtime;
-  $.each(tradeevery, function (i, time) {
-    if (!selectedtime) selectedtime = time.seconds;;
-    if (!time.hrs) time.hrs = '';
-    if (time.hrs) time.hrs = time.hrs + ':';
-    if (time.hrs && time.mins < 10) time.mins = '0'+time.mins;
-    if (!time.mins) time.mins = '0';
-    if (!time.secs) time.secs = '00';
-    if (time.secs < 10 && time.secs > 0) time.secs = '0'+time.secs;
-    
-    if (selectedtime == time.seconds) {
-      var show = '<li data-seconds="'+time.seconds+'" alt="'+time.label+'">' + time.hrs + time.mins + ':'+ time.secs + '</li>';
-      $('.timefield ul').html(show);
+  var show = '';
+  $.each(tradeevery, function (t, time) {
+  $('.tradetime[data-time="'+time.time+'"]').html(time.string);
+    for (var i = selectedsymbol.length - 1; i >= 0; i--) {
+      selectedtime = $('.'+selectedsymbol[i]+' .time').val();
+      //var selectedtime = $('.'+symbol+' .time').val();
+      if (!selectedtime && t == 0) selectedtime = time.time;
+      if (selectedtime == time.time) {
+        $('.'+selectedsymbol[i]+' .flash').css('transition', 'opacity 0.5s, width '+stoptrading+'s').css('-webkit-transition', 'opacity 0.5s, width '+stoptrading+'s');
+        if ( time.seconds <= stoptrading ) {
+          $('.'+selectedsymbol[i]+' .flash').css('opacity', 1).css('width', '115%');
+        } else {
+          $('.'+selectedsymbol[i]+' .flash').css('opacity', 0).css('width', '0%');
+        }
+        var show = '<li data-time="'+time.time+'" data-seconds="'+time.seconds+'" alt="'+time.label+'">'+time.string+'</li>';
+        $('.timefield ul').html(show);
+        
+      }
     }
-
   });
   
 });
@@ -133,13 +139,13 @@ var defaultsymbol, selectedsymbol;
 socket.on('defaultsymbol', function (data) {
   defaultsymbol = data;
   if (window.location.hash) {
-    selectedsymbol = [String(window.location.hash.replace('#',''))];
+    selectedsymbol = new Array( String(window.location.hash.replace('#','')) );
   } else {
-    selectedsymbol = defaultsymbol;
+    selectedsymbol = new Array( defaultsymbol );
   } 
 });
 
-var price = [], selectedsymbol, lastprice, lasttype, lastsymbols, defaultsymbol, selectedsymbol;
+var price = [], lastprice, lasttype, lastsymbols, defaultsymbol, selectedsymbol;
 socket.on('symbols', function (data) {
   var menu = '', sidebar = '',
   symbols = new Array();
@@ -147,7 +153,7 @@ socket.on('symbols', function (data) {
   $.each(data, function(i, data) {
         
       if (!defaultsymbol && i==0) defaultsymbol = data.symbol;
-      if (!selectedsymbol) selectedsymbol = data.symbol;
+      if (!selectedsymbol) selectedsymbol = new Array( data.symbol );
       
       // Update global variables
       if (updatekeystones) $('.keystone'+data.symbol).html(data.price);
@@ -165,7 +171,8 @@ socket.on('symbols', function (data) {
         classes = '';
         $('.keystone'+data.symbol).removeClass('red').removeClass('green');
       }
-      if (selectedsymbol == data.symbol) { classes = classes + ' selected'; }
+      
+      if ( !selectedsymbol.indexOf(data.symbol) ) { classes = classes + ' selected'; }
       price[data.symbol] = data.price;
 
       var search = $('.symbolsearch').val();
@@ -185,6 +192,7 @@ socket.on('symbols', function (data) {
 
       if (activetrades.length > 0) sidebar = sidebar + '<ul class="'+data.symbol+'-trades trades">';
 
+      // Cycle through active trades in the menu
         $.each(activetrades, function(i, active) {
 
           var activeclasses, direction;
@@ -210,12 +218,20 @@ socket.on('symbols', function (data) {
           }
 
           if (active.symbol == data.symbol) {
-            sidebar = sidebar + '<li class="'+activeclasses+' sidebartrade keystonelink" data-symbol="'+active.symbol+'"><span style="float: left;">'+currencySwitch(active.currency)+' '+active.amount+'</span><span style="float:right;">'+direction+'</span></li>';
+            //sidebar = sidebar + '<li class="'+activeclasses+' sidebartrade keystonelink" data-symbol="'+active.symbol+'"><span style="float: left;">'+currencySwitch(active.currency)+' '+active.amount+'</span><span style="float:right;">'+direction+'</span></li>';
           }
 
         });
 
       sidebar = sidebar + '</ul>';
+
+
+      // Check and adjust the fontsize of buttons
+      // if ( $('.keystone'+data.symbol).html().length > 7) {
+      //   $('.keystone'+data.symbol+'.keystone-btn').css('font-size', '11px !important');
+      // } else {
+      //   $('.keystone'+data.symbol+'.keystone-btn').css('font-size', '12px');
+      // }
 
       $('.keystones').html(menu);
       $('.sidebar-symbols').html(sidebar);
@@ -223,7 +239,10 @@ socket.on('symbols', function (data) {
 });
 
 function showloginfield(username, bal) {
+
   if (username) {
+    $('.btnuser.username').html(username);
+    $('.btnfinance.userbal').html(bal);
       var login = '<div type="button" style="height: 31px;" class="btn btnuser username" tabindex="3">'+username+'</div>';
       if (bal) {
         login = login + '<div style="height: 31px;" class="btn userbal btnfinance" tabindex="2">'+bal+'</div>';
@@ -234,6 +253,8 @@ function showloginfield(username, bal) {
   } else {
     var login = '<input type="text" autocomplete="off" class="form-control headerlogin headerusername" name="email" id="email" placeholder="Username">' +
     '<input type="password" autocomplete="off" class="form-control headerlogin headerpassword" name="password" id="password" placeholder="Password">' +
+    '<div data-translate="2factor" class="header2factor">2 Factor Security</div>'+
+    '<input type="text" autocomplete="off" class="form-control headerauthy" name="authy" id="authy" placeholder="*******">'+
     '<button type="submit" class="btn loginbtn" data-translate="login">Login</button>';
     $('.topright').addClass('loginform');
   }
@@ -241,8 +262,6 @@ function showloginfield(username, bal) {
   $('.topright').html(login);
   
 }
-var displaysymbols;
-
 function loadTrades(displaysymbols, guest) {
  $('.hook').html('');
   
@@ -250,15 +269,15 @@ function loadTrades(displaysymbols, guest) {
   '<ul class="grid">';
   
       if (prefs.timer != false) {
-        page = page + '<li class="tradetimer" data-row="2" data-col="1" data-sizex="4" data-sizey="1">'+
-          '<div class="header progress progress-striped" style="margin:0px;">'+
-            '<div class="progress-bar progress-bar-warning tradeprogress" role="progressbar" aria-valuenow="'+percentagecomplete+'" aria-valuemin="0" aria-valuemax="100" style="width: '+percentagecomplete+'%;">'+
-          '</div>'+
-          '</div>'+
-        '</li>';
+        // page = page + '<li class="tradetimer" data-row="2" data-col="1" data-sizex="4" data-sizey="1">'+
+        //   '<div class="header progress progress-striped" style="margin:0px;">'+
+        //     '<div class="progress-bar progress-bar-warning tradeprogress" role="progressbar" aria-valuenow="'+percentagecomplete+'" aria-valuemin="0" aria-valuemax="100" style="width: '+percentagecomplete+'%;">'+
+        //   '</div>'+
+        //   '</div>'+
+        // '</li>';
       }
 
-      page = page + '<li class="tradestable" data-row="3" data-col="1" data-sizex="2" data-sizey="2">'+
+      page = page + '<li class="tradestable" data-row="3" data-col="1" data-sizex="4" data-sizey="2">'+
       '</li>'+
       '<li class="chat" data-row="3" data-col="2" data-sizex="2" data-sizey="2">'+
       '</li>'+
@@ -334,7 +353,8 @@ function loadDeposit() {
   $('.hook').html(page);
 
   var lastdata = false;
-  socket.on('wallet', function (data) { // btc address
+   socket.emit('cards', true);
+   socket.on('wallet', function (data) { // btc address
     if (data.currency!=lastdata) {
       lastdata = data.currency;
       showWallet(data);
@@ -342,7 +362,6 @@ function loadDeposit() {
       walletSendUpdate(data);
       showCards(data);
     }
-    socket.emit('cards', true);
   });
 
   socket.on('cards', function (data){
@@ -443,9 +462,9 @@ function loadHistory() {
       switch (data.page) {
         case 'trade':
           if (userpage == 'trade') {
-            displayOptions(data.symbol,data.guest);
+            displayOptions([data.symbol],data.guest);
           } else {
-            loadTrades(data.symbol,data.guest);
+            loadTrades([data.symbol],data.guest);
           }
           updateOption(data.symbol);
         break;
@@ -610,23 +629,23 @@ function loadHistory() {
     currency = data.currency;
     switch (data.currency) {
       case 'BTC':
-        if (data.balance < 1000) $('.userbal').html('<span style="text-transform:lowercase;margin-right: 2px;">m</span><i class="fa fa-btc"></i> '+data.balance+'');
-        if (data.balance > 1000) $('.userbal').html('<i class="fa fa-btc"></i> '+data.balance/1000+'');
+        if (data.balance < 1000) $('.userbal').html('<span style="text-transform:lowercase;margin-right: 2px;">m</span><i class="fa fa-btc"></i> '+data.balance+'').css('padding-top', '25px');
+        if (data.balance > 1000) $('.userbal').html('<i class="fa fa-btc"></i> '+data.balance/1000+'').css('padding-top', '25px');
       break;
       case 'USD':
-        $('.userbal').html('US <i class="fa fa-usd"></i> '+data.balance+'');
+        $('.userbal').html('<div style="font-size: 12px">US</div> <i class="fa fa-usd"></i> '+data.balance+'').css('padding-top', '15px');
       break;
       case 'CAD':
-        $('.userbal').html('CAD <i class="fa fa-usd"></i> '+data.balance+'');
+        $('.userbal').html('<div style="font-size: 12px">CAD</div> <i class="fa fa-usd"></i> '+data.balance+'').css('padding-top', '15px');
       break;
       case 'EUR':
-        $('.userbal').html('<i class="fa fa-eur"></i> '+data.balance+'');
+        $('.userbal').html('<i class="fa fa-eur"></i> '+data.balance+'').css('padding-top', '25px');
       break;
       case 'GBP':
-        $('.userbal').html('<i class="fa fa-gbp"></i> '+data.balance+'');
+        $('.userbal').html('<i class="fa fa-gbp"></i> '+data.balance+'').css('padding-top', '25px');
       break;
       case 'RUB':
-        $('.userbal').html('<i class="fa fa-rub"></i> '+data.balance+'');
+        $('.userbal').html('<i class="fa fa-rub"></i> '+data.balance+'').css('padding-top', '25px');
       break;
     }
     //showloginfield(data.name, data.balance, data.currency);
@@ -667,9 +686,9 @@ function loadHistory() {
            $('.apply'+symbol).removeClass('btn-warning').removeClass('btn-danger').removeClass('btn-default').addClass('btn-success').html('<span class="glyphicon glyphicon-ok"></span>');
 
            setTimeout(function(e){
-                $('.call'+symbol).removeClass('btn-default').addClass('btn-success');
-                $('.put'+symbol).removeClass('btn-default').addClass('btn-danger');
-                $('#'+symbol+' .direction .action').html('If');
+                $('.call'+symbol).removeClass('btn-warnng').removeClass('btn-default').addClass('btn-success');
+                $('.put'+symbol).removeClass('btn-warnng').removeClass('btn-default').addClass('btn-danger');
+                $('.'+symbol+' .action').val('none');
                 $('.apply'+symbol).removeClass('btn-success').addClass('btn-default').html('Apply');
             },500);
           });
@@ -678,11 +697,11 @@ function loadHistory() {
           symbol = data.sym;
           var err = data.msg;
           symbol = symbolSwitch(symbol);
-           $('.apply'+symbol).removeClass('btn-warning').removeClass('btn-default').addClass('btn-danger').html('<span  class="glyphicon glyphicon-remove"></span> '+err);
+           $('.apply'+symbol).removeClass('btn-warning').addClass('btn-danger').html('<span  class="glyphicon glyphicon-remove"></span> '+err);
 
            setTimeout(function(e){
-                $('.apply'+symbol).removeClass('btn-danger').removeClass('btn-default').addClass('btn-warning').html('Apply');
-            },2500);
+                $('.apply'+symbol).removeClass('btn-danger').addClass('btn-warning').html('Apply');
+            },1000);
           });
 
   socket.on('disconnect', function () {
@@ -722,13 +741,13 @@ socket.on('tradeoutcome', function (data) {
     historicTrades(data);
   });
   if (data.user == user) {
-    showSplit(data.x, data.y, data.z, 2000);
+    showSplit(data.x, data.y, data.z, 7000);
     setTimeout( function() {
       showXP(data.xp, data.lastxp, data.nextxp, 5000);
       setTimeout( function() {
         showSymbols();
       },5000)
-    }, 2000);
+    }, 7000);
   }
   $('.trades li').css('left', '100%');
   socket.emit('historictrades', { limit: 5 });
