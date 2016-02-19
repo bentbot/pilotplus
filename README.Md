@@ -3,26 +3,23 @@
 ## Setup
 
 ### 1. Install Node.js, Redis, and MongoDB
+Install [Node.js](https://nodejs.org/en/download/) with *npm* if notalready installed. This tutorial works best in an Ubuntu virtual environment.
+
+Use a batch script or `apt-get` to install **MongoDB** and **Redis**
 ```
-
-Install [Node.js](https://nodejs.org/en/download/) with *npm*
-
-Use a batch script or apt-get to install MongoDB and Redis
-
 $ sudo chmod +x ./dependencies.sh
 $ sudo bash ./dependencies.sh
-
-*Note that this script might install older versions*
-
 ```
-Setup Mongodb with a local admin and so that NodeJS can connect. 
+*Note that this script might install older versions of MongoDB and Redis.*
+
+Now setup Mongodb with a local admin and so that Node.JS can connect. 
 ```
 $ mongo
 use admin
-db.createUser({user:"supermongo", pwd:"7zof44Xncx2J1p8", roles: [ { role: "userAdminAnyDatabase", db: "admin" } ]});
-db.auth({user:"supermongo", pwd:"7zof44Xncx2J1p8"});
+db.createUser({user:"supermongo", pwd:"SuperSecureKey", roles: [ { role: "userAdminAnyDatabase", db: "admin" } ]});
+db.auth({user:"supermongo", pwd:"SuperSecureKey"});
 use binarybtc
-db.addUser("nodemongo", "WYd224Oa612h147")
+db.addUser("nodemongo", "MongoPassword")
 ```
 
 ### 2. Create the necessary key file `keys.json`
@@ -36,7 +33,7 @@ $ nano keys.json
 	"authy": "AuthyDeveloperOrProductionAPIKey",
 	"coin": "AnExtraLongPasswordForBackendBitcoinAPIAccess",
 	"cookie": "ACustomCookieHash6132629810",
-	"mongo": "mongodb://nodemongo:WYd224Oa612h147@localhost/binarybtc",
+	"mongo": "mongodb://nodemongo:MongoPassword@localhost/binarybtc",
 	"redis": "MasterRedisPasswordConfigSomethingLong",
 	"send": "MasterAdminKeyToSendMoney",
     "btcrpc": {
@@ -55,10 +52,9 @@ $ nano keys.json
 }
 
 ```
-An index of options included in `keys.json`:
-
-	* Symbol and currency selection
-	* Default symbol
+* An index of options included in `keys.json`
+    * Symbol and currency selection
+    * Default symbol
 	* API Settings
 	* Security settings
 	* IRC Channel
@@ -87,27 +83,33 @@ $ nvm install 0.10.25
 $ npm install -g forever
 $ npm install -g nodemon
 
-$ npm install
-$ npm update
+$ sudo npm install
+$ sudo npm update
      
 $ nodemon binarybtc.js
 
 ```
-Connect to the webserver
+##### Connect to the webserver at http://localhost:8080/
 
 ### Troubleshooting
 
-Diagnosing any and all errors which the console may output is important, because they can pile up and crash the webserver.
+Diagnosing any errors the console may output is important. 
+##### Common Errors
 
-Common Errors Include:
+###### Missing, undefined, or unknown *Node_Modules* plugins
+* Run the NPM installer again `sudo npm install` or `sudo npm update`
+* Try installing missing Node modules manually by finding the name in the error:
+    *  *...Missing required module* **'object-manage'**
+    *  Run `sudo npm install object-manage`
 
-	* Could not connect to MongoDB 
-		Use `mongo` in the console to check if MongoDB is correctly installed.
-		Refer to section 1 to create a MongoDB collection with a user and password
-		Add the correct username and password as a MongoDB link inside `keys.json`
-		`mongo:	"mongodb://[user]:[pass]@localhost/[collection]",`
-	* Redis connection errors
-		Make sure `redis-server` is installed and running by using `top` in the console.
-		Check your Redis config file `sudo nano /etc/redis/redis.conf` for an authentication password
-		Open keys.json and edit the Redis password line
-		`"redis": "169buildinglsbonr3memb3rproud789",`
+###### Could not connect to MongoDB 
+* Use `mongo` in the console to check if MongoDB is correctly installed.
+* Refer to section 1 to create a MongoDB collection with a user and password
+* Add the correct username and password as a MongoDB link inside `keys.json`
+	* `mongo:	"mongodb://[user]:[pass]@localhost/[collection]",`
+
+###### Redis connection errors
+* Make sure `redis-server` is installed and running by using `top` in the console.
+* Check your Redis config file `sudo nano /etc/redis/redis.conf` for an authentication password
+* Open keys.json and edit the Redis password line
+    * `"redis": "RedisMasterPassword",`

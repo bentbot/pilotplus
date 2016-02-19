@@ -1,5 +1,5 @@
 {
-	"authy": "7a62ad572fb2b77aac354d32c9653fba",
+	"authy": "AUTHYAPIKEY",
 	"currencies": [
 		{ "symbol": "BTC", "name": "Bitcoin" }, 
 		{ "symbol": "CAD", "name": "Canadian" },
@@ -21,27 +21,46 @@
 		{ "symbol": "USDCNH", "name": "Chinese Yuan", "type": "Exchange" },
 		{ "symbol": "USDHKD", "name": "Hong Kong", "type": "Exchange" },
 		{ "symbol": "USDSGD", "name": "Singapore", "type": "Exchange" },
-		{ "symbol": "GOOG", "name": "Google", "type": "Stock" },
 		{ "symbol": "AAPL", "name": "Apple", "type": "Stock" },
-		{ "symbol": "YHOO", "name": "Yahoo", "type": "Stock" }
+		{ "symbol": "GOOG", "name": "Google", "type": "Stock" },
+		{ "symbol": "FB", "name": "Facebook", "type": "Stock" },
+		{ "symbol": "YHOO", "name": "Yahoo", "type": "Stock" },
+		{ "symbol": "AMZN", "name": "Amazon", "type": "Stock" },
+		{ "symbol": "MSFT", "name": "Microsoft", "type": "Stock" },
+		{ "symbol": "DELL", "name": "Dell", "type": "Stock" },
+		{ "symbol": "INTC", "name": "Intel", "type": "Stock" },
+		{ "symbol": "AMD", "name": "AMD", "type": "Stock" },
+		{ "symbol": "TSLA", "name": "Tesla Motors", "type": "Stock" },
+		{ "symbol": "BABA", "name": "Alibaba", "type": "Stock" },
+		{ "symbol": "F", "name": "Ford Motors", "type": "Stock" },
+		{ "symbol": "GM", "name": "General Motors", "type": "Stock" },
+		{ "symbol": "FCAU", "name": "Chrysler Motors", "type": "Stock" },
+		{ "symbol": "HMC", "name": "Honda", "type": "Stock" },
+		{ "symbol": "005380.KS", "name": "Hyundai", "type": "Stock" },
+		{ "symbol": "NSANY", "name": "Nissan", "type": "Stock" },
+		{ "symbol": "VW.SW", "name": "Volkswagen", "type": "Stock" },
+		{ "symbol": "CVX", "name": "Chevron", "type": "Stock" },
+		{ "symbol": "RDSA", "name": "Royal Dutch Shell", "type": "Stock" },
+		{ "symbol": "XOM", "name": "Exxon Mobil", "type": "Stock" }
 	],
+	"webport": 8080,
 	"defaultsymbol": "BTCUSD",
-	"coin": "X8tw74e6Htba9xkBTqjPfmRb3zD5qugkZ5CAMXkrbeSeDeNh87V5qXzfvM6bmC4cupHhVsfG",
-	"cookie": "LxBNGlQxLnyzKndMSA8Lo6cONvC0XPcp",
+	"coin": "VeryLongBitCoinMasterKey",
+	"cookie": "SpecialCookieSaltxPGDMaY7yTQca",
 	"irc": {
-		"connection": "vbit.io",
-		"channel": "#vbit"
+		"connection": "pilot.plus",
+		"channel": "#github"
 	},
-	"mongo": "mongodb://nodemongo:gBqYMU115g2n44M@localhost/binarybtc",
-	"redis": "169buildinglsbonr3memb3rproud789",
-	"send": "wBjRKNBvTUgpnb2W3dgMu6tu",
+	"mongo": "mongodb://nodemongo:mongopassword@localhost/binarybtc",
+	"redis": "masterredispassword",
+	"send": "MasterMoneySendingPassword",
     "btcrpc": {
         "user": "bitcoin",
-        "password": "8k2N1mTbW25vD8PDoVhxPGDMaY7yTQcasSyFRsZxvKcQ"
+        "password": "LongBitcoinRemotePassword"
 	},
 	"stripe": { 
-		"secret": "sk_test_qdvsjiU96yXvxOFDlzVFGrpI",
-		"publishable": "pk_test_aPrTxoP7NMvcVl2NXEHYncqa" 
+		"secret": "sk_test_Stripe.com_API_Secret",
+		"publishable": "pk_test_Stripe.com_API_Publishable" 
 	},
 	"paypal": {
 		"public": "null",
@@ -50,13 +69,14 @@
 	"site": {
 		"title": "Pilot+",
 		"description": "Trading on Another Level",
-		"domain": "vbit.io",
+		"domain": "pilot.plus",
 		"updatems": "3000",
-		"admin": "crunk",
+		"admin": "admin",
 		"robots": "allow",
-		"offers": { "default": "0.85", "maximum": "1.00", "minimum": "0.80" },
+		"api": true,
+		"offers": { "default": "0.80", "maximum": "0.90", "minimum": "0.70" },
 		"tradeevery": [
-			{ "label": "60 Seconds", "minutes": "1" },
+			{ "label": "60 Seconds", "seconds": "60" },
 			{ "label": "5 Minutes", "minutes": "5" },
 			{ "label": "15 Minutes", "minutes": "15" },
 			{ "label": "30 Minutes", "minutes": "30" },
@@ -84,27 +104,22 @@
 			{ "title": "Pro", "xp": "500000" },
 			{ "title": "Master", "xp": "1000000" }
 		],
-		"chart": { 
-			"type": "line",
-			"width": "100%",
-			"height": "100%",
-			"lineColor": "#3da4be",
-			"fillColor": "#FFF9F1", 
-			"lineWidth": "2",
-			"lineWidthHover": "2",
-			"minSpotColor": "undefined",
-		    "maxSpotColor": "undefined",
-		    "highlightSpotColor": "undefined",
-		    "highlightLineColor": "undefined"
-		}
+		"addfunds": [
+			{ "label": "$25", "amount": 2500 },
+			{ "label": "$50", "amount": 5000 },
+			{ "label": "$75", "amount": 7500 },
+			{ "label": "$100", "amount": 10000 },
+			{ "label": "$200", "amount": 20000 },
+			{ "label": "$300", "amount": 30000 }
+		]
 	},
 	"mailer": {
-		"user": "mail@vbit.io",
-		"password": "++61@travel@PROVE@plants@74++"
+		"user": "mail@pilot.plus",
+		"password": "MailPassword"
 	},
 	"ssl": {
-		"ca": "/home/ubuntu/keys/server.ca",
-		"key": "/home/ubuntu/keys/server.key",
-		"cert": "/home/ubuntu/keys/vbit_io.crt"
+		"ca": "/home/ubuntu/keys/domain.ca.pem",
+		"key": "/home/ubuntu/keys/domain.key",
+		"cert": "/home/ubuntu/keys/domain.crt.pem"
 	}
 }
