@@ -2,15 +2,20 @@
 
 ## Setup
 
-### 1. Install Redis and MongoDB for user management
+### 1. Install Node.js, Redis, and MongoDB
 ```
-Create a batch script to install MongoDB
+
+Install [Node.js](https://nodejs.org/en/download/) with *npm*
+
+Use a batch script or apt-get to install MongoDB and Redis
 
 $ sudo chmod +x ./dependencies.sh
 $ sudo bash ./dependencies.sh
 
+*Note that this script might install older versions*
+
 ```
-Setup Mongodb with a local admin and so that NodeJS can connect.
+Setup Mongodb with a local admin and so that NodeJS can connect. 
 ```
 $ mongo
 use admin
@@ -20,29 +25,59 @@ use binarybtc
 db.addUser("nodemongo", "WYd224Oa612h147")
 ```
 
-### 2. Create the necessary keyfile `keys.json` and specify application keys
+### 2. Create the necessary key file `keys.json`
+Edit the default keys.json file and edit the following options.
 ```
 $ nano keys.json
 
 {
-	"authy": "https://authy.com/developers",
-	"coin": "kapitalcoin private key",
-	"irc": "irc://localhost:6667/channel",
+	"authy": "AuthyDeveloperOrProductionAPIKey",
+	"coin": "AnExtraLongPasswordForBackendBitcoinAPIAccess",
+	"cookie": "ACustomCookieHash6132629810",
 	"mongo": "mongodb://nodemongo:WYd224Oa612h147@localhost/binarybtc",
-	"redis": "redismasterpass",
-	"send": "mastersend",
+	"redis": "MasterRedisPasswordConfigSomethingLong",
+	"send": "MasterAdminKeyToSendMoney",
+    "btcrpc": {
+        "user": "bitcoin",
+        "password": "ThatBitcoinRemoteAccessKey"
+	},
+	"stripe": { 
+		"secret": "sk_test_Stripe.com_PaymentAPI",
+		"publishable": "pk_test_Stripe.com_PaymentAPI" 
+	},
 	"ssl": {
-		"ca": "/home/ubuntu/keys/server.ca",
-		"key": "/home/ubuntu/keys/server.key",
-		"cert": "/home/ubuntu/keys/webserver.crt"
+		"ca": "/home/ubuntu/keys/domain.ca.pem",
+		"cert": "/home/ubuntu/keys/domain.crt.pem",
+		"key": "/home/ubuntu/keys/server.key"
 	}
 }
 
-
 ```
+An index of options included in `keys.json`:
 
+	* Symbol and currency selection
+	* Default symbol
+	* API Settings
+	* Security settings
+	* IRC Channel
+	* Site name and domain 
+	* Admin username
+	* Offer percentages
+	* Demo money
+	* Trade timing
+	* Allow or disallow signups or trading
+	* Maximum trade amount
+	* Ratio based trade shaping
+	* Experience and levels
+	* Funding options
+	* Mail Settings
+	* SSL Settings
 
 ### 3. Install NodeJS both locally and remotely to start the servers
+
+If you already have Node and NPM installed, start the server with `node binarybtc.js`
+
+If you need to install Node.Js, run these commands.
 ```
 $ sudo apt-get install npm
 $ wget -qO- https://raw.githubusercontent.com/creationix/nvm/v0.24.1/install.sh | bash
@@ -55,10 +90,4 @@ $ npm update
      
 $ nodemon binarybtc.js
 
-$ apt-add-repository ppa:bitcoin/bitcoin
-$ apt-get update
-$ apt-get install bitcoind
-$ bitcoind
-    
-$ forever kapitalcoin.js
 ```

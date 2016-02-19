@@ -1,4 +1,4 @@
-var port = 8080
+var you = 1
   , fs = require('fs')
   , url = require('url')
   , path = require('path')
@@ -31,6 +31,8 @@ var port = 8080
   , crypto = require('crypto')
   , requirejs = require('requirejs')
   , keys = require('./keys.json')
+  , port = keys.webport;
+
 
 // Stripe API
 var stripe = require("stripe")(keys.stripe.secret);
@@ -38,8 +40,6 @@ var stripe = require("stripe")(keys.stripe.secret);
 // 2 Factor
 authy.api.mode = 'production'
 authy.api.token = keys.authy;
-
-
 
 keys.ssl.lock = {
   "ca": fs.readFileSync(JSON.stringify(keys.ssl.ca).split('"')[1], 'utf8'),
