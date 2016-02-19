@@ -267,39 +267,52 @@ function loadTrades(displaysymbols, guest) {
   
   var page = '<div class="container" style="padding: 4px 0px;">'+
   '<ul class="grid">';
-  
-      if (prefs.timer != false) {
-        // page = page + '<li class="tradetimer" data-row="2" data-col="1" data-sizex="4" data-sizey="1">'+
-        //   '<div class="header progress progress-striped" style="margin:0px;">'+
-        //     '<div class="progress-bar progress-bar-warning tradeprogress" role="progressbar" aria-valuenow="'+percentagecomplete+'" aria-valuemin="0" aria-valuemax="100" style="width: '+percentagecomplete+'%;">'+
-        //   '</div>'+
-        //   '</div>'+
-        // '</li>';
-      }
+    var row = 1;
+        if (prefs.timer != false) {
+          // page = page + '<li class="tradetimer" data-row="2" data-col="1" data-sizex="4" data-sizey="1">'+
+          //   '<div class="header progress progress-striped" style="margin:0px;">'+
+          //     '<div class="progress-bar progress-bar-warning tradeprogress" role="progressbar" aria-valuenow="'+percentagecomplete+'" aria-valuemin="0" aria-valuemax="100" style="width: '+percentagecomplete+'%;">'+
+          //   '</div>'+
+          //   '</div>'+
+          // '</li>';
+        }
 
-      page = page + '<li class="tradestable" data-row="3" data-col="1" data-sizex="4" data-sizey="2">'+
-      '</li>'+
-      '<li class="chat" data-row="3" data-col="2" data-sizex="2" data-sizey="2">'+
-      '</li>'+
-      '<li class="xp" data-row="3" data-col="1" data-sizex="2" data-sizey="1">'+
-      '</li>'+
-      '<li class="recenttrades" data-row="3" data-col="1" data-sizex="4" data-sizey="2">'+
-      '</li>'+
-    '</ul>'+
-    '<div class="guest">'+
-    '</div>';
+        page = page + '<li class="tradestable" data-row="'+row+'" data-col="1" data-sizex="4" data-sizey="2"></li>'+
+
+      '</ul>'+
+      '<div class="clear"></div>'+
+      '<div class="guest"></div>';
+
     var page = page + '</div>';
   $('.hook').html(page);
   displayOptions(displaysymbols);
   updateOption(displaysymbols);
-  socket.emit('historictrades', { limit: 5, skip: 0 });
-  socket.on('historictrades', function (data) {
-    showhistoric(data);
-  });
-  if (user && prefs['statistics'] != false) displayxp();
-  if (user && prefs['chat'] != false) showChat();
-  //if (!user) showGuest();
-  if (!user) showloginfield();
+  if (user && prefs['historictrades'] != false) {
+    socket.emit('historictrades', { limit: 5, skip: 0 });
+    socket.on('historictrades', function (data) {
+      $('.grid').append('<li class="recenttrades" data-row="'+row+'" data-col="1" data-sizex="4" data-sizey="2"></li>'); row++;
+      showhistoric(data);
+    });
+  }
+  if (user && prefs['statistics'] != false) {
+    $('.grid').append('<li class="xp" data-row="'+row+'" data-col="2" data-sizex="2" data-sizey="2"></li>'); row++;
+    displayxp();
+  }
+  if (prefs['chat'] != false) {
+    $('.grid').append('<li class="chat" data-row="'+row+'" data-col="1" data-sizex="2" data-sizey="2"></li>'); row++;
+    showChat();
+  }
+  
+  if (!user) {
+    socket.emit('publictrades');
+    socket.on('publictrades', function (trades) {
+      $('.grid').append('<li class="historictrades guesttrades" data-row="'+row+'" data-col="2" data-sizex="2" data-sizey="2"></li>'); row++;
+      showhistoric(trades);
+    });
+    showloginfield();
+    showGuest();
+  } 
+
 }
 
 function loadAdmin() {
@@ -462,9 +475,9 @@ function loadHistory() {
       switch (data.page) {
         case 'trade':
           if (userpage == 'trade') {
-            displayOptions([data.symbol],data.guest);
+            displayOptions([data.symbol]);
           } else {
-            loadTrades([data.symbol],data.guest);
+            loadTrades([data.symbol]);
           }
           updateOption(data.symbol);
         break;
@@ -545,8 +558,7 @@ function loadHistory() {
 
     function page(name, symbol) {
       //console.log('changepage '+name+' '+symbol);
-      if (user) socket.emit('page', { page: name, symbol: symbol });
-      if (!user) socket.emit('page', { page: name, symbol: symbol, guest: true });
+      socket.emit('page', { page: name, symbol: symbol });
     }
 
     socket.on('hello', function (data) {

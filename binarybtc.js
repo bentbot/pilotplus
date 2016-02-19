@@ -1377,6 +1377,18 @@ io.sockets.on('connection', function (socket) {
       });
   });
 
+  socket.on('publictrades', function (data) {
+    if (!data) var limit = 50;
+    if (!data) var skip = 0;
+    if (data && data.limit) var limit = data.limit;
+    if (data && data.skip) var skip = data.skip;
+    Historictrades.find({}).sort({ time: -1 }).skip(skip).limit(limit).exec(function (err,docs) {
+      if (err) throw (err);
+      socket.emit('publictrades', docs);
+    });
+
+  });
+
 // Bitcoin Socket API
   socket.on('coinconnect', function (data) {
 

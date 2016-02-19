@@ -109,6 +109,11 @@ $(".hook").on("mouseup",".reveal",function(e) {
     $(".pwd").replaceWith($('.pwd').clone().attr('type', 'password'));
 });
 
+$(".menu").on("click", ".sidebar-search .fa-search", function (e) {
+  e.preventDefault();
+  $('.symbolsearch').focus();
+});
+
 
 
 $(".globalheader").on("click",".keystones li a",function(e) {
@@ -135,10 +140,6 @@ $(".menu").on("click",".keystonesidebar",function(e) {
   }
 });
 
-$(".menu").on("click", ".sidebar-search .fa-search", function (e) {
-  e.preventDefault();
-  $('.symbolsearch').focus();
-});
 
 // $(".menu").on("keyup",".symbolsearch", function(e) {
 //   e.preventDefault();
@@ -747,6 +748,8 @@ $('.hook').click(function() {
     //   $users.find('li').removeClass('selected');
     //   $user.addClass('selected');
     // });
+
+
 
 // onload
 });

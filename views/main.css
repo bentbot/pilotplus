@@ -895,7 +895,6 @@ height: 70px;
   display: none;
 }
 
-
 .allhistorictrades {
     border: 1px solid #EEE;
     margin: 6px 0px;
@@ -905,14 +904,14 @@ height: 70px;
     -webkit-trasition: all 0.1s ease-in-out;
     trasition: all 0.1s ease-in-out;
 }
-.histroictrade {
-  -webkit-transition: all 0.5s ease-in-out;
-  transition: all 0.5s ease-in-out;
+.historictrade {
+  -webkit-transition: all 0.2s ease-in-out;
+  transition: all 0.2s ease-in-out;
   height: 36px;
 }
-.histroictrade td {
-  -webkit-transition: all 0.5s ease-in-out;
-  transition: all 0.5s ease-in-out;
+.historictrade td {
+  -webkit-transition: all 0.2s ease-in-out;
+  transition: all 0.2s ease-in-out;
   padding: 8px;
 }
 .historictrade.selected td {
@@ -923,6 +922,11 @@ height: 70px;
     background: #D2D2D2;
     height: 300px;
   }
+
+.guesttrades .row-fluid {
+  height: 177px;
+  overflow-y: scroll;
+}
 @keyframes xp {
   0% {
     opacity: 0;
@@ -2541,9 +2545,12 @@ display: none;
   text-align: center;
   position: relative;
 }.signupbonus .swoop {
-  transform: rotateZ(-45deg);
-  font-size: 46px;
-  color: #3FAFEA;
+  transform: rotateZ(-55deg);
+    font-size: 46px;
+    color: #EA3F3F;
+    top: 10px;
+    position: relative;
+    left: 10px;
 }
 
 .guestpanels div {
@@ -2967,6 +2974,9 @@ background: whitesmoke;
 .header.active {
   background: #F3F3F3;
   cursor: move;
+}
+.trading { 
+  margin-bottom: 10px;
 }
 .trading .header {
   padding: 5px 3px 5px 10px !important;
