@@ -290,6 +290,7 @@ function loadTrades(displaysymbols, guest) {
   if (user && prefs['historictrades'] != false) {
     socket.emit('historictrades', { limit: 5, skip: 0 });
     socket.on('historictrades', function (data) {
+      $('li.recenttrades').remove();
       $('.grid').append('<li class="recenttrades" data-row="'+row+'" data-col="1" data-sizex="4" data-sizey="2"></li>'); row++;
       showhistoric(data);
     });
@@ -304,17 +305,19 @@ function loadTrades(displaysymbols, guest) {
   }
   
   if (!user) {
-    socket.emit('publictrades');
-    socket.on('publictrades', function (trades) {
-      $('.grid').append('<li class="historictrades guesttrades" data-row="'+row+'" data-col="2" data-sizex="2" data-sizey="2"></li>'); row++;
-      showhistoric(trades);
-    });
+    $('.grid').append('<li class="recenttrades guesttrades" data-row="'+row+'" data-col="2" data-sizex="2" data-sizey="2"></li>'); row++;
     showloginfield();
     showGuest();
   } 
 
 }
-
+if (!user) {
+  setInterval( function() { socket.emit('publictrades'); }, 1000);
+  socket.on('publictrades', function (trades) {
+    showactive(trades.active);
+    showhistoric(trades.historic);
+  });
+}
 function loadAdmin() {
   $('.hook').html('');
   var page = '<div class="container" style="padding: 4px 0px;">'+

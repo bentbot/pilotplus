@@ -1,5 +1,6 @@
 var selectedtrade;
 function showhistoric(data, append) {
+    console.log(data);
     var twins = 0;
     var tpush = 0;
     var tlosses = 0;
@@ -243,7 +244,7 @@ $(function() {
     $(this).addClass('selected');
     selectedtrade = $(this).attr('id');
   });
-  $('.hook').on("scroll", ".guesttrades .row-fluid", function (e) {
+  $('.hook').on("click", ".guesttrades .row-fluid", function (e) {
     // if ( $(this).scrollTop() + $(this).innerHeight() >= $(this)[0].scrollHeight ) {
       console.log(e);
     // }

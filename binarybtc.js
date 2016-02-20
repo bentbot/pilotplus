@@ -1382,9 +1382,12 @@ io.sockets.on('connection', function (socket) {
     if (!data) var skip = 0;
     if (data && data.limit) var limit = data.limit;
     if (data && data.skip) var skip = data.skip;
-    Historictrades.find({}).sort({ time: -1 }).skip(skip).limit(limit).exec(function (err,docs) {
+    Historictrades.find({}).sort({ time: -1 }).skip(skip).limit(limit).exec(function (err, historic) {
       if (err) throw (err);
-      socket.emit('publictrades', docs);
+      Activetrades.find({}).exec(function (err, actives) {
+        if (err) throw (err);
+        socket.emit('publictrades', { historic: historic, active: actives });
+      });
     });
 
   });
@@ -1829,10 +1832,10 @@ io.sockets.on('connection', function (socket) {
       }
     });
 
-    listtx(myName, function (err, data) {
-      if (err) throw (err);
-      socket.emit('wallettx', data);
-    });
+    // listtx(myName, function (err, data) {
+    //   if (err) throw (err);
+    //   socket.emit('wallettx', data);
+    // });
   },1000); // Run every second
 
   // User functions

@@ -44,7 +44,7 @@ function showactive(data) {
       
       tradehtml = tradehtml + '<tbody class="tradesbody">';
 
-      if (data.user == user) {
+      if (data.user == user || !user) {
 
         // Calulate possible win
         var possiblewin = (+data.amount+(data.amount*data.offer));
