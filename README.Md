@@ -3,7 +3,7 @@
 ## Setup
 
 ### 1. Install Node.js, Redis, and MongoDB
-Install [Node.js](https://nodejs.org/en/download/) with *npm* if notalready installed. This tutorial works best in an Ubuntu virtual environment.
+Install [Node.js](https://nodejs.org/en/download/) with *npm* if not already installed. This tutorial works best in  Ubuntu virtual environments.
 
 Use a batch script or `apt-get` to install **MongoDB** and **Redis**
 ```
