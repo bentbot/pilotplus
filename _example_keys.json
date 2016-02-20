@@ -1,0 +1,126 @@
+{
+	"authy": "AUTHYAPIKEY",
+	"currencies": [
+		{ "symbol": "BTC", "name": "Bitcoin" }, 
+		{ "symbol": "CAD", "name": "Canadian" },
+		{ "symbol": "USD", "name": "US Dollar" },
+		{ "symbol": "EUR", "name": "Euro" },
+		{ "symbol": "GBP", "name": "Pound" }
+	],
+	"symbols": [
+		{ "symbol": "BTCUSD", "name": "Bitcoin", "type": "Crypto" },
+		{ "symbol": "LTCUSD", "name": "Litecoin", "type": "Crypto" },
+		{ "symbol": "AUDUSD", "name": "Australian", "type": "Exchange" },
+		{ "symbol": "CADUSD", "name": "Canadaian", "type": "Exchange" },
+		{ "symbol": "EURUSD", "name": "Euro", "type": "Exchange" },
+		{ "symbol": "GBPUSD", "name": "Pound", "type": "Exchange" },
+		{ "symbol": "USDJPY", "name": "Japanese", "type": "Exchange" },
+		{ "symbol": "USDCHF", "name": "Swiss Franc", "type": "Exchange" },
+		{ "symbol": "NZDUSD", "name": "New Zealand", "type": "Exchange" },
+		{ "symbol": "USDINR", "name": "Indian Rupee", "type": "Exchange" },
+		{ "symbol": "USDCNH", "name": "Chinese Yuan", "type": "Exchange" },
+		{ "symbol": "USDHKD", "name": "Hong Kong", "type": "Exchange" },
+		{ "symbol": "USDSGD", "name": "Singapore", "type": "Exchange" },
+		{ "symbol": "AAPL", "name": "Apple", "type": "Stock" },
+		{ "symbol": "GOOG", "name": "Google", "type": "Stock" },
+		{ "symbol": "FB", "name": "Facebook", "type": "Stock" },
+		{ "symbol": "YHOO", "name": "Yahoo", "type": "Stock" },
+		{ "symbol": "AMZN", "name": "Amazon", "type": "Stock" },
+		{ "symbol": "MSFT", "name": "Microsoft", "type": "Stock" },
+		{ "symbol": "DELL", "name": "Dell", "type": "Stock" },
+		{ "symbol": "INTC", "name": "Intel", "type": "Stock" },
+		{ "symbol": "AMD", "name": "AMD", "type": "Stock" },
+		{ "symbol": "TSLA", "name": "Tesla Motors", "type": "Stock" },
+		{ "symbol": "BABA", "name": "Alibaba", "type": "Stock" },
+		{ "symbol": "F", "name": "Ford Motors", "type": "Stock" },
+		{ "symbol": "GM", "name": "General Motors", "type": "Stock" },
+		{ "symbol": "FCAU", "name": "Chrysler Motors", "type": "Stock" },
+		{ "symbol": "HMC", "name": "Honda", "type": "Stock" },
+		{ "symbol": "005380.KS", "name": "Hyundai", "type": "Stock" },
+		{ "symbol": "NSANY", "name": "Nissan", "type": "Stock" },
+		{ "symbol": "VW.SW", "name": "Volkswagen", "type": "Stock" },
+		{ "symbol": "CVX", "name": "Chevron", "type": "Stock" },
+		{ "symbol": "RDSA", "name": "Royal Dutch Shell", "type": "Stock" },
+		{ "symbol": "XOM", "name": "Exxon Mobil", "type": "Stock" }
+	],
+	"webport": 8080,
+	"defaultsymbol": "BTCUSD",
+	"coin": "VeryLongBitCoinMasterKey",
+	"cookie": "SpecialCookieSaltxPGDMaY7yTQca",
+	"irc": {
+		"connection": "pilot.plus",
+		"channel": "#github"
+	},
+	"mongo": "mongodb://nodemongo:mongopassword@localhost/binarybtc",
+	"redis": "masterredispassword",
+	"send": "MasterMoneySendingPassword",
+    "btcrpc": {
+        "user": "bitcoin",
+        "password": "LongBitcoinRemotePassword"
+	},
+	"stripe": { 
+		"secret": "sk_test_Stripe.com_API_Secret",
+		"publishable": "pk_test_Stripe.com_API_Publishable" 
+	},
+	"paypal": {
+		"public": "null",
+		"private": "null"
+	},
+	"site": {
+		"title": "Pilot+",
+		"description": "Trading on Another Level",
+		"domain": "pilot.plus",
+		"updatems": "3000",
+		"admin": "admin",
+		"robots": "allow",
+		"api": true,
+		"offers": { "default": "0.80", "maximum": "0.90", "minimum": "0.70" },
+		"tradeevery": [
+			{ "label": "60 Seconds", "seconds": "60" },
+			{ "label": "5 Minutes", "minutes": "5" },
+			{ "label": "15 Minutes", "minutes": "15" },
+			{ "label": "30 Minutes", "minutes": "30" },
+			{ "label": "1 Hours", "hours": "1" },
+			{ "label": "2 Hours", "hours": "2" }
+		],
+		"allowsignup": true,
+		"allowtrading": true,
+		"returntie": true,
+		"maxamount": "50",
+		"defaultcurrency": "USD",
+		"startingamount": "5",
+		"stoptrading": "3",
+		"offset": { "bottom": "100", "top": "0"  },
+		"experience": { "win": "250", "tie": "50", "loss": "35" },
+		"levels": [
+			{ "title": "Newbie", "xp": "0" },
+			{ "title": "Junior", "xp": "700" },
+			{ "title": "Rookie", "xp": "3000" },
+			{ "title": "Comrade", "xp": "10000" },
+			{ "title": "Captain", "xp": "40000" },
+			{ "title": "Senior", "xp": "80000" },
+			{ "title": "Minor", "xp": "100000" },
+			{ "title": "Major", "xp": "300000" },
+			{ "title": "Pro", "xp": "500000" },
+			{ "title": "Master", "xp": "1000000" }
+		],
+		"addfunds": [
+			{ "label": "$25", "amount": 2500 },
+			{ "label": "$50", "amount": 5000 },
+			{ "label": "$75", "amount": 7500 },
+			{ "label": "$100", "amount": 10000 },
+			{ "label": "$200", "amount": 20000 },
+			{ "label": "$300", "amount": 30000 }
+		]
+	},
+	"mailer": {
+		"user": "mail@pilot.plus",
+		"password": "MailPassword"
+	},
+	"ssl": {
+		"ca": "/home/ubuntu/keys/domain.ca.pem",
+		"key": "/home/ubuntu/keys/domain.key",
+		"cert": "/home/ubuntu/keys/domain.crt.pem"
+	}
+}
+
