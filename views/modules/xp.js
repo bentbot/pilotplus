@@ -3,7 +3,7 @@ var html = '<div class="xpblock">'+
   '<div class="row-fluid">'+
   '<div class="span12">'+
   '<div class="header capitalize">'+user+'<span class="yellow" style="float:right;"><i class="fa fa-star"></i> Level <span class="userlevel">'+level+'</span></span></div>'+
-  '<table class="xp table" id="usertable">'+
+  '<table class="xp table" style="display: none;" id="usertable">'+
     '<tbody>'+
       '<tr>'+
         '<td style="width: 33%;">'+

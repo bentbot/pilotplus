@@ -1,6 +1,6 @@
 var selectedtrade;
 function showhistoric(data, append) {
-    console.log(data);
+
     var twins = 0;
     var tpush = 0;
     var tlosses = 0;
@@ -8,9 +8,10 @@ function showhistoric(data, append) {
     $('.historictrades').html('');
     var tradehtml = '';
     tradehtml = tradehtml+ '<div class="historicblock"><div class="header" data-translate="historictrades">Historic Trades <span style="float:right"><span class="green twins">x</span> / <span class="orange tpush">y</span> / <span class="red tlosses">z</span></span></div>';     
-    if (data) {
-    tradehtml = tradehtml + '<div class="row-fluid"><div class="span12"><div><table class="table" id="historictrades">';
-    tradehtml = tradehtml + '<tbody>';
+    if ( data ) {
+      lasthistoric = data;
+      tradehtml = tradehtml + '<div class="row-fluid"><div class="span12"><div><table class="table" id="historictrades">';
+      tradehtml = tradehtml + '<tbody>';
 
      var definingrow = '<tr class="historictrade definingrow">' +
                     '<td class="symbol">Symbol</td>'+

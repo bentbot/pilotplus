@@ -12,7 +12,6 @@ require(['modules/wallet']);
 require(['modules/withdrawal']);
 require(['modules/security']);
 require(['modules/terms']);
-require(['modules/prefs']);
 require(['modules/chat']);
 require(['modules/xp']);
 require(['modules/referrals']);
@@ -49,7 +48,7 @@ var minsx, progress, symbols;
 var price = new Array();
 var updatekeystones = true;
 var publictrades = false;
-var date, percentagecomplete;
+var date, percentagecomplete = 0, lasthistoric = null;
 
 socket.on('stripe', function (data) {
   Stripe.setPublishableKey(data.publishableKey);
@@ -93,6 +92,9 @@ socket.on('offer', function (data) {
   offer = data;
 });
 
+
+// Socket and Trade Timing Functions
+
 socket.on('servertime', function (data) {
   date = new Date(data);
   $('.servertime').html(date.customFormat( "#hhh#:#mm#:#ss#" ));
@@ -100,29 +102,45 @@ socket.on('servertime', function (data) {
 
 var selectedtime;
 socket.on('nexttrade', function (data) {
+  // Define Global Controls
   stoptrading = data.stoptrading;
   tradeevery = data.next;
   nexttrade = data;
   var show = '';
+
+  // Run each time every second or so
   $.each(tradeevery, function (t, time) {
-  $('.tradetime[data-time="'+time.time+'"]').html(time.string);
+    // Update appropriate time containers
+    $('.tradetime[data-time="'+time.time+'"]').html(time.string);
+    // Observe selected symbols
     for (var i = selectedsymbol.length - 1; i >= 0; i--) {
+      // Set the time selected from a symbolic field
       selectedtime = $('.'+selectedsymbol[i]+' .time').val();
-      //var selectedtime = $('.'+symbol+' .time').val();
+      // Set the selected time if not already filled
       if (!selectedtime && t == 0) selectedtime = time.time;
+      // Check if this specific time is the selected one
       if (selectedtime == time.time) {
+        // Animation to lock out / stop trading
         $('.'+selectedsymbol[i]+' .flash').css('transition', 'opacity 0.5s, width '+stoptrading+'s').css('-webkit-transition', 'opacity 0.5s, width '+stoptrading+'s');
-        if ( time.seconds <= stoptrading ) {
+        if ( time.seconds <= stoptrading || stoptrading == 0 ) {
           $('.'+selectedsymbol[i]+' .flash').css('opacity', 1).css('width', '115%');
+          $('.tradeprogress').addClass('progress-bar-danger');
         } else {
           $('.'+selectedsymbol[i]+' .flash').css('opacity', 0).css('width', '0%');
+          $('.tradeprogress').removeClass('progress-bar-danger');
         }
+
+        // Show the trade time remaining specific to each symbol
         var show = '<li data-time="'+time.time+'" data-seconds="'+time.seconds+'" alt="'+time.label+'">'+time.string+'</li>';
-        $('.timefield ul').html(show);
+        $('.'+selectedsymbol[i]+'_tradetimes').html(show);
         
+        tradeprogress = (time.seconds / time.time ) * 100;
+        $('.tradeprogress').attr('aria-valuenow', tradeprogress).width(tradeprogress+'%');
+
       }
     }
-  });
+
+  }); // Each Trade, Every Time
   
 });
 
@@ -162,66 +180,79 @@ socket.on('symbols', function (data) {
       var classes = '';
       
       if (price[data.symbol] > data.price) {
-        classes = 'red';
+        classes = 'red ';
         $('.keystone'+data.symbol).addClass('red').removeClass('green');
       } else if (price[data.symbol] < data.price) {
-        classes = 'green';
+        classes = 'green ';
         $('.keystone'+data.symbol).removeClass('red').addClass('green');
       } else {
         classes = '';
         $('.keystone'+data.symbol).removeClass('red').removeClass('green');
       }
       
-      if ( !selectedsymbol.indexOf(data.symbol) ) { classes = classes + ' selected'; }
+      if ( !selectedsymbol.indexOf(data.symbol) ) { classes = classes + 'selected '; }
       price[data.symbol] = data.price;
 
+      // Render menus
+      if (data.price) menu = menu + '<li class="keystone keystonelink " data-type="'+data.type+'" data-symbol="'+data.symbol+'"><a>'+data.name+': <span class="keystone'+data.symbol+' '+classes+'">'+data.price+'</span></a></li>'; 
+
+      // Render sidebar
       var search = $('.symbolsearch').val();
 
-      // Render menus
+      // Add the type of symbol titles
       if (lasttype != data.type && data.price && !search) {
         sidebar = sidebar + '<div class="sidebar-title"> <span data-translate="trade">'+data.type+'</span></div>'
         lasttype = data.type;
       }
 
-      if ( data.price && search ) {
-        sidebar = sidebar + '<li class="keystone keystonesidebar keystonelink keystone'+data.symbol+' '+classes+'" data-type="'+data.type+'" data-symbol="'+data.symbol+'"><div class="name">'+data.name+'</div><div class="price">'+data.price+'</div></li>'; 
+      // Add sidebar items
+      
+      if ( data.price && search.length > 0 ) {
+        classes = classes + 'hide ';
       }
+      
+      sidebar = sidebar + '<li class="keystone keystonesidebar keystonelink keystone'+data.symbol+' '+classes+'" data-type="'+data.type+'" data-symbol="'+data.symbol+'"><div class="name">'+data.name+'</div><div class="price">'+data.price+'</div></li>'; 
 
-      if (data.price) menu = menu + '<li class="keystone keystonelink " data-type="'+data.type+'" data-symbol="'+data.symbol+'"><a>'+data.name+': <span class="keystone'+data.symbol+' '+classes+'">'+data.price+'</span></a></li>'; 
-      if (data.price && !search) sidebar = sidebar + '<li class="keystone keystonesidebar keystonelink keystone'+data.symbol+' '+classes+'" data-type="'+data.type+'" data-symbol="'+data.symbol+'"><div class="name">'+data.name+'</div><div class="price">'+data.price+'</div></li>'; 
+      // Add any active trades below the symbol
+      if ( activetrades.length > 0 && prefs["sidebartrades"] != false) {
 
-      if (activetrades.length > 0) sidebar = sidebar + '<ul class="'+data.symbol+'-trades trades">';
+        sidebar = sidebar + '<ul class="'+data.symbol+'-trades trades">';
 
-      // Cycle through active trades in the menu
-        $.each(activetrades, function(i, active) {
+        // Cycle through active trades
+          $.each(activetrades, function(i, active) {
 
-          var activeclasses, direction;
-          
-          if (active.direction == 'Put') {
-            direction = '<span class="red glyphicon glyphicon-arrow-down"></span> '+active.price;
-            if (price[active.symbol] > active.price) {
-              activeclasses = 'red';
-            } else if (price[active.symbol] < active.price) {
-              activeclasses = 'green';
-            } else {
-              activeclasses = '';
+            // Cycle through colors and directions
+            var activeclasses, direction;
+
+            if (active.direction == 'Put') {
+              direction = '<span class="red glyphicon glyphicon-arrow-down"></span> '+active.price;
+              if (price[active.symbol] > active.price) {
+                activeclasses = 'red';
+              } else if (price[active.symbol] < active.price) {
+                activeclasses = 'green';
+              } else {
+                activeclasses = '';
+              }
+            } else if (active.direction == 'Call') {
+              direction = '<span class="green glyphicon glyphicon-arrow-up"></span> '+active.price;
+              if (price[active.symbol] < active.price) {
+                activeclasses = 'red';
+              } else if (price[active.symbol] > active.price) {
+                activeclasses = 'green';
+              } else {
+                activeclasses = '';
+              }
             }
-          } else if (active.direction == 'Call') {
-            direction = '<span class="green glyphicon glyphicon-arrow-up"></span> '+active.price;
-            if (price[active.symbol] < active.price) {
-              activeclasses = 'red';
-            } else if (price[active.symbol] > active.price) {
-              activeclasses = 'green';
-            } else {
-              activeclasses = '';
+
+            if (active.symbol == data.symbol) {
+
+              sidebar = sidebar + '<li class="'+activeclasses+' sidebartrade keystonelink" data-symbol="'+active.symbol+'"><span style="float: left;">'+currencySwitch(active.currency)+' '+active.amount+'</span><span style="float:right;">'+direction+'</span></li>';
+            
             }
-          }
 
-          if (active.symbol == data.symbol) {
-            //sidebar = sidebar + '<li class="'+activeclasses+' sidebartrade keystonelink" data-symbol="'+active.symbol+'"><span style="float: left;">'+currencySwitch(active.currency)+' '+active.amount+'</span><span style="float:right;">'+direction+'</span></li>';
-          }
+          }); // Trades loop
 
-        });
+      } // Any active trades
 
       sidebar = sidebar + '</ul>';
 
@@ -240,10 +271,10 @@ socket.on('symbols', function (data) {
 
 function showloginfield(username, bal) {
 
-  if (username) {
-    $('.btnuser.username').html(username);
+  if (user) {
+    $('.btnuser.username').html(user);
     $('.btnfinance.userbal').html(bal);
-      var login = '<div type="button" style="height: 31px;" class="btn btnuser username" tabindex="3">'+username+'</div>';
+      var login = '<div type="button" style="height: 31px;" class="btn btnuser username" tabindex="3">'+user+'</div>';
       if (bal) {
         login = login + '<div style="height: 31px;" class="btn userbal btnfinance" tabindex="2">'+bal+'</div>';
       } else { 
@@ -268,15 +299,18 @@ function loadTrades(displaysymbols, guest) {
   var page = '<div class="container" style="padding: 4px 0px;">'+
   '<ul class="grid">';
     var row = 1;
-        if (prefs.timer != false) {
-          // page = page + '<li class="tradetimer" data-row="2" data-col="1" data-sizex="4" data-sizey="1">'+
-          //   '<div class="header progress progress-striped" style="margin:0px;">'+
-          //     '<div class="progress-bar progress-bar-warning tradeprogress" role="progressbar" aria-valuenow="'+percentagecomplete+'" aria-valuemin="0" aria-valuemax="100" style="width: '+percentagecomplete+'%;">'+
-          //   '</div>'+
-          //   '</div>'+
-          // '</li>';
+
+      // Trade timer
+        if (prefs["bigtimer"] == true) {
+          page = page + '<li class="tradetimer" data-row="2" data-col="1" data-sizex="4" data-sizey="1">'+
+            '<div class="header progress progress-striped" style="margin:0px;">'+
+              '<div class="progress-bar tradeprogress" role="progressbar" aria-valuenow="'+percentagecomplete+'" aria-valuemin="0" aria-valuemax="100" style="width: '+percentagecomplete+'%;">'+
+              '</div>'+
+            '</div>'+
+          '</li>';
         }
 
+        // Active trade table container
         page = page + '<li class="tradestable" data-row="'+row+'" data-col="1" data-sizex="4" data-sizey="2"></li>'+
 
       '</ul>'+
@@ -285,20 +319,27 @@ function loadTrades(displaysymbols, guest) {
 
     var page = page + '</div>';
   $('.hook').html(page);
+
   displayOptions(displaysymbols);
   updateOption(displaysymbols);
+
   if (user && prefs['historictrades'] != false) {
     socket.emit('historictrades', { limit: 5, skip: 0 });
     socket.on('historictrades', function (data) {
       $('li.recenttrades').remove();
-      $('.grid').append('<li class="recenttrades" data-row="'+row+'" data-col="1" data-sizex="4" data-sizey="2"></li>'); row++;
+
+      // Historic trades
+      $('.grid').append('<li class="recenttrades" data-row="'+row+'" data-col="1" data-sizex="4" data-sizey="3"></li>'); row++;
       showhistoric(data);
+
     });
   }
+
   if (user && prefs['statistics'] != false) {
     $('.grid').append('<li class="xp" data-row="'+row+'" data-col="2" data-sizex="2" data-sizey="2"></li>'); row++;
     displayxp();
   }
+
   if (prefs['chat'] != false) {
     $('.grid').append('<li class="chat" data-row="'+row+'" data-col="1" data-sizex="2" data-sizey="2"></li>'); row++;
     showChat();
@@ -311,13 +352,28 @@ function loadTrades(displaysymbols, guest) {
   } 
 
 }
+
 if (!user) {
-  setInterval( function() { socket.emit('publictrades'); }, 1000);
-  socket.on('publictrades', function (trades) {
-    showactive(trades.active);
-    showhistoric(trades.historic);
+
+  var limittrades = 30;
+  var skiptrades = 0;
+
+  setInterval( function() { socket.emit('publichistorictrades', { limit: limittrades, skip: skiptrades }); }, 1000);
+
+  var displayhistoric = true;
+
+  socket.on('publichistorictrades', function (trades) {
+    if (displayhistoric) {
+      showhistoric(trades);
+      displayhistoric = false;
+    }
   });
+
+  socket.on('allactivetrades', function (data) {
+    showactive(data);
+  })
 }
+
 function loadAdmin() {
   $('.hook').html('');
   var page = '<div class="container" style="padding: 4px 0px;">'+
@@ -350,10 +406,6 @@ function loadAdmin() {
   socket.on('remotebals', function (data) {
     showRemoteBals(data);
   });
-
-  socket.on('allactivetrades', function (data) {
-    showAllActive(data);
-  })
 
 }
 
@@ -721,19 +773,20 @@ function loadHistory() {
 
   socket.on('disconnect', function () {
     status = false;
-    $('.btnlogo').removeClass('btn-warning').addClass('btn-danger');
-    $('.btnlogo').html('<div class="glyphicon glyphicon-warning-sign"></div> <div data-translate="lostconnection">Lost Connection</div>');
-  });
-  socket.on('reconnect', function () {
-    status = true;
-    $('.btnlogo').removeClass('btn-warning').removeClass('btn-danger').addClass('btn-success');
-    $('.btnlogo').html('<div class="glyphicon glyphicon-lock"></div> <div data-translate="reconnected">Reconnected</div>');
-    setTimeout(function(){
-      $('.btnlogo').removeClass('btn-success').removeClass('btn-danger');
-      $('.btnlogo').html('<div class="bars"><div class="line one"></div><div class="line two"></div><div class="line three"></div></div>');
-    },3000);
+    $('.btnlogo').removeClass('check').addClass('open error');
+    $('.btnlogo .label').html('Offline');
   });
 
+  socket.on('reconnect', function () {
+    status = true;
+    $('.btnlogo').removeClass('open error').addClass('check');
+    $('.btnlogo .label').html('Online');
+    setTimeout(function(){
+      $('.btnlogo').removeClass('check');
+      $('.btnlogo .label').html('Options');
+      if ( $('.menu').hasClass('open') ) $('.btnlogo').addClass('open');
+    },3000);
+  });
 
   socket.on('tradingopen', function (data) {
     var tradingopen = data;
@@ -860,6 +913,13 @@ function select_all(el) {
         textRange.moveToElementText(el);
         textRange.select();
     }
+}
+// String contain / find
+if (!('contains' in String.prototype)) {
+    String.prototype.contains = function (str, startIndex) {
+        "use strict";
+        return -1 !== String.prototype.indexOf.call(this, str, startIndex);
+    };
 }
 
 // Function to add custom formats to dates in milliseconds

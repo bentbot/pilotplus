@@ -3,44 +3,47 @@ function showactive(data) {
       var tradehtml = '';
       if (data.length < 1) tradehtml = tradehtml + '<div class="usertrades"><div class="header" data-translate="noactivetrades">No Active Trades</div>';
 
-      $.each(data, function (index, data) {
+      // Timing loop
+      var timeleft, totalseconds, totaltime, totaltimestring = '';
+      $.each(data, function (index, trade) {
 
-        // Calulate timing
-        var timeleft, totalseconds, totaltime, totalstring = '';
-        if (data.expires > totalseconds) {
-          totalseconds = data.expires;
-          $('.full.tradetime').data('time', totalseconds);
+        // Display the next trade in the header
+        if ( !totaltime || trade.expires >= totaltime ) {
+          totalseconds = trade.expires;
+          totaltime = trade.expires; // 60 seconds
+          $('.full.tradetime').attr('time', totalseconds); // Setting the attrbute will automatically set it's time
         }
 
+      });
+
+      // Display loop
+      $.each(data, function (index, data) {
+
+        // Update trade times
         for (var i = nexttrade.next.length - 1; i >= 0; i--) {
+          if ( totaltime == nexttrade.next[i].time ) totaltimestring = nexttrade.next[i].string;
           if ( data.expires == nexttrade.next[i].time ) {
-            timeleft = nexttrade.next[i].string;
-          }
-          if ( data.expires >= nexttrade.next[i].time ) {
-            totalseconds = nexttrade.next[i].seconds;
-            totaltime = nexttrade.next[i].time;
-            totalstring = nexttrade.next[i].string;
+            timeleft = nexttrade.next[i].string; // 0:29
+            totalseconds = nexttrade.next[i].seconds; // 29..28
           }
         };
 
-    if (index == 0) {
-      tradehtml = tradehtml + '<div class="usertrades"><div class="header"><span data-translate="activetrades">Active Trades</span> <span style="float:right;"><span class="full tradetime" data-time="'+totaltime+'">'+totalstring+'</span> <i class="fa fa-clock-o hide"></i></span></div>';
-    } 
-
-    if ( index == 0 ) {
-      tradehtml = tradehtml + '<div class="row-fluid"><div class="span12 "><div><table class="table tradestable" id="trades">';
-      '<thead>' +
-          '<tr>';
-            if (publictrades == true) tradehtml = tradehtml + '<th>User</th>';
-            tradehtml = tradehtml + '<th class="symbol">Symbol</th>'+
-            '<th>Trade</th>'+
-            '<th>Amount</th>'+
-            '<th>Prize</th>'+
-            '<th>Outcome</th>'+
-            '<th>Time</th>'+
-          '</tr>' +
-      '</thead>';
-    }
+        // Create trades table header
+        if (index == 0) {
+          tradehtml = tradehtml + '<div class="usertrades"><div class="header"><span data-translate="activetrades">Active Trades</span> <span style="float:right;"><span class="full tradetime" data-time="'+totaltime+'">'+totaltimestring+'</span> <i class="fa fa-clock-o hide"></i></span></div>';
+          tradehtml = tradehtml + '<div class="row-fluid"><div class="span12 "><div><table class="table tradestable" id="trades">';
+          '<thead>' +
+              '<tr>';
+                if (publictrades == true) tradehtml = tradehtml + '<th>User</th>';
+                tradehtml = tradehtml + '<th class="symbol">Symbol</th>'+
+                '<th>Trade</th>'+
+                '<th>Amount</th>'+
+                '<th>Prize</th>'+
+                '<th>Outcome</th>'+
+                '<th>Time</th>'+
+              '</tr>' +
+          '</thead>';
+        }
       
       tradehtml = tradehtml + '<tbody class="tradesbody">';
 

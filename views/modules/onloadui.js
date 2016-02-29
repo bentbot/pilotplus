@@ -141,17 +141,17 @@ $(".menu").on("click",".keystonesidebar",function(e) {
 });
 
 
-// $(".menu").on("keyup",".symbolsearch", function(e) {
-//   e.preventDefault();
-//   var s = $(this).val();
-//   if (s.length > 0) {
-//     $('.sidebar-symbols .sidebar-title').slideUp();
-//   } else {
-//     $('.sidebar-symbols .sidebar-title').slideDown();
-//   }
-//   $('.sidebar-symbols .keystone').find(".name:not(:contains(" + s + "))").parent().slideUp();
-//   $('.sidebar-symbols .keystone').find(".name:contains(" + s + ")").parent().slideDown();
-// });
+$(".menu").on("keyup",".symbolsearch", function(e) {
+  e.preventDefault();
+  var s = $(this).val();
+  if (s.length > 0) {
+    $('.sidebar-symbols .sidebar-title').slideUp();
+  } else {
+    $('.sidebar-symbols .sidebar-title').slideDown();
+  }
+  $('.sidebar-symbols .keystone').find(".name:not(:contains(" + s + "))").parent().slideUp();
+  $('.sidebar-symbols .keystone').find(".name:contains(" + s + ")").parent().slideDown();
+});
 
 var scroll;
 $('.scroller').mouseover( function() {
@@ -269,7 +269,7 @@ $(".globalheader").on("click",".keystones .seeall",function(e) {
       } else if (html == "Error"){
         $('.loginbtn').removeClass('btn-success').addClass('btn-warning').html("<i class='fa fa-times'></i>");
       } else if (html == "Two Factor") {
-        $('.loginbtn').removeClass('btn-warning').addClass('btn-yellow').html("<img src='/assets/img/com.authy.authy.png' height='25' width='25'>");
+        $('.loginbtn').removeClass('btn-warning').addClass('btn-yellow').html("<img src='/assets/img/com.authy.authy.png' height='30' width='30'>");
         
         $('.headerlogin').hide();
         $('.headerpassword').hide();

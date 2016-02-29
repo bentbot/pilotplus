@@ -1,4 +1,4 @@
-var socket = require('socket.io-client')('https://vbit.io:3030'),
+var socket = require('socket.io-client')('https://pilot.plus:3030'),
     express = require('express'),
     keys = require('./keys.json'),
     app = express();

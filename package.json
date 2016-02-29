@@ -1,10 +1,10 @@
 {
-  "name": "binarybtc",
+  "name": "pilotplus",
   "version": "0.0.7",
-  "description": "Bitcoin Binary Options",
-  "main": "binarybtc.js",
+  "description": "Easily trade currencies in a secure environment, earning profitable returns.",
+  "main": "index.js",
   "scripts": {
-    "start": "node binarybtc.js"
+    "start": "node index.js"
   },
   "dependencies": {
     "async": "0.9.0",
@@ -35,7 +35,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/bentbot/binarybtc"
+    "url": "https://github.com/bentbot/pilotplus"
   },
   "keywords": [
     "bitcoin"
@@ -43,8 +43,8 @@
   "author": "bentbot",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/bentbot/binarybtc/issues"
+    "url": "https://github.com/bentbot/pilotplus/issues"
   },
-  "homepage": "https://github.com/bentbot/binarybtc",
+  "homepage": "https://pilot.plus/",
   "engine": "0.10.33"
 }
