@@ -450,7 +450,7 @@ padding:0px 0px 0px 10px;
         text-transform: capitalize;
         letter-spacing: 1px;
         color: white;
-        font-weight: 100;
+        font-weight: 500;
         position: absolute;
         right: 0px;
         top: 0px;
@@ -475,7 +475,8 @@ padding:0px 0px 0px 10px;
         position: absolute;
         top: 0px;
         right: 70px;
-        font-weight: 100;
+        font-weight: 700;
+        letter-spacing: 1px;
         opacity: 0.7;
         -webkit-transition: all 0.2s;
         transition: all 0.2s;
@@ -1065,7 +1066,7 @@ height: 70px;
   text-transform: uppercase;
   left: 31px;
   position: absolute;
-  font-weight: 100;
+  font-weight: 300;
   font-size: 14px;
   top: 25px;
   opacity: 0;
@@ -2744,47 +2745,44 @@ letter-spacing: 0.6px;
 
 
 .announcexp {
-
-  -webkit-transition: height 0.5s; /* For Safari 3.1 to 6.0 */
-transition: height 0.5s;
-height: 0px;
-background: -webkit-gradient(linear, left top, right top, color-stop(50%,hsl(113, 100%, 35%)), color-stop(50%,hsl(360, 100%, 35%)), color-stop(0%,hsl(113, 100%, 35%)));
-/*background: hsl(113, 100%, 35%) !important;*/
-width: 100%;
-overflow: hidden;
-position: relative;
+  transition: height 0.5s;
+  height: 0px;
+  background: #3A4B71;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
 }.announcexp .container {
-padding: 0px;
-position: relative;
-height: 100%;
+  padding: 0px;
+  position: relative;
+  height: 100%;
 }.announcexp .container .y {
-box-shadow: black 0px 0px 10px;
-width: 33%;
-height: 30px;
-float: left;
-background: rgb(229,138,59); /* Old browsers */
-background: -moz-linear-gradient(left,  rgba(229,138,59,1) 0%, rgba(233,110,1,1) 25%, rgba(233,110,1,1) 50%, rgba(233,110,1,1) 80%, rgba(229,138,59,1) 100%); /* FF3.6+ */
-background: -webkit-gradient(linear, left top, right top, color-stop(0%,rgba(229,138,59,1)), color-stop(25%,rgba(233,110,1,1)), color-stop(50%,rgba(233,110,1,1)), color-stop(80%,rgba(233,110,1,1)), color-stop(100%,rgba(229,138,59,1))); /* Chrome,Safari4+ */
-background: -webkit-linear-gradient(left,  rgba(229,138,59,1) 0%,rgba(233,110,1,1) 25%,rgba(233,110,1,1) 50%,rgba(233,110,1,1) 80%,rgba(229,138,59,1) 100%); /* Chrome10+,Safari5.1+ */
-background: -o-linear-gradient(left,  rgba(229,138,59,1) 0%,rgba(233,110,1,1) 25%,rgba(233,110,1,1) 50%,rgba(233,110,1,1) 80%,rgba(229,138,59,1) 100%); /* Opera 11.10+ */
-background: -ms-linear-gradient(left,  rgba(229,138,59,1) 0%,rgba(233,110,1,1) 25%,rgba(233,110,1,1) 50%,rgba(233,110,1,1) 80%,rgba(229,138,59,1) 100%); /* IE10+ */
-background: linear-gradient(to right,  rgba(229,138,59,1) 0%,rgba(233,110,1,1) 25%,rgba(233,110,1,1) 50%,rgba(233,110,1,1) 80%,rgba(229,138,59,1) 100%); /* W3C */
-padding: 5px 20px;
-position: absolute;
-top: 0px;
-text-align: center;
-font-size: 14px;
-color: rgba(255, 255, 255, 1);
-text-shadow: 0px 0px 2px rgba(0, 0, 0, 0.3);
-font-weight: 300;
-letter-spacing: 0.6px;
+  box-shadow: black 0px 0px 10px;
+  width: 33%;
+  height: 30px;
+  float: left;
+  background: rgb(229,138,59); /* Old browsers */
+  background: -moz-linear-gradient(left,  rgba(229,138,59,1) 0%, rgba(233,110,1,1) 25%, rgba(233,110,1,1) 50%, rgba(233,110,1,1) 80%, rgba(229,138,59,1) 100%); /* FF3.6+ */
+  background: -webkit-gradient(linear, left top, right top, color-stop(0%,rgba(229,138,59,1)), color-stop(25%,rgba(233,110,1,1)), color-stop(50%,rgba(233,110,1,1)), color-stop(80%,rgba(233,110,1,1)), color-stop(100%,rgba(229,138,59,1))); /* Chrome,Safari4+ */
+  background: -webkit-linear-gradient(left,  rgba(229,138,59,1) 0%,rgba(233,110,1,1) 25%,rgba(233,110,1,1) 50%,rgba(233,110,1,1) 80%,rgba(229,138,59,1) 100%); /* Chrome10+,Safari5.1+ */
+  background: -o-linear-gradient(left,  rgba(229,138,59,1) 0%,rgba(233,110,1,1) 25%,rgba(233,110,1,1) 50%,rgba(233,110,1,1) 80%,rgba(229,138,59,1) 100%); /* Opera 11.10+ */
+  background: -ms-linear-gradient(left,  rgba(229,138,59,1) 0%,rgba(233,110,1,1) 25%,rgba(233,110,1,1) 50%,rgba(233,110,1,1) 80%,rgba(229,138,59,1) 100%); /* IE10+ */
+  background: linear-gradient(to right,  rgba(229,138,59,1) 0%,rgba(233,110,1,1) 25%,rgba(233,110,1,1) 50%,rgba(233,110,1,1) 80%,rgba(229,138,59,1) 100%); /* W3C */
+  padding: 5px 20px;
+  position: absolute;
+  top: 0px;
+  text-align: center;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 1);
+  text-shadow: 0px 0px 2px rgba(0, 0, 0, 0.3);
+  font-weight: 300;
+  letter-spacing: 0.6px;
 }
 .announcexp .container .xpbar {
   box-shadow: rgba(0, 0, 0, 0.66) 0px 0px 4px;
   width: 50%;
   height: 30px;
   float: left;
-  background: linear-gradient(to bottom, #2B83B7 0%,#3462C5 25%,#2665B9 50%,#2D60BB 80%,#4168B7 100%);
+  background: linear-gradient(to bottom,#1C6CC0 10%, #1B6ABF 25%, #2665B9 50%, #185AB6 80%, #0B61A9 90%, #4168B7 100%);
   padding: 7px 20px;
   position: absolute;
   top: 0px;
@@ -2800,6 +2798,18 @@ letter-spacing: 0.6px;
   font-weight: 300;
   letter-spacing: 0.6px;
   left: 0px;
+  border-top: 1px solid rgb(127, 169, 234) !important;
+  border-right: 1px solid rgb(96, 132, 189) !important;
+  border-left: 1px solid #5D76FF;
+  border-bottom: 0px solid #AABFD8;
+}
+.announcexp .container .xpbar span {
+  top: -8px;
+  position: relative;
+  opacity: 0.9;
+  letter-spacing: 1px;
+  font-weight: 300;
+  text-shadow: none;
 }
 
 .applyspotlight {
@@ -3049,7 +3059,10 @@ background: whitesmoke;
   color: white;
 } 
 .userbal .fa {
-  margin-right: 0px; 
+  margin-right: -5px; 
+}
+.userbal div {
+  font-size: 10px;
 }
 .globalheader {
   border-bottom: 1px solid #E6E6E6;
@@ -3071,7 +3084,7 @@ background: whitesmoke;
   position: absolute;
   top: 0px;
   left: 0px;
-  z-index: 50;
+  z-index: 3;
 }
 
 
@@ -3357,6 +3370,8 @@ border-top: 0px solid #FFF;
   transition: all 0.3s;
 }.loginbtn:hover {
   /* background-color: rgba(0, 0, 0, 0.0) !important; */
+}.loginbtn .fa {
+  font-size: 30px;
 }
 .glyph {
 background-image: url('assets/img/glyph.png');

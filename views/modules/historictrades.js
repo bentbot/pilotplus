@@ -41,20 +41,6 @@ function showhistoric(data, append) {
         }
 
 
-        var coeff = 1000 * 60 * 1;
-        var entrytime = new Date(0);
-        var entrydate = new Date(0);
-        var iodate = new Date(0);
-        entrytime.setUTCMilliseconds(entry.time);
-        entrydate.setUTCMilliseconds(entry.time);
-        iodate.setUTCMilliseconds(entry.time);
-        entrytime = new Date(Math.round(entrytime.getTime() / coeff) * coeff);
-        entrydate = new Date(Math.round(entrydate.getTime() / coeff) * coeff);
-        iodate = new Date(Math.round(iodate.getTime() / coeff) * coeff);
-        entrytime = entrytime.customFormat( "#hhh#:#mm#:#ss# " );
-        entrydate = entrydate.customFormat( "#DD#/#MM#/#YYYY#" );
-        iodate = iodate.toISOString();
-
         if (entry.outcome == 'Win') {
           twins++;
           var thumbhtml = '<span class="green" data-translate="won">Won</span>';
@@ -87,7 +73,7 @@ function showhistoric(data, append) {
         // Historic Trade Row
         tradehtml = tradehtml + '<tr class="historictrade '+classes+'" data-id="'+entry._id+'">' +
           '<td class="symbol keystonelink" data-symbol="'+entry.symbol+'">'+entry.symbol+'</td>'+
-          '<td class="time"><i style="opacity: 0.7"  class="fa fa-clock-o"></i> <time class="timeago" datetime="'+iodate+'">'+entrytime+'</time></td>'+
+          '<td class="time"><i style="opacity: 0.7"  class="fa fa-clock-o"></i> <time class="timeago" datetime="'+iodate+'">'+entry.time+'</time></td>'+
           '<td class="trade">'+arrowhtml+' <span class="tradeprice">'+entry.price+'</span></td>'+
           '<td class="price"><i style="opacity: 0.7"  class="fa fa-bell"></i> <span class="tradeprice">'+entry.finalprice+'</span></td>'+
           '<td class="outcome">'+thumbhtml+'</td>';

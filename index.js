@@ -349,10 +349,6 @@ function sendConfirmation(to, key, cb) {
   });
 }
 
-
-
-
-
 //****************//
 // Mongo Framework
 //requirejs('./requirements/mongoframework.js');
@@ -368,7 +364,7 @@ db.once('open', function callback () {
 // Setup database schemas and models
 var schema = new mongoose.Schema({ key: 'string', user: 'string', createdAt: { type: Date, expires: '10h' }});
 var Activeusers = mongoose.model('activeusers', schema);
-var schema = new mongoose.Schema({ username: 'string', createdAt: { type: Date, expires: '1h' }});
+var schema = new mongoose.Schema({ username: 'string', createdAt: { type: Date, expires: keys.site.loginblock }});
 var Userfirewall = mongoose.model('userfirewall', schema);
 var schema = new mongoose.Schema({ ip: 'string', time: 'string', handle: 'string' });
 var Pageviews = mongoose.model('pageviews', schema);
@@ -429,7 +425,7 @@ function pay(amount, tradeuser, currency, callback) {
             console.log('Balance Update for '+tradeuser+': '+reply+' to '+updatedbal);
             rclient.set(tradeuser+'.'+currency, updatedbal, function(err, reply) {
               if (err) errors =+ err;
-              if (callback) callback(errors);
+              callback(errors, amount, tradeuser, currency);
             });
           });
         });
@@ -595,7 +591,9 @@ var calls = {};
 var puts = {};
 var totalcall = {};
 var totalput = {};
+var tradingnow = false;
 var useraddress = {};
+var payout = new Array();
 var y = new Array();
 var x = new Array();
 var z = new Array();
@@ -603,20 +601,20 @@ var a = 0;
 
 
 // Master trade function
-//=trade
+//=trade if able
+
 function trade() {
-     // Money managing object
-     var changeobject = new ObjectManage();
 
-     // Looped trades and incrementer
-     var loopedtrades = new Array(), t = 0;
+  var loopedtrades = new Array(), t = 0;
 
+  if (tradingnow == false) {
+    tradingnow = true;
+    // Looped trades and incrementet
     // Get active trades
     Activetrades.find({ }, function (err, trades) {
 
-      // Main loop
+      // For Loop
       trades.forEach( function (trade) {
-        t++; // Increment loop
 
         // Get the correct time cycle for this trade
         var cycle;
@@ -626,8 +624,9 @@ function trade() {
           }
         };
 
+
         // Check if the cycle has ended
-        if (cycle.seconds <= keys.site.stoptrading) {
+        if (cycle.seconds <= keys.site.stoptrading && cycle.seconds < 1) {
           // Check the direction and calculate the outcome
           var winnings = 0;
           if (trade.direction == 'Call'){
@@ -659,18 +658,13 @@ function trade() {
           }
 
           // Add money to a user currency object
+          
           if (winnings > 0) {
-            if ( changeobject.$exists(trade.user+'.'+trade.currency) ){
-              // Get user's amount
-              var userbalance = changeobject.$get(trade.user+'.'+trade.currency);
-              var balance = Number( userbalance ).toFixed(2);
-              var userwinnings = Number( winnings ).toFixed(2);
-              var userwinnings = Number( +balance+userwinnings ).toFixed(2);
+            if ( payout[trade.user+'.'+trade.currency] > 0 ) {
               // Recalculate and set amount
-              changeobject.$set(trade.user+'.'+trade.currency, userwinnings);
-
+              payout[trade.user+'.'+trade.currency] = Number( +Number(payout[trade.user+'.'+trade.currency]) + +Number(winnings) ).toFixed(2);
             } else {
-              changeobject.$set(trade.user+'.'+trade.currency, winnings);
+              payout[trade.user+'.'+trade.currency] = Number(winnings).toFixed(2);
             }
           }
 
@@ -697,37 +691,45 @@ function trade() {
           ratio[trade.symbol] = 50;
 
           Activetrades.remove({ _id: trade._id }, function(err) {
-            if (err) console.log(err);
+            if (err) throw(err);
           });
-
+          
         }// timing cycle check
+
       });//foreach trade loop
 
+          // Run graphical updates 
+        if (loopedtrades.length > 0) cookTrades(loopedtrades);
     });//active trades
 
-    // Transfer money object into redis
-    if ( loopedtrades.length > 0 ) {
-      console.log(changeobject);
-
-    }
-
-    // Run graphical updates 
-    cookTrades(loopedtrades);
-
-  // empty the ram and database of old objects
-  x = new Array(); //win
-  y = new Array(); //tie
-  z = new Array(); //lose
-  t = new Array(); //totals
-  calls = {};
-  puts = {};
-  totalcall = {};
-  totalput = {};
-  trades = new Array();
-  lasttrade = time;
+    // empty the ram and database of old objects
+    x = new Array(); //win
+    y = new Array(); //tie
+    z = new Array(); //lose
+    t = new Array(); //totals
+    calls = {};
+    puts = {};
+    totalcall = {};
+    totalput = {};
+    trades = new Array();
+    lasttrade = time;
+  } else {
+    tradingnow = false;
+  }
 }
+
+setInterval( function () {
+  trade();
+}, 500);
+
+
+var x = new Array();
+var y = new Array();
+var z = new Array();
+
 // Post trading notifications
 function cookTrades(trades) {
+
   if (trades.length > 0) console.log('Traded '+date.toString());
 
   var xp = new Array();
@@ -735,14 +737,23 @@ function cookTrades(trades) {
   var lastlevel = new Array();
   var nextlevel = new Array();
 
-  async.each(trades, function (trade) {
-
-    User.findOne({ username: trade.user }, function (err, user) {
+  // Findall 
+    Historictrades.find({ user: trade.user }, function (err, historic) {
       if (err) throw (err);
-            Historictrades.find({ user: trade.user }, function (err, historic) {
-        if (err) throw (err);
-    
-        var achievements = {}, experience, percentage = 50, i, w, l;
+      async.each(trades, function (trade) {
+        User.findOne({ username: trade.user }, function (err, user) {
+          if (err) throw (err);
+
+          // Send the pay function after the trade has been calculated
+          if (payout[trade.user+'.'+trade.currency] > 0) {
+            pay(payout[trade.user+'.'+trade.currency], trade.user, trade.currency, function (err, amount, username, currency) {
+              if (err) throw (err);
+                // Reset the user's payout
+                payout[trade.user+'.'+trade.currency] = null;
+            });
+          }
+
+        var achievements = {}, percentage = 50, i=0, w=0, l=0;
 
         async.each( historic, function ( item ) {
           i++;
@@ -768,14 +779,14 @@ function cookTrades(trades) {
           xp[trade.user] = Number(+Number(xp[trade.user]) + +Number(keys.site.experience.loss));
         }
 
+        percentage = Number(l/w*100);
+
         if (user.experience) {
-          experience = Number(+Number(user.experience) + +Number(xp[trade.user]));
+          achievements.experience = Number(+Number(user.experience) + +Number(xp[trade.user]));
         } else {
-          experience = Number(xp[trade.user]);
+          achievements.experience = Number(xp[trade.user]);
         }
 
-          percentage = w/l*100; 
-          achievements.percentage = Number(percentage);
           //achievements.experience = Number(experience);
 
           for (var i = keys.site.levels.length - 1; i >= 0; i--) {
@@ -793,13 +804,26 @@ function cookTrades(trades) {
             }
           }
 
-          User.findOneAndUpdate({ username: trade.user }, achievements, {upsert: true}, function (err) {
-            if (err) throw (err);
+
+          // User.findOneAndUpdate({ username: trade.user }, achievements, {upsert: true}, function (err) {
+          //   if (err) throw (err);
+          // });
+          //console.log('Trade outcome for ' + trade.user + ' Won:' + x[trade.user] + ' Tied:' + y[trade.user] + ' Lost:' + z[trade.user]);
+
+          io.sockets.emit('tradeoutcome',  { 
+            user: trade.user, 
+            x: x[trade.user], 
+            y: y[trade.user], 
+            z: z[trade.user], 
+            xp: xp[trade.user], 
+            change: keys.site.splittimer,
+            level: currentlevel[trade.user], 
+            lastlevel: lastlevel[trade.user], 
+            nextlevel: nextlevel[trade.user] 
           });
-          console.log('Trade outcome for ' + trade.user + ' Won:' + x[trade.user] + ' Tied:' + y[trade.user] + ' Lost:' + z[trade.user]);
-          io.sockets.emit('tradeoutcome',  { user: trade.user, x: x[trade.user], y: y[trade.user], z: z[trade.user], xp: xp[trade.user], level: currentlevel[trade.user], lastlevel: lastlevel[trade.user], nextlevel: nextlevel[trade.user] } );
       });
-    });    
+
+    });
   });
 }
 
@@ -985,7 +1009,7 @@ function addTrade(symbol, amount, direction, user, expiry, socket) {
     }
   });
 }
-var nexttrade = new Array(), nexttradesecs = new Array(),nexttrademins = new Array(),nexttradehrs = new Array(), hrs = new Array(),  mins = new Array(), secs = new Array();
+var tradenow = false, nexttrade = new Array(), nexttradesecs = new Array(),nexttrademins = new Array(),nexttradehrs = new Array(), hrs = new Array(),  mins = new Array(), secs = new Array();
 
 function checknextTrade() {
   for (var i = keys.site.tradeevery.length - 1; i >= 0; i--) {
@@ -1050,13 +1074,14 @@ function checknextTrade() {
 
       // console.log(hrs[i],mins[i],secs[i], nexttradesecs[i], string);
 
-     if (nexttradesecs[i] == 0) trade();
+     if (nexttradesecs[i] == 0) tradenow = true;
 
   };
 
   //console.log(nexttradesecs);
   io.sockets.emit('nexttrade', { next: nexttrade, last: lasttrade, stoptrading: keys.site.stoptrading }); // Emit to chrome
   // If it's time to trade
+
 }
 
 // Proto trade shaping
@@ -1116,6 +1141,7 @@ var chart = {};
 
 // });
 
+// Update a new price for a symbol
 function updatePrice(data, symbol) {
   io.sockets.emit(symbol+'_price', data);
   updateChart(data, symbol);
@@ -1137,20 +1163,25 @@ function updateChart(data, symbol, force) {
 }
 
 // chart point for the client
-var lastdata = new Array();
 function chartPoint(data, symbol) {
   symbol = symbolswitch(symbol);
-  // Check if the value has changed and put it in the DB
-  if (data && Number(data) && data != lastdata[symbol] || time-lastdata[time] > 1000) {
+  if ( data && Number(data) ) {
+    // Check if the value has changed and put it in the DB
     var price = {
-      symbol: symbol,
-      price: data,
-      time: time
+        symbol: symbol,
+        price: data,
+        time: time
     };
-    var historicprice = new Historicprices(price);
-    historicprice.save();
-    lastdata[symbol] = data;
-    lastdata[time] = time;
+
+    Historicprices.findOne({symbol:symbol}).sort({time:-1}).exec(function( err, historic ) {
+      if (err) throw (err);
+      if (historic) {
+        if ( historic.price != price.price || historic.time-price.time > 10000 ) {
+          var historicprice = new Historicprices(price);
+          historicprice.save();
+        }
+      }
+    });
   }
 }
 
@@ -1300,6 +1331,9 @@ io.sockets.on('connection', function (socket) {
     //socket.emit('nexttrade', { next: nexttrade, stoptrading: keys.site.stoptrading });
   });
 
+/***
+/* Main chart sending api
+/**/
   socket.on('chart', function (data) {
     if (!data.candle || data.candle < 1000) data.candle = 60000;
     if (!data.time) data.time = 1800000;
@@ -1312,8 +1346,10 @@ io.sockets.on('connection', function (socket) {
         async.each(docs, function (data) {
           // Assign each point to the chart
           points.unshift([Number(data.time), Number(data.price)]);
+        });
 
-        });      
+        points = sortByKey(points,0);
+
         socket.emit('chart', { symbol: data.symbol, chart: points, type: data.type });
       });
     } else if (data.type == 'candlestick') {
@@ -1507,7 +1543,7 @@ io.sockets.on('connection', function (socket) {
       if (err) throw (err);
       if (docs) {
         usercurrency = docs.currency;
-        userlevel = docs.level;
+        userlevel[myName] = docs.level;
         userxp = docs.experience;
         userpercentage = docs.percentage;
         userratio = docs.ratio;
@@ -1549,7 +1585,7 @@ io.sockets.on('connection', function (socket) {
             ratio: userratio, 
             percentage: userpercentage,
             xp: userxp, 
-            level: userlevel,
+            level: userlevel[myName],
             currency: usercurrency,
             lastpass: docx.passwordlast
           });
@@ -1578,10 +1614,6 @@ io.sockets.on('connection', function (socket) {
 
   
   // Send user current data on connect
-
-  Historictrades.find({ user: myName }).sort({time:-1}).limit(25).find(function(err, historictrades) {
-    socket.emit('historictrades', historictrades);
-  });
   User.findOne({ username: myName }, function (err, user) {
     if (user) {
       email = user.email;
@@ -1650,12 +1682,7 @@ io.sockets.on('connection', function (socket) {
       var re = new RegExp(/[\s\[\]\(\)=,"\/\?@\:\;]/g);
       if (re.test(data.amount)) { console.log('Illegal trade input from '+myName); } else {
         // Push data to addTrade
-        //console.log('add trade for ' + data.user);
         addTrade(data.symbol, data.amount, data.direction, data.user, data.time, socket);
-        // Emit active trades again
-        // Activetrades.find({ user: myName }).sort({time:-1}).find(function(err, activetrades) {
-        //   socket.emit('activetrades', activetrades);
-        // });
       }
     }
   });
@@ -1664,8 +1691,8 @@ io.sockets.on('connection', function (socket) {
 
   socket.on('historictrades', function (data) {
     if ( myName != keys.site.admin ) data.user = myName;
-    if (!data.limit ) data.limit = 25;
-    if (!data.skip ) data.skip = 0;
+    if (!data.limit) data.limit = 5;
+    if (!data.skip) data.skip = 0;
     Historictrades.find({ user: data.user }).sort({time:-1}).limit(data.limit).skip(data.skip).find(function(err, historictrades) {
       socket.emit('historictrades', historictrades);
     });
@@ -1760,10 +1787,12 @@ io.sockets.on('connection', function (socket) {
     // Emit trade objects
     socket.emit('username', myName); // Update userbalance
     socket.emit('messages', messages); // Update userbalance
-    // Activetrades.find({ user: myName }).sort({time:-1}).find(function(err, activetrades) {
-    //   socket.emit('activetrades', activetrades);
-    //   trades = activetrades;
-    // });
+
+    // Emit active trades
+    Activetrades.find({ user: myName }).sort({time:-1}).find(function(err, activetrades) {
+      socket.emit('activetrades', activetrades);
+      trades = activetrades;
+    });
 
     io.sockets.emit('tradingopen', tradingopen); // Update trading status
     io.sockets.emit('ratios', ratio); // Update ratios
@@ -1803,6 +1832,7 @@ io.sockets.on('connection', function (socket) {
             var paypal, customerid, customercards, selectedcard;
             Customers.findOne({ username: myName }, function(err, docs) {
               if (err) throw (err);
+              if (docs) {
               Userprefs.findOne({ user: myName, preference: 'card' }, function (err, card) {
               if (err) throw (err);
                 if (card) {
@@ -1840,6 +1870,7 @@ io.sockets.on('connection', function (socket) {
                   }); // Update useraddress
                 }
               });
+            } // If customer exists
             });
             socket.emit('ratio', docs.ratio);
             socket.emit('percentage', docs.percentage);
@@ -2322,10 +2353,11 @@ app.get('/login/:username/:password/:factor', function(req, res) {
       var factor = decodeURI(req.params.factor);
       username = username.toLowerCase();
           // Check if this username is in the userfilewall
-          Userfirewall.count({username: username}, function(err, c){
+
+          Userfirewall.count({username: username}, function(err, loginattempts){
             if (err) throw (err)
             // If this user has less than 5 failed login attempts in the past hour
-            if (c < 10) {
+            if (loginattempts < keys.site.loginattempts) {
               // If the username and password exist
               if (username && password) {
                 // Find the user in the database
@@ -2384,7 +2416,7 @@ app.get('/login/:username/:password/:factor', function(req, res) {
                               // Log the failed request
                               var loginRequest = new Userfirewall({
                                 username: username,
-                                createdAt: date
+                                createdAt: time
                               });
                              loginRequest.save(function(err) {
                                if (err) { throw (err) }
@@ -2626,24 +2658,26 @@ function getPrice(symbol, callback) {
         var symb = symbol.toLowerCase();
         symb = symb[0];
         btceoptions.path = '/api/2/btc_usd/ticker';
-        var req = https.get(btceoptions, function(resp){
-          var decoder = new StringDecoder('utf8');
-          resp.on('data', function(chunk){
-            chunk = decoder.write(chunk);
-            //console.log(chunk)
-            var data = chunk.split(',');
-            var datas = data[7].split(':');
-            data = datas[1];
+        var req = https.get(btceoptions, function(resp) { 
+          if (resp) {
+            var decoder = new StringDecoder('utf8');
+            resp.on('data', function(chunk) {
+              chunk = decoder.write(chunk);
+              //console.log(chunk)
+              var data = chunk.split(',');
+              var datas = data[7].split(':');
+              data = datas[1];
 
-            if(isNumber(data)) {
-            data = Number(data);
-            data = data.toFixed(2);
-            updatePrice(data, symbol);
-            price[symbol] = data;
-            }else {
-              lag = lag+2;
-            }
-          });
+              if(isNumber(data)) {
+              data = Number(data);
+              data = data.toFixed(2);
+              updatePrice(data, symbol);
+              price[symbol] = data;
+              }else {
+                lag = lag+2;
+              }
+            });
+          }
         }).on("error", function(e){
           //console.log("Got "+btceoptions.host+" error: " + e.message);
           lag = lag+2;
@@ -2653,25 +2687,29 @@ function getPrice(symbol, callback) {
         var symb = symbol.toLowerCase();
         symb = symb[0];
         btceoptions.path = '/api/2/ltc_usd/ticker';
-        var req = https.get(btceoptions, function(resp){
-          var decoder = new StringDecoder('utf8');
-          resp.on('data', function(chunk){
-            chunk = decoder.write(chunk);
-            //console.log(chunk)
-            var data = chunk.split(',');
-            var datas = data[7].split(':');
-            data = datas[1];
+        var req = https.get(btceoptions, function(resp) {
+          if (resp) {
+            var decoder = new StringDecoder('utf8');
+            resp.on('data', function(chunk){
+              chunk = decoder.write(chunk);
+              //console.log(chunk)
+              var data = chunk.split(',');
+              var datas = data[7].split(':');
+              data = datas[1];
 
-            if(isNumber(data)) {
-            data = Number(data);
-            data = data.toFixed(2);
-            //console.log(data);
-            updatePrice(data, symbol);
-            price[symbol] = data;
-            }else {
-              lag = lag+2;
-            }
-          });
+              if(isNumber(data)) {
+              data = Number(data);
+              data = data.toFixed(2);
+              //console.log(data);
+              updatePrice(data, symbol);
+              price[symbol] = data;
+              }else {
+                lag = lag+2;
+              }
+            });
+          } else {
+            lag = lag+2;  
+          }
         }).on("error", function(e){
           //console.log("Got "+btceoptions.host+" error: " + e.message);
           lag = lag+2;
@@ -3073,6 +3111,14 @@ Array.prototype.pushIfNotExist = function(element, comparer) {
         this.push(element);
     }
 };
+
+function sortByKey(array, key) {
+    return array.sort(function(a, b) {
+        var x = a[key]; var y = b[key];
+        return ((x < y) ? -1 : ((x > y) ? 1 : 0));
+    });
+}
+
 // Function to add custom formats to dates in milliseconds
 Date.prototype.customFormat = function(formatString){
     var YYYY,YY,MMMM,MMM,MM,M,DDDD,DDD,DD,D,hhh,hh,h,mm,m,ss,s,ampm,AMPM,dMod,th;
@@ -3094,5 +3140,3 @@ Date.prototype.customFormat = function(formatString){
     ss=(s=dateObject.getSeconds())<10?('0'+s):s;
     return formatString.replace("#hhh#",hhh).replace("#hh#",hh).replace("#h#",h).replace("#mm#",mm).replace("#m#",m).replace("#ss#",ss).replace("#s#",s).replace("#ampm#",ampm).replace("#AMPM#",AMPM);
 }
-
-

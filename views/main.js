@@ -197,7 +197,8 @@ socket.on('symbols', function (data) {
       if (data.price) menu = menu + '<li class="keystone keystonelink " data-type="'+data.type+'" data-symbol="'+data.symbol+'"><a>'+data.name+': <span class="keystone'+data.symbol+' '+classes+'">'+data.price+'</span></a></li>'; 
 
       // Render sidebar
-      var search = $('.symbolsearch').val();
+      var search = '';
+      if ($('.symbolsearch').val()) search = $('.symbolsearch').val();
 
       // Add the type of symbol titles
       if (lasttype != data.type && data.price && !search) {
@@ -311,7 +312,7 @@ function loadTrades(displaysymbols, guest) {
         }
 
         // Active trade table container
-        page = page + '<li class="tradestable" data-row="'+row+'" data-col="1" data-sizex="4" data-sizey="2"></li>'+
+        page = page + '<li class="tradestable" data-row="'+row+'" data-col="1" data-sizex="4" data-sizey="2"><div class="usertrades"><div class="header" data-translate="noactivetrades">No Active Trades</div></li>'+
 
       '</ul>'+
       '<div class="clear"></div>'+
@@ -329,7 +330,7 @@ function loadTrades(displaysymbols, guest) {
       $('li.recenttrades').remove();
 
       // Historic trades
-      $('.grid').append('<li class="recenttrades" data-row="'+row+'" data-col="1" data-sizex="4" data-sizey="3"></li>'); row++;
+      $('.grid').append('<li class="recenttrades" data-row="'+row+'" data-col="1" data-sizex="4" data-sizey="2"></li>'); row++;
       showhistoric(data);
 
     });
@@ -370,8 +371,8 @@ if (!user) {
   });
 
   socket.on('allactivetrades', function (data) {
-    showactive(data);
-  })
+    //showactive(data);
+  });
 }
 
 function loadAdmin() {
@@ -804,21 +805,22 @@ socket.on('alertuser', function (data) {
 
 
 socket.on('tradeoutcome', function (data) {
-  socket.emit('historictrades', { limit: 6, skip: 0 });
+  socket.emit('historictrades', { limit: 5, skip: 0 });
   socket.on('historictrades', function (data) {
     historicTrades(data);
   });
+  console.log(data);
   if (data.user == user) {
-    showSplit(data.x, data.y, data.z, 7000);
+    showSplit(data.x, data.y, data.z, data.change);
     setTimeout( function() {
-      showXP(data.xp, data.lastxp, data.nextxp, 5000);
+      showXP(data.xp, data.lastxp, data.nextxp, data.change);
+      socket.emit('historictrades', { limit: 5 });
       setTimeout( function() {
         showSymbols();
-      },5000)
-    }, 7000);
+      },data.change)
+    }, data.change);
   }
   $('.trades li').css('left', '100%');
-  socket.emit('historictrades', { limit: 5 });
 });
 
 socket.on('chart', function (data) {

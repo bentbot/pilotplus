@@ -143,12 +143,12 @@ function displayOptions(displaysymbols, guest) {
       var header = '<li class="trading symbols chart-'+symbol+'" data-symbol="'+symbol+'" data-row="'+index+'" data-col="1" data-sizex="4" data-sizey="2"><div class="header" data-symbol="'+symbol+'">'+symbol+controls+'</div>';
 
     var optiontimer = '';
-    if ( prefs["optiontimer"] != false ) {
+    /*if ( prefs["optiontimer"] == true ) {
         optiontimer = optiontimer + '<div class="optionprogress progress" style="margin:0px;">'+
           '<div class="progress-bar tradeprogress" role="progressbar" aria-valuenow="'+percentagecomplete+'" aria-valuemin="0" aria-valuemax="100" style="width: '+percentagecomplete+'%;">'+
           '</div>'+
         '</div>';
-    }
+    }*/
 
     option = header + '<div class="'+symbol+'">'+
       // '<div class="header">'+symbol+'</div>'+
