@@ -215,9 +215,11 @@ padding:0px 0px 0px 10px;
 .menu li {
   position: relative;
   min-height: 36px;
+  transition: background-color 0.3s ease-in-out;
+  -webkit-transition: background-color 0.3s ease-in-out;
   background-color: #EFEFEF;
-  padding: 1% 2% 2% 5%;
-  border-bottom: 3px solid #D0D0D0;
+  padding: 1% 0% 0% 0%;
+  border-bottom: 1px solid #D2D2D2;
   width: 100%;
   /* border-radius: 5px; */
   margin: 0%;
@@ -232,7 +234,8 @@ padding:0px 0px 0px 10px;
   color: #fff;
   text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.00);
   -webkit-font-smoothing: antialiased;
-  border-bottom: 2px solid #42372E;
+  border-bottom: none;
+  border-top: 1px solid #959595;
   -webkit-transition: background-color 0.04s ease-in-out;
   transition: background-color 0.04s ease-in-out;
   }
@@ -268,11 +271,12 @@ padding:0px 0px 0px 10px;
   letter-spacing: 0.2px;
   float: left;
   cursor: pointer;
+  padding-left: 5%;
 }
 .menu .price {
   font-size: 15px;
   float: right;
-  padding-right: 5px;
+  padding-right: 5%;
   font-family: Arial;
   letter-spacing: 0.1px;
   font-weight: 500;
@@ -281,14 +285,13 @@ padding:0px 0px 0px 10px;
 .menu .trades {
   clear: both;
   margin-top: 0px;
-  position: relative;
   z-index: -1;
   left: 0px;
   width: 100%;
   top: 0px;
 }
 .menu .trades li {
-  height: 30px;
+  height: 31px;
   padding: 0px 10px 0 10px;
   min-height: 0px;
   background-color: rgb(255, 244, 218);
@@ -455,13 +458,13 @@ padding:0px 0px 0px 10px;
         right: 0px;
         top: 0px;
         border-left: 1px solid rgba(255,255,255,0.3);
-        opacity: 0.7;
+        opacity: 1;
         -webkit-transition: all 0.2s ease-in-out;
         transition: all 0.2s ease-in-out;
         outline: none !important;
-      }.btnuser:hover, .btnuser:active, .btnuser:focus {
+      }.btnuser:hover, .btnuser:active, .btnuser:focus, .btnuser:visited {
+        background-color: rgb(12, 184, 206);
         color: white;
-        opacity: 1;
       }
       .btnuser.btn-success, .btnuser.btn-danger, .btnuser.btn-blue {
         font-weight: 200;
@@ -477,14 +480,14 @@ padding:0px 0px 0px 10px;
         right: 70px;
         font-weight: 700;
         letter-spacing: 1px;
-        opacity: 0.7;
+        opacity: 1;
         -webkit-transition: all 0.2s;
         transition: all 0.2s;
         background-color: rgba(0,0,0,0);
         outline: none !important;
-      }.btnfinance:hover, .btnfinance:active, .btnfinance:focus {
+      }.btnfinance:hover, .btnfinance:active, .btnfinance:focus, .btnfinance:visited {
+        background-color: rgb(12, 184, 206);
         color: white;
-        opacity: 1;
       }
       .btnfinance.btn-success, .btnfinance.btn-danger, .btnfinance.btn-blue {
         font-weight: 200;
@@ -868,6 +871,7 @@ height: 70px;
 .info .expires .timefield li {
   margin-top: 0px;
   margin-bottom: 0px;
+  background: transparent;
 }
 .info .expires .timefield .flash {
     height: 30px;
@@ -1259,6 +1263,54 @@ top: -7px;
 right: -7px;
 }
 
+
+.profile {
+  padding: 0;
+}
+.banner {
+
+    height: 200px;
+}
+.banner .container {
+  padding: 0;
+  text-align: center;
+}
+.banner .badge {
+  margin: 25px 0;
+  background: transparent;
+}
+.banner .bg {
+  position: absolute;
+  top: 0;
+  z-index: -1;
+  width: 100%;
+  height: 200px !important;
+  overflow: hidden;
+}
+.banner .username {
+  font-weight: 400;
+  color: white;
+  font-size: 17px;
+  text-shadow: 0px 1px 0 black;
+}
+.banner .picture img {
+  width: 120px;
+  padding: 1px;
+  border-radius: 120px;
+  box-shadow: 0 0 2px black;
+  margin-bottom: 8px;
+}
+.account {
+
+}
+
+.banner.teal {
+  background: -webkit-linear-gradient(top, rgb(0, 179, 171) 0%,rgba(0, 171, 179, 0.75) 25%,rgba(30,87,153,0) 100%);
+}
+
+
+
+
 .accounttray {
   -webkit-transition: height 0.5s; /* For Safari 3.1 to 6.0 */
 transition: height 0.5s;
@@ -1583,7 +1635,7 @@ font-family: monospace;
   width: 90%;
   margin: auto;
   margin-top: 15px;
-  padding: 0 10px;
+  padding: 0 20px;
 }.method.paypal .input-group-addon {
   background: #5FB3E0 !important;
   color: white;
@@ -1928,8 +1980,8 @@ height: 35px;
   left: 15px;
   bottom: 10px;
 }
-.sendpaypal .fa, .sendcc .fa {
-
+.addpaypal .fa, .sendcc .fa {
+  margin: 0 10px;
 }
 
 
@@ -2667,13 +2719,16 @@ margin-right: 15px;
 
 .announcesplit {
   -webkit-transition: height 0.5s; /* For Safari 3.1 to 6.0 */
-transition: height 0.5s;
-height: 0px;
-background: -webkit-gradient(linear, left top, right top, color-stop(50%,hsl(113, 100%, 35%)), color-stop(50%,hsl(360, 100%, 35%)), color-stop(0%,hsl(113, 100%, 35%)));
-/*background: hsl(113, 100%, 35%) !important;*/
-width: 100%;
-overflow: hidden;
-position: relative;
+  transition: height 0.5s;
+  height: 0px;
+  background: -webkit-gradient(linear, left top, right top, color-stop(50%,hsl(113, 100%, 35%)), color-stop(50%,hsl(360, 100%, 35%)), color-stop(0%,hsl(113, 100%, 35%)));
+  /*background: hsl(113, 100%, 35%) !important;*/
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+}.announcesplit.fixed {
+  position: fixed;
+  top: 0;
 }.announcesplit .container {
 padding: 0px;
 position: relative;
@@ -2697,7 +2752,7 @@ text-align: center;
 font-size: 14px;
 color: rgba(255, 255, 255, 1);
 text-shadow: 0px 0px 2px rgba(0, 0, 0, 0.3);
-font-weight: 300;
+font-weight: 500;
 letter-spacing: 0.6px;
 
 }.announcesplit .container .y {
@@ -2717,7 +2772,7 @@ text-align: center;
 font-size: 14px;
 color: rgba(255, 255, 255, 1);
 text-shadow: 0px 0px 2px rgba(0, 0, 0, 0.3);
-font-weight: 300;
+font-weight: 500;
 letter-spacing: 0.6px;
 
 }
@@ -2739,7 +2794,7 @@ text-align: center;
 font-size: 14px;
 text-shadow: 0px 0px 2px rgba(0, 0, 0, 0.3);
 color: rgba(255, 255, 255, 1);
-font-weight: 300;
+font-weight: 500;
 letter-spacing: 0.6px;
 }
 
@@ -2888,6 +2943,7 @@ margin-right: 15px;
 }
 
 .grid li {
+  background: white;
   border: 1px solid #EEE;
   margin: 6px 0px;
   border-radius: 4px;
@@ -2911,16 +2967,20 @@ margin-right: 15px;
 }
 .grid li[data-sizex="2"] {
   float: left;
-  width: 49.5%;
-  margin-right: 0.25%;
-  margin-left: 0.25%;
+  width: 49.50%;
+  margin: 0 0.25% 7px 0.25%;
   margin-top: 0px;
 }
-.grid li[data-sizex="2"]::first-child {
-  margin-left: 0px;
-}.grid li[data-sizex="2"]::last-child {
-  margin-right: 0px;
+
+.grid li[data-sizex="2"][data-col="1"] {
+  width: 49.75%;  
+  margin-right: 0;
 }
+.grid li[data-sizex="2"][data-col="2"] {
+  width: 49.75%;
+  margin-left: 0;
+}
+
 .grid::first-child {
   margin-right: 1%;
 }
@@ -3065,7 +3125,6 @@ background: whitesmoke;
   font-size: 10px;
 }
 .globalheader {
-  border-bottom: 1px solid #E6E6E6;
   z-index: 10;
   position: relative;
 }
@@ -3074,6 +3133,7 @@ background: whitesmoke;
   padding: 0px;
   border-bottom: 0px;
   line-height: 30px;
+  height: 30px;
 }
 .globalheader .container {
   padding: 0px;
@@ -3247,7 +3307,7 @@ border-top: 0px solid #FFF;
   background: rgba(0, 0, 0, 0.31);
   color: #fff;
   letter-spacing: 1px;
-  font-weight: 100;
+  font-weight: 500;
   outline: 0px !important;
 }
 .headerusername::-webkit-input-placeholder {
@@ -3368,8 +3428,12 @@ border-top: 0px solid #FFF;
   border-radius: 0px;
   text-align: center;
   transition: all 0.3s;
-}.loginbtn:hover {
+  font-weight: 400;
+  text-transform: uppercase;
+  padding: 0px !important;
+}.loginbtn:hover, .loginbtn:focus, .loginbtn:active {
   /* background-color: rgba(0, 0, 0, 0.0) !important; */
+  background-color: rgb(12, 184, 206) !important;
 }.loginbtn .fa {
   font-size: 30px;
 }
@@ -3432,6 +3496,9 @@ display: none;
   text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.00);
   -webkit-font-smoothing: antialiased;
   transition: background-color 0.08s ease-in-out;
+}
+.btn-success:hover {
+  border: 1px solid #5FDA50;
 }
   .btn-danger {
   background-color: #B20000 !important;
@@ -3641,11 +3708,9 @@ padding: 6px 15px !important;
   }
 }
 
-}
+ 
 @media (max-width: 760px) {
-  body {
-    min-width: 360px;
-  }
+
   .topcontainer{
     padding: 0 10px 0 10px;
     width: 100%;
@@ -3669,6 +3734,8 @@ padding: 6px 15px !important;
     padding: 10px 12px;
   }
   
+
+ 
 
   #email, #password {
     width: 90px !important;
@@ -3791,5 +3858,179 @@ padding: 6px 15px !important;
     width: 64px !important;
     margin-top: -16px !important;
     margin-left: -14px;
+  }
+}
+
+@media screen and (max-width: 420px) {
+  
+  .topleft.open, .topleft.check {
+    width: 70px;
+  }
+  .topleft.open .label {
+    left: -80px;
+  }
+  .grid li {
+    height: auto;
+  }
+  .controls {
+    position: relative !important;
+    width: 100%;
+    height: auto;
+    top: 0;
+  }
+  .controls .info {
+    position: relative !important;
+    width: 100% !important;
+    height: auto !important;
+    margin-bottom: 20px;
+  }
+  .controls .info .bold {
+    float: left;
+    margin: 0;
+    font-size: 16px;
+  }
+  .controls .info .details {
+    position: relative;
+  }
+  .controls .info .trade-header {
+    height: 35px;
+    padding: 7px 12px;
+    position: relative;
+    background: #F1F1F1;
+    box-shadow: inset 0px 0px 5px #DADADA;
+    border-top: 1px solid #D4D4D4;
+    border-bottom: none;
+    text-shadow: 0px 1px 1px white;
+  }
+  .controls .info .trade-header h1.estimate {
+    font-weight: 400;
+  }
+  .controls .info .trade-header h1.estimate i {
+    margin-right: 3px;
+  }
+  .controls .info .trade-header h1 {
+    font-size: 17px;
+    float: right;
+    padding: 0;
+    font-weight: 400;
+    letter-spacing: 1px;
+  }
+  .controls .info .detials .direction {
+    float: left;
+    margin: 0;
+  }
+  .controls .info .details .directionpicker {
+    height: 40px;
+    margin: 2% auto !important;
+    width: 96%;
+    border-radius: 5px 5px 4px 4px;
+    overflow: hidden;
+    border: 1px solid #EEEEEE;
+  }
+  .controls .btn-group-horizontal {
+    height: 100% !important;
+  }
+  .controls .btn-group-horizontal .btn {
+    height: 100% !important;
+  }
+  .controls .info .details .expires {
+    height: 40px;
+    margin: 2% auto !important;
+    width: 96%;
+    border-radius: 5px 5px 4px 4px;
+    overflow: hidden;
+  }
+  .controls .info .details .expires {
+    width: 96% !important;
+    height: 30px !important;
+    margin: 0;
+  }
+  .controls .info .amount {
+    width: 96% !important;
+    height: 30px !important;
+    margin: 0 auto !important;
+    position: relative;
+  }
+  .controls .info .applytrade {
+    width: 96%;
+    margin: 0;
+  }
+  .info .expires .timefield .flash {
+    top: 0;
+  }
+  .controls .info .amount .amountfield {
+    height: 100%;
+    font-size: 20px;
+    padding: 5px 10px;
+  }
+  .controls .info .amount .btn-group-vertical {
+    position: absolute;
+    right: 0px;
+    width: 25%;
+    height: 100%;
+  }
+  .controls .info .details .expires .btn-group {
+    height: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+  }
+  .controls .info .details .expires .btn-group .btn {
+    height: 100% !important;
+  }
+
+  .controls .info .details .expires .btn-group .timefield {
+    width: 50% !important;
+    background: white;
+    font-size: 15px !important;
+  }
+  
+  .info .expires .timefield li {
+       border: none !important;
+  }
+
+  .controls .info .amount .btn-group-vertical .amountup,
+  .controls .info .amount .btn-group-vertical .amountdown {
+    width: 50%;
+    height: 100%;
+    float: left;
+    border-radius: 0px !important;
+    padding: 3px 0 !important;
+    font-size: 21px !important;
+    text-align: center !important;
+  }
+  .controls .info .amount .btn-group-vertical .amountup:active,
+  .controls .info .amount .btn-group-vertical .amountup:focus,
+  .controls .info .amount .btn-group-vertical .amountup:hover {
+    border-left: 1px solid #ccc;
+  }
+  .controls .info .amount .btn-group-vertical .amountdown {
+    border-radius: 0 3px 3px 0 !important;
+    top: 1px;
+    
+  }
+  .manual .amount .amountup i,
+  .manual .amount .amountdown i {
+    position: relative;
+    right: 0;
+    left: 0;
+    top: 0;
+    bottom: 0;
+  }
+  .controls .info .details .amount .input-group-addon {
+    font-size: 17px !important;
+  }
+  .info .directionpicker .btn {
+    height: 100%;
+    font-size: 16px !important;
+    text-shadow: 0px 1px 0px white;
+    font-weight: 500 !important;
+  }
+  .info .directionpicker .callbtn, .info .directionpicker .putbtn {
+    border-radius: 0 !important;
+  }
+  .controls .info .detials .directionpicker {
+    width: 100%;
+    margin: 0 !important;
+    height: 40px;
   }
 }

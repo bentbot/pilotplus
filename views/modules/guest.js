@@ -7,7 +7,6 @@ function showGuest () {
         '<div class="col-md-4"><i class="fa fa-bolt" style="color: #00BCD4 !important;"></i><h1 data-translate="instant">Lightning Fast</h1><p data-translate="instantbody">Instantly deposit, trade, and withdrawal with '+localcurrency+' and Bitcoin.</p></div>'+
         '<div class="col-md-4"><span data-translate="fiaticon"><i class="fa fa-usd"></i></span><h1 data-translate="options">Instantly Profitable</h1><p data-translate="optionsbody">Profit in seconds by trading on exchange rates, crypto currencies, stocks, and more.</p></div>'+
       '</div>'+
-      '<div class="signupbonus" data-translate="signupbonus"> Get started with $5 free when you sign up today! <i class="fa fa-reply swoop fa-6"></i></div>'+
       '<div class="signupbox well">'+
       '<form autocomplete="false">'+
       '<div class="input-group">'+

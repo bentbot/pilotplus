@@ -16,17 +16,17 @@ function emoji(){}
 	/**
 	 * Configuration details for different image sets. This includes a path to a directory containing the
 	 * individual images (`path`) and a URL to sprite sheets (`sheet`). All of these images can be found
-	 * in the [emoji-data repository]{@link https://github.com/iamcal/emoji-data}. Using a CDN for these
+	 * in the [emoji-data repository]{@link https://github.com/iamcal/assets/emoji-data}. Using a CDN for these
 	 * is not a bad idea.
 	 *
 	 * @memberof emoji
 	 * @type {
 	 */
 	emoji.img_sets = {
-		'apple'    : {'path' : '/emoji-data/img-apple-64/'   , 'sheet' : '/emoji-data/sheet_apple_64.png',    'mask' : 1 },
-		'google'   : {'path' : '/emoji-data/img-google-64/'  , 'sheet' : '/emoji-data/sheet_google_64.png',   'mask' : 2 },
-		'twitter'  : {'path' : '/emoji-data/img-twitter-64/' , 'sheet' : '/emoji-data/sheet_twitter_64.png',  'mask' : 4 },
-		'emojione' : {'path' : '/emoji-data/img-emojione-64/', 'sheet' : '/emoji-data/sheet_emojione_64.png', 'mask' : 8 }
+		'apple'    : {'path' : '/assets/emoji-data/img-apple-64/'   , 'sheet' : '/assets/emoji-data/sheet_apple_64.png',    'mask' : 1 },
+		'google'   : {'path' : '/assets/emoji-data/img-google-64/'  , 'sheet' : '/assets/emoji-data/sheet_google_64.png',   'mask' : 2 },
+		'twitter'  : {'path' : '/assets/emoji-data/img-twitter-64/' , 'sheet' : '/assets/emoji-data/sheet_twitter_64.png',  'mask' : 4 },
+		'emojione' : {'path' : '/assets/emoji-data/img-emojione-64/', 'sheet' : '/assets/emoji-data/sheet_emojione_64.png', 'mask' : 8 }
 	};
 
 	/**

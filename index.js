@@ -26,13 +26,14 @@ var you = 1
   , subdomain = require('wildcard-subdomains')
   , irc = require('irc')
   , authy = require('authy-node')
-  , bcrypt = require('bcrypt')
+  , bcrypt = require('bcryptjs')
   , nodemailer = require('nodemailer')
   , crypto = require('crypto')
   , requirejs = require('requirejs')
-  , keys = require('./keys.json')
-  , port = keys.webport;
 
+
+    var keys = require('./keys.json'),
+        port = keys.webport;
 
 // Stripe API
 var stripe = require("stripe")(keys.stripe.secret);
@@ -738,14 +739,15 @@ function cookTrades(trades) {
   var nextlevel = new Array();
 
   // Findall 
-    Historictrades.find({ user: trade.user }, function (err, historic) {
+    async.each(trades, function (trade) {
+      Historictrades.find({ user: trade.user }, function (err, historic) {
       if (err) throw (err);
-      async.each(trades, function (trade) {
         User.findOne({ username: trade.user }, function (err, user) {
           if (err) throw (err);
 
           // Send the pay function after the trade has been calculated
           if (payout[trade.user+'.'+trade.currency] > 0) {
+            console.log(payout[trade.user+'.'+trade.currency]);
             pay(payout[trade.user+'.'+trade.currency], trade.user, trade.currency, function (err, amount, username, currency) {
               if (err) throw (err);
                 // Reset the user's payout
@@ -1342,11 +1344,13 @@ io.sockets.on('connection', function (socket) {
     if (data.type == 'line') {
       Historicprices.find({ symbol: data.symbol }).where('time').gte(time-data.time).sort({ time: -1 }).exec(function (err, docs) {
       if (err) throw (err);
-      
+        
         async.each(docs, function (data) {
           // Assign each point to the chart
           points.unshift([Number(data.time), Number(data.price)]);
         });
+        
+        points.unshift([Number(time), Number(points[points.length-1][1])]);
 
         points = sortByKey(points,0);
 
@@ -1371,8 +1375,8 @@ io.sockets.on('connection', function (socket) {
 
                 // Calculate candle stick arguments ReCheck
                 if ( !open ) open = Number(docs[i].price);
-                if ( !high || high < Number(docs[i].price) ) high = Number(docs[i].price);
                 if ( !low || low > Number(docs[i].price) ) low = Number(docs[i].price);
+                if ( !high || high < Number(docs[i].price) ) high = Number(docs[i].price);
                 close = Number(docs[i].price);
 
               }
@@ -1439,6 +1443,27 @@ io.sockets.on('connection', function (socket) {
         socket.emit('movingaverage', { symbol: data.symbol, time: data.time, average: avg, difference: diff, closing: closing  });
       });
   });
+
+
+    socket.on('descent', function (data) {
+      if (!data.time) data.time = 1800000;
+      Historicprices.find({ symbol: data.symbol }).where('time').gte(time-data.time).sort({ time: -1 }).exec(function (err, docs) {
+        if (err) throw (err);
+        var x, y;
+        async.each(docs, function (doc) {
+            n = Number(doc.price);
+            y = Number(doc.time);
+        });
+        socket.emit('socklog', { x: x, y: y });
+      });
+    });
+
+
+
+
+
+
+
 
 
   var lasthistoric, lastactive;
@@ -2038,6 +2063,21 @@ app.get('/robots.txt', function(req,res) {
   res.send(robot);
 });
 
+app.get('/view/:template', function (req, res) {
+  var view = req.params.template;
+  var data = { countries: ['US', 'CA', 'AU', 'GB', 'DK', 'FI', 'JP', 'NO'] };
+  switch (view) {
+    case 'wallet-withdrawal':
+      data.title = 'Withdraw';
+    break;
+    case 'wallet-deposit':
+      data.title = 'Deposit';
+    break;
+  }
+
+  res.render('partials/'+view+'.jade', data)
+})
+
 app.get('/tos', function(req,res) {
   res.render('index', {
     site: keys.site,
@@ -2368,7 +2408,7 @@ app.get('/login/:username/:password/:factor', function(req, res) {
                   if (user) {
                    // Test the password
 
-                    var cookieTimeout = 36000000; // 10 Hour timeout
+                    var cookieTimeout = keys.cookietimeout; // 10 Hour timeout
 
                       user.comparePassword(password, function(isMatch, err) {
                           if (err)  { throw (err); } else {

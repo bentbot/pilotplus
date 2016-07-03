@@ -135,7 +135,12 @@ function showWallet(data) {
       break;
     }
     showCards(data);
-    $(".wallet").html(html);
+    //$(".wallet").html(html);
+
+    $.get('/view/wallet-deposit', function (data, status) {
+      $('.wallet').html(data);
+    })
+
 }
 
 function btcWalletUpdate(data) {  

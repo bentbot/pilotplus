@@ -94,13 +94,13 @@ Highcharts.createElement('link', {
 // Add the background image to the container
 Highcharts.wrap(Highcharts.Chart.prototype, 'getContainer', function (proceed) {
    proceed.call(this);
-   //this.container.style.background = 'url(https://pilot.plus/assets/img/sandtoss.jpg)';
+   this.container.style.background = 'url(https://pilot.plus/assets/img/sandtoss.jpg)';
 });
 
-if ( $( '#'+data.symbol+'_container' ).width() > 968 ) {
+if ( $( '#'+data.symbol+'_container' ).width() > 420 ) {
 	rightMargin = 140;	
 } else {
-	rightMargin = 115;
+	rightMargin = 10;
 }
 
 

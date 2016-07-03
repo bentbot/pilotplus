@@ -35,11 +35,13 @@ function displayOptions(displaysymbols, guest) {
                 '<div class="manual">'+
 
                   '<div class="details trader">'+
-                      '<h1>'+percentage+'%</h1>';
-                      if (bonus) show = show + '<span class="bonusoffer">+'+bonus+'%</span>';
-                      show = show + '<span class="hide rawoffer">'+offer+'</span>'+
-                     '<!--  <span class="bold rate">Payout if</span><br /> -->'+
-                      '<span class="direction bold"><span class="option">'+symbol+'</span></span><br />'+
+                      '<div class="trade-header">'+
+                        '<h1>'+percentage+'%</h1>';
+                        if (bonus) show = show + '<span class="bonusoffer">+'+bonus+'%</span>';
+                        show = show + '<span class="hide rawoffer">'+offer+'</span>'+
+                        '<!--  <span class="bold rate">Payout if</span><br /> -->'+
+                        '<span class="direction bold"><span class="option">'+symbol+'</span></span><br />'+
+                      '</div>'+
                       
                     '<div class="directionpicker">'+
                       '<div class="btn-group-horizontal">'+
@@ -54,6 +56,15 @@ function displayOptions(displaysymbols, guest) {
                         '</button>'+
                       '</div>'+
                     '</div>'+
+
+                     '<div class="input-group amount">'+
+                        '<span class="input-group-addon">'+currencysymbol+'</span>'+
+                        '<input type="number" class="form-control amountfield" data-symbol="'+symbol+'" placeholder="">'+
+                        '<div class="btn-group-vertical" role="group" aria-label="...">'+
+                          '<div class="btn btn-xs btn-default amountup" data-symbol="'+symbol+'"><i class="fa fa-caret-up"></i></div>'+
+                          '<div class="btn btn-xs btn-default amountdown" data-symbol="'+symbol+'"><i class="fa fa-caret-down"></i></div>'+
+                        '</div>'+
+                      '</div>'+
 
                       '<div class="expires">'+
                         '<div class="btn-group">'+
@@ -71,14 +82,7 @@ function displayOptions(displaysymbols, guest) {
                       '</div>'+
                   '</div>'+
 
-                  '<div class="input-group amount">'+
-                        '<span class="input-group-addon">'+currencysymbol+'</span>'+
-                        '<input type="number" class="form-control amountfield" data-symbol="'+symbol+'" placeholder="">'+
-                        '<div class="btn-group-vertical" role="group" aria-label="...">'+
-                          '<div class="btn btn-xs btn-default amountup" data-symbol="'+symbol+'"><i class="fa fa-caret-up"></i></div>'+
-                          '<div class="btn btn-xs btn-default amountdown" data-symbol="'+symbol+'"><i class="fa fa-caret-down"></i></div>'+
-                        '</div>'+
-                  '</div>'+
+                 
 
                   '<button type="button" data-translate="apply" data-symbol="'+symbol+'" class="btn btn-default applytrade apply'+symbol+'">Apply</button>'+
                   '<span class="floater">+50xp</span>'+

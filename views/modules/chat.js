@@ -46,7 +46,7 @@ function newChat(from,to,message,errors) {
   if (message.error) err = 'BBCode tag opening/closing error.';
   
   message = emoji.replace_colons(message.html);
-  if ((message.match(/:/g) || []).length > 1) err = 'Invalid emoji: '+message+'<span style="float:right;font-style:italic;"><a href="http://emojipedia.org/" target="_blank">:sweat_smile: <span class="emoji emoji-sizer" style="background-image:url(/emoji-data/img-apple-64/1f605.png)" title="sweat_smile"></span></a></span></span>';
+  if ((message.match(/:/g) || []).length > 1) err = 'Invalid emoji: '+message+'<span style="float:right;font-style:italic;"><a href="http://emojipedia.org/" target="_blank">:sweat_smile: <span class="emoji emoji-sizer" style="background-image:url(/assets/emoji-data/img-apple-64/1f605.png)" title="sweat_smile"></span></a></span></span>';
 
   message = emoji.replace_emoticons(message);
 
@@ -83,7 +83,7 @@ $(function() {
         if (message.error) var err = 'BBCode tag opening/closing error.';
     
         message = emoji.replace_colons(message.html);
-        if ((message.match(/:/g) || []).length > 1) var err = 'Invalid emoji: '+message+'<span style="float:right;font-style:italic;"><a href="http://emojipedia.org/" target="_blank">:sweat_smile: <span class="emoji emoji-sizer" style="background-image:url(/emoji-data/img-apple-64/1f605.png)" title="sweat_smile"></span></a></span></span>';
+        if ((message.match(/:/g) || []).length > 1) var err = 'Invalid emoji: '+message+'<span style="float:right;font-style:italic;"><a href="http://emojipedia.org/" target="_blank">:sweat_smile: <span class="emoji emoji-sizer" style="background-image:url(/assets/emoji-data/img-apple-64/1f605.png)" title="sweat_smile"></span></a></span></span>';
 
         message = emoji.replace_emoticons(message);
 

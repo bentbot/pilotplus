@@ -105,8 +105,10 @@ function showWalletSend(data) {
 
       break;
     }
-
-    $(".walletsend").html(html);
+    $.get('/view/wallet-withdrawal', function (data, status) {
+      $('.walletsend').html(data);
+    })
+    //$(".walletsend").html(html);
 
   } else {
     lastdata = data;

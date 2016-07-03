@@ -37,7 +37,8 @@
     "socket.io-client": "1.3.5",
     "stripe": "^4.5.0",
     "striptags": "^2.1.1",
-    "wildcard-subdomains": "^0.1.0"
+    "wildcard-subdomains": "^0.1.0",
+    "bcryptjs": "~2.3.0"
   },
   "repository": {
     "type": "git",

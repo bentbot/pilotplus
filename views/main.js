@@ -77,6 +77,9 @@ socket.on('option', function (data) {
 socket.on('movingaverage', function (data) {
   console.log(data);
 })
+socket.on('socklog', function (data) {
+  console.log(data);
+})
 socket.on('ratios', function (data) {
   for (var key in data) {
     var obj = data[key];
@@ -189,8 +192,8 @@ socket.on('symbols', function (data) {
         classes = '';
         $('.keystone'+data.symbol).removeClass('red').removeClass('green');
       }
-      
-      if ( !selectedsymbol.indexOf(data.symbol) ) { classes = classes + 'selected '; }
+
+      if ( $.inArray(data.symbol, selectedsymbol) > -1) { classes = classes + 'selected '; }
       price[data.symbol] = data.price;
 
       // Render menus
@@ -212,7 +215,7 @@ socket.on('symbols', function (data) {
         classes = classes + 'hide ';
       }
       
-      sidebar = sidebar + '<li class="keystone keystonesidebar keystonelink keystone'+data.symbol+' '+classes+'" data-type="'+data.type+'" data-symbol="'+data.symbol+'"><div class="name">'+data.name+'</div><div class="price">'+data.price+'</div></li>'; 
+      sidebar = sidebar + '<li class="keystone keystonesidebar keystonelink keystone'+data.symbol+' '+classes+'" data-type="'+data.type+'" data-symbol="'+data.symbol+'"><div class="name">'+data.name+'</div><div class="price">'+data.price+'</div>'; 
 
       // Add any active trades below the symbol
       if ( activetrades.length > 0 && prefs["sidebartrades"] != false) {
@@ -251,10 +254,13 @@ socket.on('symbols', function (data) {
             
             }
 
-          }); // Trades loop
+          }); // Trades loop   
+      }
 
-      } // Any active trades
 
+      // Close the symbol
+      sidebar = sidebar + '</li>';
+      
       sidebar = sidebar + '</ul>';
 
 
@@ -283,11 +289,11 @@ function showloginfield(username, bal) {
       }
     $('.topright').addClass('accountinfo');
   } else {
-    var login = '<input type="text" autocomplete="off" class="form-control headerlogin headerusername" name="email" id="email" placeholder="Username">' +
-    '<input type="password" autocomplete="off" class="form-control headerlogin headerpassword" name="password" id="password" placeholder="Password">' +
+    var login = '<input type="text" tabindex="3" autocomplete="off" class="form-control headerlogin headerusername" name="email" id="email" placeholder="Username">' +
+    '<input type="password" tabindex="4" autocomplete="off" class="form-control headerlogin headerpassword" name="password" id="password" placeholder="Password">' +
     '<div data-translate="2factor" class="header2factor">2 Factor Security</div>'+
-    '<input type="text" autocomplete="off" class="form-control headerauthy" name="authy" id="authy" placeholder="*******">'+
-    '<button type="submit" class="btn loginbtn" data-translate="login">Login</button>';
+    '<input type="text" tabindex="5" autocomplete="off" class="form-control headerauthy" name="authy" id="authy" placeholder="*******">'+
+    '<button type="submit" tabindex="2" class="btn loginbtn" data-translate="login">Login</button>';
     $('.topright').addClass('loginform');
   }
 
@@ -525,7 +531,13 @@ function loadHistory() {
   $('.hook').html(page);
 }
 
+function loadProfile() {
+  $.get('/view/profile', function (data, status) {
+    $('.hook').html(data);
+  })
+}
 
+// Page Changer
     socket.on('loadpage', function (data) {
       //console.log('loadpage ' + data.page);
       switch (data.page) {
@@ -536,6 +548,9 @@ function loadHistory() {
             loadTrades([data.symbol]);
           }
           updateOption(data.symbol);
+        break;
+        case 'account':
+          loadProfile();
         break;
         case 'prefs':
           loadPrefs();
@@ -552,7 +567,7 @@ function loadHistory() {
         case 'referrals':
           loadReferrals();
         break;
-      case 'security':
+        case 'security':
           loadSecurity();
         break;
       case 'terms':
@@ -802,23 +817,26 @@ socket.on('alertuser', function (data) {
   }
 });
 
-
-
+var windowInFocus = true;
 socket.on('tradeoutcome', function (data) {
   socket.emit('historictrades', { limit: 5, skip: 0 });
   socket.on('historictrades', function (data) {
     historicTrades(data);
   });
-  console.log(data);
   if (data.user == user) {
     showSplit(data.x, data.y, data.z, data.change);
-    setTimeout( function() {
-      showXP(data.xp, data.lastxp, data.nextxp, data.change);
-      socket.emit('historictrades', { limit: 5 });
-      setTimeout( function() {
-        showSymbols();
-      },data.change)
-    }, data.change);
+    // var windowAnnounceCheck = setInterval( function() {
+      if (windowInFocus) {
+        // clearInterval(windowAnnounceCheck);
+        setTimeout( function() {
+          showXP(data.xp, data.lastxp, data.nextxp, data.change);
+          socket.emit('historictrades', { limit: 5 });
+          setTimeout( function() {
+            showSymbols();
+          },data.change)
+        }, data.change);
+      }
+    // }, 500);
   }
   $('.trades li').css('left', '100%');
 });
@@ -897,7 +915,7 @@ function updateOption(symbol) {
 
 }
 
-$("[data-translate]").jqTranslate('index');
+$("[data-translate]").jqTranslate('languages/index');
 $('.keystones').scrollbox();
 
 $(".timeago").timeago();

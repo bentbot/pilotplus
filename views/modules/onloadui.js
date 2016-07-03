@@ -35,6 +35,13 @@ $(function() {
       e.preventDefault();
   });
 
+  var windowInFocus;
+  $(window).focus(function() {
+    windowInFocus = true;
+  }).blur( function () {
+    windowInFocus = false;
+  })
+
   var tradesymbol = new Array();
   if (document.location.hash) {
     var hash = document.location.hash.replace('#','');
@@ -51,10 +58,14 @@ $(function() {
   $(window).on('scroll', function() {
     var top = $(window).scrollTop();
     var height = $('.globalheader').height();
+    var header = $('.globalheader .header').height();
     if ( top < height ) {
-       var padding = height-top;
+        var padding = height-top;
+        if ( top < height-header ) {
+          $('.announcesplit').removeClass('fixed')
+        }
     } else {
-      var padding = 0
+      $('.announcesplit').addClass('fixed')
     }
     $('.menu').css('padding-top', padding);
   });
@@ -81,24 +92,25 @@ var options = {
 };
 
 
-$('.slider').fractionSlider({
-  'slideTransition' : 'fade', // default slide transition
-  'slideTransitionSpeed' : 1000, // default slide transition time
-  'slideEndAnimation' : true, // if set true, objects will transition out before next slide moves in      
-  'position' : '0,0', // default position | should never be used
-  'transitionIn' : 'left', // default in - transition
-  'transitionOut' : 'left', // default out - transition
-  'fullWidth' : false, // transition over the full width of the window
-  'delay' : 0, // default delay for elements
-  'timeout' : 2000, // default timeout before switching slides
-  'speedIn' : 2500, // default in - transition speed
-  'speedOut' : 1000, // default out - transition speed
-  'easeIn' : 'easeOutExpo', // default easing in
-  'easeOut' : 'easeOutCubic', // default easing out
-  'controls' : true, // controls on/off
-  'pager' : true, // pager inside of the slider on/off OR $('someselector') for a pager outside of the slider
-  'responsive' : true, // responsive slider (see below for some implementation tipps)
-});
+
+// $('.slider').fractionSlider({
+//   'slideTransition' : 'fade', // default slide transition
+//   'slideTransitionSpeed' : 1000, // default slide transition time
+//   'slideEndAnimation' : true, // if set true, objects will transition out before next slide moves in      
+//   'position' : '0,0', // default position | should never be used
+//   'transitionIn' : 'left', // default in - transition
+//   'transitionOut' : 'left', // default out - transition
+//   'fullWidth' : false, // transition over the full width of the window
+//   'delay' : 0, // default delay for elements
+//   'timeout' : 2000, // default timeout before switching slides
+//   'speedIn' : 2500, // default in - transition speed
+//   'speedOut' : 1000, // default out - transition speed
+//   'easeIn' : 'easeOutExpo', // default easing in
+//   'easeOut' : 'easeOutCubic', // default easing out
+//   'controls' : true, // controls on/off
+//   'pager' : true, // pager inside of the slider on/off OR $('someselector') for a pager outside of the slider
+//   'responsive' : true, // responsive slider (see below for some implementation tipps)
+// });
 
 
 // $("[data-translate]").jqTranslate('trans',{defaultLang: 'es'});
@@ -129,14 +141,22 @@ $(".globalheader").on("click",".keystones li a",function(e) {
 
 $(".menu").on("click",".keystonesidebar",function(e) {
   e.preventDefault();
-  $(this).addClass('selected');
   var symbol = $(this).attr('data-symbol');
   if ( selectedsymbol.indexOf(symbol) < 0 ) {
+    $(this).addClass('selected');
     page('trade',symbol);
     showSymbols();
     lastitem = symbol;
     selectedsymbol.push(symbol);
     location.hash = symbol;
+  } else if (selectedsymbol.length > 1) {
+    $(this).removeClass('selected');
+     if (selectedsymbol.length > 1) {
+      selectedsymbol = $.grep(selectedsymbol, function(value) {
+        return value != symbol;
+      });
+    }
+    $('.chart-'+symbol).remove();
   }
 });
 
@@ -202,6 +222,13 @@ $(".globalheader").on("click",".keystones .seeall",function(e) {
     }
   });
 
+  $(".topright").on("keyup","#authy",function(e) {
+    if(e.keyCode == 13) {
+      $('.loginbtn').html('<i class="fa fa-spin fa-cog"></i>');
+      login();
+    }
+  });
+
   $(".topright").on("click",".loginbtn",function(e) {
     $('.loginform').addClass('open');
     $('.headerusername').focus();
@@ -213,8 +240,7 @@ $(".globalheader").on("click",".keystones .seeall",function(e) {
   $(".topright").on("click keypress",".username",function(e) {
     if (showlogin == false) {
       showAccount();
-      page('security');
-      showAccount();
+      page('account');
       showlogin = true;
       lastitem = 'account';
       $(this).addClass('btn-success');
@@ -432,25 +458,25 @@ $(".globalheader").on("click",".keystones .seeall",function(e) {
       } 
       setTimeout(function () { applyingtrade = false; }, 700);
   });
-    $(".hook").on("keyup",".applyautotrade",function(e) {
-      if (applyingtrade==false && e.keyCode == 13) {
-        var symbol = $(this).attr('data-symbol');
-        var direction = $('.'+symbol+' .action').html();
-        var repeat = Number($('#'+symbol+' .info .repeat .repeatfield').val());
-        var amount = Number($('#'+symbol+' .info .amount .repeatamountfield').val());
-        amount = amount.toFixed(2);
-        //user = userid;
-        socket.emit('autotrade', {
-          symbol : symbol,
-          amount : amount,
-          repeat : repeat,
-          direction : direction,
-          user : user
-        });
-        applyingtrade = true;
-      } 
-      setTimeout(function () { applyingtrade = false; }, 700);
-  });
+  //   $(".hook").on("keyup",".applyautotrade",function(e) {
+  //     if (applyingtrade==false && e.keyCode == 13) {
+  //       var symbol = $(this).attr('data-symbol');
+  //       var direction = $('.'+symbol+' .action').html();
+  //       var repeat = Number($('#'+symbol+' .info .repeat .repeatfield').val());
+  //       var amount = Number($('#'+symbol+' .info .amount .repeatamountfield').val());
+  //       amount = amount.toFixed(2);
+  //       //user = userid;
+  //       socket.emit('autotrade', {
+  //         symbol : symbol,
+  //         amount : amount,
+  //         repeat : repeat,
+  //         direction : direction,
+  //         user : user
+  //       });
+  //       applyingtrade = true;
+  //     } 
+  //     setTimeout(function () { applyingtrade = false; }, 700);
+  // });
 
   $(".hook").on("change keyup",".amountfield",function() {
     var symbol = $(this).attr('data-symbol');
@@ -515,6 +541,14 @@ $(".globalheader").on("click",".keystones .seeall",function(e) {
   
 
 
+  // $(".hook").on("click",".callbtn, .putbtn",function() {
+  //   $('.controls .info .amount').css('display', 'block');
+  //   $('.controls .info .details .expires').css('display', 'block');
+  //   $('.controls .info .applytrade').css('display', 'block');
+  // });
+
+
+
   $(".hook").on("click",".callbtn",function() {
     var symbol = $(this).attr('data-symbol');
     var amount = $('.'+symbol+' .amountfield').val();
@@ -564,11 +598,11 @@ var last;
 $(".hook").on("click",".expires .add",function() {
   var symbol = $(this).attr('data-symbol');
   var selected = $('.'+symbol+' .time').val();
-
+console.log(last)
     for (var i = 0; i <= tradeevery.length - 1; i++) {
-    if ( tradeevery[i].time != last ) { 
-      last = tradeevery[i].time;
-      if ( tradeevery[i].time > selected ) {
+    if ( tradeevery[i].time > selected ) {
+      if ( tradeevery[i].time != last ) { 
+        last = tradeevery[i].time;
         $('.'+symbol+' .time').val(tradeevery[i].time);
         $('.'+symbol+'_tradetimes').html('<li data-time='+tradeevery[i].time+'" data-seconds="'+tradeevery[i].string+'">'+tradeevery[i].string+'</li>');
         return;
@@ -578,15 +612,14 @@ $(".hook").on("click",".expires .add",function() {
   
 });
 
-var last;
 $(".hook").on("click",".expires .subtract",function() {
   var symbol = $(this).attr('data-symbol');
   var selected = $('.'+symbol+' .time').val();
-
+console.log(last)
   for (var i = tradeevery.length - 1; i >= 0; i--) {
-    if ( tradeevery[i].time != last ) { 
-      last = tradeevery[i].time;
-      if ( tradeevery[i].time < selected ) {
+    if ( tradeevery[i].time < selected ) {
+      if ( tradeevery[i].time != last ) { 
+        last = tradeevery[i].time;
         $('.'+symbol+' .time').val(tradeevery[i].time);
         $('.'+symbol+'_tradetimes').html('<li data-time='+tradeevery[i].time+'" data-seconds="'+tradeevery[i].string+'">'+tradeevery[i].string+'</li>');
         return;
@@ -626,11 +659,6 @@ $(".hook").on("click",".amountdown",function(e) {
 
 
 
-  $(".globalheader").on("click","#account",function() {
-    page('prefs');
-    
-  });
-
   $(".globalheader").on("click","#deposit",function() {
     page('deposit');
     
@@ -643,6 +671,11 @@ $(".hook").on("click",".amountdown",function(e) {
   
   $(".globalheader").on("click","#prefs",function() {
     page('prefs');
+
+  }); 
+
+  $(".globalheader").on("click","#account",function() {
+    page('account');
 
   });  
 
@@ -749,7 +782,12 @@ $('.hook').click(function() {
     //   $user.addClass('selected');
     // });
 
-
+  $('.announcesplit, .announcexp').on('click', function (e) {
+      e.preventDefault();
+      hideAllPanels();
+      showSymbols();
+  }); 
+  
 
 // onload
 });
@@ -810,32 +848,44 @@ function showSplit(x, y, z, change) {
 
     $(".announcesplit div").removeClass('applyspotlight');
 
+
+    // Set the window title
+    var divider = ' - ';
+    if (sitetitle == 'Pilot+') divider = ' ';
+
     if ( x > z && x > y || x == y && x == z || x == z && x > y || x == y && x > z ) { 
       $(".announcesplit .x").addClass('applyspotlight'); 
-      document.title = sitetitle + ' - Won for '+currency+' '+x.toFixed(2); specialtitle = true;
+      document.title = sitetitle + divider + 'Won for '+currency+' '+x.toFixed(2); specialtitle = true;
       specialtitle = true;
     } else if (y > x && y > z) {  
       $(".announcesplit .y").addClass('applyspotlight'); 
-      document.title = sitetitle + ' - Pushed for '+currency+' '+y.toFixed(2); specialtitle = true;
+      document.title = sitetitle + divider + 'Pushed for '+currency+' '+y.toFixed(2); specialtitle = true;
       specialtitle = true;
     } else if (z > x && z > y || y == z) { 
       $(".announcesplit .z").addClass('applyspotlight'); 
-      document.title = sitetitle + ' - Lost for '+currency+' '+z.toFixed(2); specialtitle = true;
+      document.title = sitetitle + divider + 'Lost for '+currency+' '+z.toFixed(2); specialtitle = true;
       specialtitle = true;
     }
 
-    var windowrun = false;
-      setTimeout(function(){
-        if (!windowrun) {
-          hideAllPanels();
-          document.title = sitetitle;
-          specialtitle = false;
-          showSymbols();
-          windowrun = true;
-        }
-      },change); 
+    var windowrunning = false;
+    setTimeout(function(){
 
-  } else {
+      if (!windowrunning) {
+
+        hideAllPanels();
+        showSymbols();
+
+        document.title = sitetitle;
+        specialtitle = false;
+        windowrunning = true;
+
+      } else {
+        windowrunning = false;
+      }
+
+    }, change);
+
+  } else { // No Data, Skip
     showSymbols();
   }
 }

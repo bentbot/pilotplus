@@ -1,0 +1,60 @@
+div
+	.addcard.nocards.alert.alert-info
+		.center
+			.paymentmethod( data-translate="addapayment" )
+				span Add a Payment
+			.btn-group( role="group" aria-label="Payment type" )
+				button.btn.btn-method.btn-group-xs( type="button" data-method="cc" ) Credit Card
+				button.btn.btn-method.btn-group-xs( type="button" data-method="paypal" ) PayPal
+				button.btn.btn-method.btn-group-xs( type="button" data-method="bank" ) Bank Account
+			.fundsinput
+				.method.cc
+					.input-group
+						span.input-group-addon
+							a( href="https://stripe.com" target="_blank" )
+								i.fa.fa-cc-stripe
+						input( type="text" class="form-control" id="number" placeholder="••••  ••••  ••••  ••••" autocomplete="off" )
+						input( type="text" class="form-control" id="expiry" maxlength="5" placeholder="••/••" autocomplete="off" )
+						input( type="text" class="form-control" id="cvc" maxlength="3" placeholder="•••" autocomplete="off" )
+						button.btn.btn-success.sendcc Add Card
+							i.fa.fa-plus-circle
+				.method.paypal
+					.input-group
+						span.input-group-addon
+							i.fa.fa-cc-paypal
+						input( type="text" class="form-control" id="paypalemail" placeholder="PayPal Email" autocomplete="off" )
+						button( class="btn btn-success addpaypal" data-update="false" )
+							span( data-translate="addpaypal" ) Add PayPal
+							i.fa.fa-paypal
+				.method.bank
+					.input-group
+						.dropdown
+							button( class="btn btn-blue dropdown-toggle" type="button" id="benkdropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" )
+								i.fa.fa-bank
+								span.caret
+							ul( class="dropdown-menu bank-country-dropdown" aria-labelledby="benkdropdown" )
+								each country in countries
+									li( data-country="#{country}" )
+										img( src="/assets/img/flags/#{country}.png" )
+							input( type="hidden" class="form-control country" id="country" value="none" )
+							input( type="text" class="form-control" id="routing" placeholder="Routing #" autocomplete="off" )
+							input( type="text" class="form-control" id="account" placeholder="Account #" autocomplete="off" )
+							button.btn.btn-success.sendbank
+								span Add Account
+								i.fa.plus-circle
+	.addfunds.alert.alert-info 
+		.center
+			.fundssource( data-translate="addfunds" )
+				span Add Funds
+			.addfundsnow
+				.showmethod.method.cc
+					.input-group
+						span( class="input-group-addon" )
+							i.fa.usd
+					.addingfunds
+						span.fundingfrom Adding funds from Visa
+						span.fundingcvc ••••
+						span.fundingcvc 4242
+					button( class="btn btn-success addpayment" )
+						Add Funds
+						i.fa.plus-circle

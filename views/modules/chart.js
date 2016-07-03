@@ -1,3 +1,5 @@
+//view highchat.js
+/*
 var charts = new Array();
 
 function loadChart(data) {

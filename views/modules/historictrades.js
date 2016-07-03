@@ -34,6 +34,8 @@ function showhistoric(data, append) {
         possiblewin = possiblewin.toFixed(2);
         entry.price = Number(entry.price);
 
+        var iodate = null;
+
         if (entry.direction == 'Call') {
           var arrowhtml = '<span style="opacity: 0.7" class="glyphicon glyphicon-arrow-up"></span>';
         } else if (entry.direction == 'Put') {
@@ -73,7 +75,7 @@ function showhistoric(data, append) {
         // Historic Trade Row
         tradehtml = tradehtml + '<tr class="historictrade '+classes+'" data-id="'+entry._id+'">' +
           '<td class="symbol keystonelink" data-symbol="'+entry.symbol+'">'+entry.symbol+'</td>'+
-          '<td class="time"><i style="opacity: 0.7"  class="fa fa-clock-o"></i> <time class="timeago" datetime="'+iodate+'">'+entry.time+'</time></td>'+
+          '<td class="time"><i style="opacity: 0.7"  class="fa fa-clock-o"></i> <time class="timeago" datetime="'+entry.time+'">'+entry.time+'</time></td>'+
           '<td class="trade">'+arrowhtml+' <span class="tradeprice">'+entry.price+'</span></td>'+
           '<td class="price"><i style="opacity: 0.7"  class="fa fa-bell"></i> <span class="tradeprice">'+entry.finalprice+'</span></td>'+
           '<td class="outcome">'+thumbhtml+'</td>';
