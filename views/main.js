@@ -16,6 +16,7 @@ require(['modules/chat']);
 require(['modules/xp']);
 require(['modules/referrals']);
 
+
 var socket = io.connect('https://pilot.plus:3030', {secure: true});
 var user, email, currency, dualfactor, verified, userid, option, price, expires, direction, userdeposit, ratio, percentage, xp, level, specialtitle;
 var $users = $('#users ul');
@@ -289,15 +290,32 @@ function showloginfield(username, bal) {
       }
     $('.topright').addClass('accountinfo');
   } else {
+    
     var login = '<input type="text" tabindex="3" autocomplete="off" class="form-control headerlogin headerusername" name="email" id="email" placeholder="Username">' +
     '<input type="password" tabindex="4" autocomplete="off" class="form-control headerlogin headerpassword" name="password" id="password" placeholder="Password">' +
     '<div data-translate="2factor" class="header2factor">2 Factor Security</div>'+
     '<input type="text" tabindex="5" autocomplete="off" class="form-control headerauthy" name="authy" id="authy" placeholder="*******">'+
     '<button type="submit" tabindex="2" class="btn loginbtn" data-translate="login">Login</button>';
+    
+    // var login = '<div class="loginwindow hidden">'+
+    //   '<div class="loginpane">'+
+    //     '<p data-translate="pleaselogin">Please enter your username and password.</p>'+
+    //     '<input type="text" tabindex="3" autocomplete="off" class="form-control" name="email" id="email" placeholder="Username">'+
+    //     '<input type="password" tabindex="4" autocomplete="off" class="form-control" name="password" id="password" placeholder="Password">'+
+    //     '<button type="submit" tabindex="2" class="btn loginbtn" data-translate="login">Sign In</button>'+
+    //     '<button type="submit" tabindex="2" class="btn loginbtn" data-translate="login">Sign Up</button>'+
+    //   '</div>'+
+    //   '<div class="dualauthpane">'+
+    //     '<p data-translate="2factor" class="header2factor">2 Factor Security</p>'
+    //     '<input type="text" tabindex="5" autocomplete="off" class="form-control" name="authy" id="authy" placeholder="*******">'+
+    //     '<button type="submit" tabindex="2" class="btn loginbtn" data-translate="login">Login</button>'+
+    //   '</div>'+
+    // '</div>';
+
     $('.topright').addClass('loginform');
   }
 
-  $('.topright').html(login);
+  $('.topright').append(login);
   
 }
 function loadTrades(displaysymbols, guest) {

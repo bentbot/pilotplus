@@ -89,9 +89,11 @@ $(function () {
     var un = $(".username").val();
     var em = $(".email").val();
     var pwd = $(".pwd").val();
+    var path = "adduser/"+un+"/"+em+"/"+pwd;
+    console.log( path );
     if (un && em && pwd && term && validemail && un.length >= 3) {
     $.ajax({
-      url: "adduser/"+un+"/"+em+"/"+pwd,
+      url: path,
       cache: false
       }).done(function( resp ) {
         if (resp == 'OK') {

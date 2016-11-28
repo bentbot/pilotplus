@@ -1,5 +1,7 @@
 'use strict';
 
+var Promise = require('bluebird');
+var isPlainObject = require('lodash.isplainobject');
 var stripeMethod = require('./StripeMethod');
 var utils = require('./utils');
 
@@ -35,7 +37,7 @@ module.exports = {
   setMetadata: function(id, key, value, auth, cb) {
     var self = this;
     var data = key;
-    var isObject = utils.isObject(key);
+    var isObject = isPlainObject(key);
     // We assume null for an empty object
     var isNull = data === null || (isObject && !Object.keys(data).length);
 
@@ -50,42 +52,41 @@ module.exports = {
     }
 
     var urlData = this.createUrlData();
-    var deferred = this.createDeferred(cb);
     var path = this.createFullPath('/' + id, urlData);
 
-    if (isNull) {
-      // Reset metadata:
-      sendMetadata(null, auth);
-    } else if (!isObject) {
-      // Set individual metadata property:
-      var metadata = {};
-      metadata[key] = value;
-      sendMetadata(metadata, auth);
-    } else {
-      // Set entire metadata object after resetting it:
-      this._request('POST', path, {
-        metadata: null,
-      }, auth, {}, function(err, response) {
-        if (err) {
-          return deferred.reject(err);
-        }
-        sendMetadata(data, auth);
-      });
-    }
+    return this.wrapTimeout(new Promise((function(resolve, reject) {
+      if (isNull) {
+        // Reset metadata:
+        sendMetadata(null, auth);
+      } else if (!isObject) {
+        // Set individual metadata property:
+        var metadata = {};
+        metadata[key] = value;
+        sendMetadata(metadata, auth);
+      } else {
+        // Set entire metadata object after resetting it:
+        this._request('POST', path, {
+          metadata: null,
+        }, auth, {}, function(err, response) {
+          if (err) {
+            return reject(err);
+          }
+          sendMetadata(data, auth);
+        });
+      }
 
-    function sendMetadata(metadata, auth) {
-      self._request('POST', path, {
-        metadata: metadata,
-      }, auth, {}, function(err, response) {
-        if (err) {
-          deferred.reject(err);
-        } else {
-          deferred.resolve(response.metadata);
-        }
-      });
-    }
-
-    return deferred.promise;
+      function sendMetadata(metadata, auth) {
+        self._request('POST', path, {
+          metadata: metadata,
+        }, auth, {}, function(err, response) {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(response.metadata);
+          }
+        });
+      }
+    }).bind(this)), cb);
   },
 
   getMetadata: function(id, auth, cb) {
@@ -95,20 +96,17 @@ module.exports = {
     }
 
     var urlData = this.createUrlData();
-    var deferred = this.createDeferred(cb);
     var path = this.createFullPath('/' + id, urlData);
 
-    this._request('GET', path, {}, auth, {}, function(err, response) {
-      if (err) {
-        deferred.reject(err);
-      } else {
-        deferred.resolve(
-         response.metadata
-        );
-      }
-    });
-
-    return deferred.promise;
+    return this.wrapTimeout(new Promise((function(resolve, reject) {
+      this._request('GET', path, {}, auth, {}, function(err, response) {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(response.metadata);
+        }
+      });
+    }).bind(this)), cb);
   },
 
 };

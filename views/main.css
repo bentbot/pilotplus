@@ -72,7 +72,9 @@ border: 1px solid;
     left: 140px;
   }  
 }
-
+.hook .container {
+  padding: 15px 0px;
+}
 .refs {
   margin-top: 20px;
   min-height: 133px;
@@ -1222,17 +1224,19 @@ background-color: hsl(0, 0%, 95%) !important;
 width: 100%;
 overflow: hidden;
 position: relative;
+height: 45px;
+box-shadow: inset 0px -1px 2px #e2e2e2;
 }.linktray ul {
-min-width: 1000px;
-font-size: 14px;
-color: #333 !important;
-margin: 0 auto;
-padding: 0px;
-float:left;
-list-style: none;
-cursor: default;
-width: 1000%;
-/* left: -130px; */
+  min-width: 1000px;
+  font-size: 15px;
+  color: #333 !important;
+  margin: 0 auto;
+  padding: 0px;
+  float: left;
+  list-style: none;
+  cursor: default;
+  width: 1000%;
+  margin-top: 7px;
 }.linktray ul:first-child {
   margin-left: 10px;
 }
@@ -2945,7 +2949,7 @@ margin-right: 15px;
 .grid li {
   background: white;
   border: 1px solid #EEE;
-  margin: 6px 0px;
+  margin: 15px 0px;
   border-radius: 4px;
   overflow: hidden;
   position: relative;
@@ -2974,11 +2978,11 @@ margin-right: 15px;
 
 .grid li[data-sizex="2"][data-col="1"] {
   width: 49.75%;  
-  margin-right: 0;
+  margin-left: 0;
 }
 .grid li[data-sizex="2"][data-col="2"] {
   width: 49.75%;
-  margin-left: 0;
+  margin-right: 0;
 }
 
 .grid::first-child {
@@ -3133,7 +3137,7 @@ background: whitesmoke;
   padding: 0px;
   border-bottom: 0px;
   line-height: 30px;
-  height: 30px;
+  height: 45px;
 }
 .globalheader .container {
   padding: 0px;
@@ -3416,7 +3420,8 @@ border-top: 0px solid #FFF;
   letter-spacing: 1px;
 }
 .loginbtn {
-  height: 100% !important;
+  top: 0;
+  height: 70px !important;
   background: rgba(0, 0, 0, 0.2) !important;
   font-weight: 100;
   color: white !important;
@@ -3433,9 +3438,22 @@ border-top: 0px solid #FFF;
   padding: 0px !important;
 }.loginbtn:hover, .loginbtn:focus, .loginbtn:active {
   /* background-color: rgba(0, 0, 0, 0.0) !important; */
-  background-color: rgb(12, 184, 206) !important;
+  /* background-color: rgb(12, 184, 206) !important; */
 }.loginbtn .fa {
   font-size: 30px;
+}
+.loginbtn span {
+  position: absolute;
+  top: 16px;
+  right: -1px;
+  background: #383838;
+  padding: 5px;
+  border-top: 3px solid #E91E63;
+  transition: all 0.3s ease-out
+}
+.loginbtn span.hidden {
+  opacity: 0;
+  top: 75px;
 }
 .glyph {
 background-image: url('assets/img/glyph.png');
@@ -3625,11 +3643,11 @@ display: none;
 }
 
 .input-group-addon {
-padding: 6px 12px;
-font-size: 14px;
-font-weight: 400;
-line-height: 1;
-text-align: center;
+  padding: 6px 12px;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1;
+  text-align: center;
   background-color: hsl(28, 0%, 94%) !important;
   background-repeat: repeat-x;
   background-image: -khtml-gradient(linear, left top, left bottom, from(#efefef), to(#efefef));
@@ -3643,7 +3661,7 @@ text-align: center;
   color: #333;
   text-shadow: 0 1px 1px rgba(255, 255, 255, 0.00);
   -webkit-font-smoothing: antialiased;
-border-radius: 4px;
+  border-radius: 4px;
 }
 
 .btn-xs, .btn-group-xs>.btn {
@@ -3651,6 +3669,9 @@ padding: 1px 5px !important;
 font-size: 12px !important;
 line-height: 1.5 !important;
 border-radius: 3px !important;
+}
+.btn-xs.smaller, .btn-group-xs>.btn.smaller {
+  font-size: 11px !important;
 }
 
 .input-group-sm > .form-control, .input-group-sm > .input-group-addon, .input-group-sm > .input-group-btn > .btn {

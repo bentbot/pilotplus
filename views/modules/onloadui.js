@@ -200,7 +200,7 @@ $(".globalheader").on("click",".keystones .seeall",function(e) {
   $(this).css('bottom', '-12px').html('Less');
   allopen = true;
   } else if (allopen == true) {
-    $('.linktray').css('height', '30px');
+    $('.linktray').css('height', '45px');
     $(this).css('bottom', '-3px').html('More');
     allopen = false;
   }
@@ -287,13 +287,11 @@ $(".globalheader").on("click",".keystones .seeall",function(e) {
       url: url,
       cache: false
     }).done(function( html ) {
-      console.log(html)
-      if (html == "Too many requests.") {
-        $('.loginbtn').removeClass('btn-warning').addClass('btn-danger').html("<i class='fa fa-times'></i>");
-      } else if (html == "Invalid username or password."){
-        $('.loginbtn').removeClass('btn-success').addClass('btn-warning').html("<i class='fa fa-times'></i>");
-      } else if (html == "Error"){
-        $('.loginbtn').removeClass('btn-success').addClass('btn-warning').html("<i class='fa fa-times'></i>");
+      console.log(html);
+      if (html == "Too many requests." || html == "Invalid username or password." || html == "Error") {
+        $('.loginbtn span').removeClass('hidden');
+        $('.loginbtn').removeClass('btn-warning').addClass('btn-danger').html("<i class='fa fa-times'></i><span>"+html+"</span>");
+        setTimeout( function() { $('.loginbtn span').addClass('hidden'); }, 2500);
       } else if (html == "Two Factor") {
         $('.loginbtn').removeClass('btn-warning').addClass('btn-yellow').html("<img src='/assets/img/com.authy.authy.png' height='30' width='30'>");
         
@@ -808,7 +806,7 @@ function hideAllPanels() {
 
 function showSuccess(msg, xp, next) {
   hideAllPanels();
-  $(".announcesuccess").css('height', 30);
+  $(".announcesuccess").css('height', 45);
   $(".announcesuccess .container ul li a").html(msg);
   $(".announcesuccess .container span").html(xp);
   setTimeout(function(){
@@ -817,7 +815,7 @@ function showSuccess(msg, xp, next) {
 }
 function showDanger(msg, xp, next) {
   hideAllPanels();
-  $(".announcedanger").css('height', 30);
+  $(".announcedanger").css('height', 45);
   $(".announcedanger .container ul li a").html(msg);
   $(".announcedanger .container span").html(xp);
   setTimeout(function(){
@@ -829,7 +827,7 @@ function showDanger(msg, xp, next) {
 function showSplit(x, y, z, change) {
   if (x||y||z) {
     hideAllPanels();
-    $(".announcesplit").css('height', 30);
+    $(".announcesplit").css('height', 45);
 
     var total = x+y+z;
 
@@ -892,7 +890,7 @@ function showSplit(x, y, z, change) {
 
 function showXP(experience, lastxp, nextxp, change) {
   hideAllPanels();
-  $(".announcexp").css('height', 30);
+  $(".announcexp").css('height', 45);
 
   var lastpercentage = Number((experience-lastxp)/(nextxp-lastxp)*100);
   if (lastpercentage > 100) lastpercentage = 100;
@@ -907,15 +905,15 @@ function showXP(experience, lastxp, nextxp, change) {
 
 function showSymbols() {
   hideAllPanels();
-  $(".linktray").css('height', 30);
+  $(".linktray").css('height', 45);
 }
 function showAccount() {
   hideAllPanels();
-  $(".accounttray").css('height', 30);
+  $(".accounttray").css('height', 45);
 }
 function showFinances() {
   hideAllPanels();
-$(".financestray").css('height', 30);
+$(".financestray").css('height', 45);
 }
 function uitradeico(symbol, direction, manual) {
     switch (direction) {

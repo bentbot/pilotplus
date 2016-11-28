@@ -486,7 +486,7 @@ app.use(passport.session());
 app.use(bodyParser.text({ type: 'text/html' }));
 app.use(subdomain({
   domain: keys.site.domain, 
-  namespace: 's', 
+  namespace: 'domain', 
   www: 'false'
 }));
 
@@ -496,7 +496,7 @@ var server = https.createServer(keys.ssl.lock, app).listen(port, function(){
 });
 
 // Start secure socket server
-var io = require('socket.io').listen(3000, keys.ssl.lock);
+var io = require('socket.io').listen(keys.socketport, keys.ssl.lock);
 
 
 
@@ -1164,10 +1164,13 @@ function updateChart(data, symbol, force) {
   }
 }
 
+ var unsavedCharts = [];
+
 // chart point for the client
 function chartPoint(data, symbol) {
   symbol = symbolswitch(symbol);
   if ( data && Number(data) ) {
+
     // Check if the value has changed and put it in the DB
     var price = {
         symbol: symbol,
@@ -1175,25 +1178,29 @@ function chartPoint(data, symbol) {
         time: time
     };
 
-    Historicprices.findOne({symbol:symbol}).sort({time:-1}).exec(function( err, historic ) {
-      if (err) throw (err);
-      if (historic) {
-        if ( historic.price != price.price || historic.time-price.time > 10000 ) {
-          var historicprice = new Historicprices(price);
-          historicprice.save();
-        }
+    Historicprices.findOne({ 'symbol': symbol }).sort({time:-1}).exec(function( err, historic ) {
+      if (err) {
+        throw (err);
+      };
+
+      if (historic && historic.price != price.price || historic && historic.time-price.time > 10000 ) {
+        unsavedCharts.push(price);
+      } else if (!historic) {
+        unsavedCharts.push(price);
       }
+
+    if ( unsavedCharts.length > keys.symbols.length ) {
+      Historicprices.create(unsavedCharts, function (err, prices) {
+        if (err) throw (err);
+        unsavedCharts = [];
+      });
+    }
+
     });
   }
 }
 
 
-function sendChart(symbol, view) {
-  Historicprices.find().where('time').gte(time-view).exec(function(err, docs) {
-    if (err) throw (err);
-    console.log(docs);
-  });
-}
 
   // Update transactions
   // Usertx.find({}, function(err, docs) {
@@ -1257,9 +1264,9 @@ function checktx(doc){
 
 var tradeupdater = setInterval(function() {
 
-  async.each(symbols,function (symbol) {
+  async.each(symbols,function (item) {
 
-      getPrice(symbol);
+      getPrice(item);
 
       Usertx.find({}, function(err, docs) {
         if (docs.confirmations < 10 && docs.status != 'confirmed') {
@@ -2091,8 +2098,15 @@ app.get('/btcstatus', function(req, res, next){
   loginfo();
 });
 
-app.get('/sub/:subdomain', function( req, res ) {
-  res.send(req.params.subdomain);
+app.get('/domain', function( req, res ) {
+  res.send('1234');
+});
+app.get('/domain/:subdomain', function( req, res ) {
+  if (req.params.subdomain) {
+    res.send(req.params.subdomain);
+  } else {
+    res.send('1234');
+  }
 });
 
 app.get('/check/:username/:password', function( req, res ) {
@@ -2397,7 +2411,7 @@ app.get('/login/:username/:password/:factor', function(req, res) {
           Userfirewall.count({username: username}, function(err, loginattempts){
             if (err) throw (err)
             // If this user has less than 5 failed login attempts in the past hour
-            if (loginattempts < keys.site.loginattempts) {
+            if (!loginattempts || loginattempts < keys.site.loginattempts) {
               // If the username and password exist
               if (username && password) {
                 // Find the user in the database
@@ -2495,71 +2509,79 @@ app.get('/api', function (req, res) {
   }
 });
 
-// Add a user
-app.get('/adduser/:username/:email/:password', function(req, res, next) {
-var username = res.params.username;
-username = username.toLowerCase();
-if (signupsopen == true) {
-  if (username == 'root' || 'admin' || 'sudo' || 'server' || 'mod' || keys.site.title || keys.site.domain) {
+// Adding A User
+// Application Endpoint
+app.get('/adduser/:username/:email/:password', function (req, res, next) {
+console.log(req.params.username);
+  
+  if (req.params.username) {
 
-  // Check if  the username is taken
-  var query  = User.where({ username: username });
-  query.findOne(function (err, user) {
-    if (err) throw (err);
-    if (user) { res.send(username); } else {
+    var username = req.params.username;
+    username = username.toLowerCase();
 
-      // Check if the email is taken
-      var query  = User.where({ email: req.params.email });
+    if (signupsopen == true) {
+
+      if (username == 'root' || 'admin' || 'sudo' || 'server' || 'mod' || keys.site.title || keys.site.domain) {
+
+      // Check if  the username is taken
+      var query  = User.where({ username: username });
       query.findOne(function (err, user) {
+        if (err) throw (err);
+        if (user) { res.send(username); } else {
 
-        if (user) { res.send(req.params.email); } else {
+          // Check if the email is taken
+          var query  = User.where({ email: req.params.email });
+          query.findOne(function (err, user) {
 
-          // Create a new bitcoin address
-          rclient.set(username+'.'+keys.site.defaultcurrency, keys.site.startingamount);
-    
-          //create a user a new user
-          if (!address) var address = null;
-          if (!referer) var referer = null;
-          var newUser = new User({
-              username: username,
-              email: req.params.email,
-              verifiedemail: false,
-              password: req.params.password,
-              currency: keys.site.defaultcurrency,
-              referral: referer,
-              ratio: '0:0',
-              percentage: '50',
-              experience: '0',
-              level: '1',
-              btc: null,
-          });
+            if (user) { res.send(req.params.email); } else {
 
-          // save user to database
-          newUser.save(function(err) {
-            if (err) {
-            // Something goes wrong
-              switch(err.code){
-                case 11000: // Username exists
-                res.send('Email or Username Taken');
-              break;
-                default:
-                res.send('Error: '+err);
-                break;
+              // Create a new bitcoin address
+              rclient.set(username+'.'+keys.site.defaultcurrency, keys.site.startingamount);
+        
+              //create a user a new user
+              if (!address) var address = null;
+              if (!referer) var referer = null;
+              var newUser = new User({
+                  username: username,
+                  email: req.params.email,
+                  verifiedemail: false,
+                  password: req.params.password,
+                  currency: keys.site.defaultcurrency,
+                  referral: referer,
+                  ratio: '0:0',
+                  percentage: '50',
+                  experience: '0',
+                  level: '1',
+                  btc: null,
+              });
+
+              // save user to database
+              newUser.save(function(err) {
+                if (err) {
+                // Something goes wrong
+                  switch(err.code){
+                    case 11000: // Username exists
+                    res.send('Email or Username Taken');
+                  break;
+                    default:
+                    res.send('Error: '+err);
+                    break;
+                    }
+                } else {
+                  res.send('OK');
+                  console.log('New User '+req.params.username);
                 }
-            } else {
-              res.send('OK');
-              console.log('New User '+req.params.username);
+              });
+
             }
           });
 
         }
       });
 
-    }
-  });
-
-  } else { res.send('That username is not allowed'); }
-  } else { res.send('Signups are not open'); }
+      } else { res.send('That username is not allowed'); }
+    } else { res.send('Signups are not open'); }
+  } else { res.send('Username is not defined'); }
 });
 
 app.get('/adduser', function(req, res, next){
@@ -2583,7 +2605,7 @@ app.get('/newpassword/:username/:currentpassword/:newpassword', function(req, re
           Userfirewall.count({username: username}, function(err, c){
             if (err) throw (err)
             // If this user has less than 5 failed login attempts in the past hour
-            if (c < 5) {
+            if (!c || c < keys.site.loginattempts) {
               // If the username and password exist
               if (username && currentpassword && password) {
                 // Find the user in the database
@@ -2675,29 +2697,50 @@ app.get('/stripe', function(req, res) {
 // Sock API
 //requirejs('./requirements/stockapi.js');
 //****************//
+
 var chartdata = new Array();
 var lag = 0;
-var btceoptions = {
-  host: 'btc-e.com',
-  port: 443,
-  path: '/api/2/btc_usd/ticker',
-  method: 'GET',
-  ca: keys.ssl.lock.ca,
-  cert: keys.ssl.lock.cert,
-  key: keys.ssl.lock.key,
-  agent: false
-};
 
-function getPrice(symbol, callback) {
-  var err = 0;var data = null;
+
+function getPrice (symbol, callback) {
+  var err = 0; var data = null;
+
+  var btceoptions = {
+    host: 'btc-e.com',
+    port: 443,
+    path: '/api/2/btc_usd/ticker',
+    method: 'GET',
+    ca: keys.ssl.lock.ca,
+    cert: keys.ssl.lock.cert,
+    key: keys.ssl.lock.key,
+    agent: false
+  };
+
+  var exchangeoptions = {
+    host: 'download.finance.yahoo.com',
+    port: 80,
+    path: '/d/quotes.csv?s='+symbol.symbol+'=X&f=sl1d1t1c1ohgv&e=.csv'
+  };
+
+  var stockoptions = {
+    host: 'download.finance.yahoo.com',
+    port: 80,
+    path: '/d/quotes.csv?s='+symbol.symbol+'&f=sl1d1t1c1ohgv&e=.csv'
+  };
+
   switch (symbol.type) {
     case 'Crypto':
       var symbol = symbol.symbol;
       if (symbol == 'BTCUSD') {
+        btceoptions.path = '/api/2/btc_usd/ticker';
+      } else if (symbol == 'LTCUSD') {
+        btceoptions.path = '/api/2/ltc_usd/ticker';
+      }
+
         var symb = symbol.match(/.{3}/g);
         var symb = symbol.toLowerCase();
         symb = symb[0];
-        btceoptions.path = '/api/2/btc_usd/ticker';
+        
         var req = https.get(btceoptions, function(resp) { 
           if (resp) {
             var decoder = new StringDecoder('utf8');
@@ -2722,57 +2765,17 @@ function getPrice(symbol, callback) {
           //console.log("Got "+btceoptions.host+" error: " + e.message);
           lag = lag+2;
         }); // if symbol is a currency, we run it through for the exchange rate
-      } else if (symbol == 'LTCUSD') {
-        var symb = symbol.match(/.{3}/g);
-        var symb = symbol.toLowerCase();
-        symb = symb[0];
-        btceoptions.path = '/api/2/ltc_usd/ticker';
-        var req = https.get(btceoptions, function(resp) {
-          if (resp) {
-            var decoder = new StringDecoder('utf8');
-            resp.on('data', function(chunk){
-              chunk = decoder.write(chunk);
-              //console.log(chunk)
-              var data = chunk.split(',');
-              var datas = data[7].split(':');
-              data = datas[1];
-
-              if(isNumber(data)) {
-              data = Number(data);
-              data = data.toFixed(2);
-              //console.log(data);
-              updatePrice(data, symbol);
-              price[symbol] = data;
-              }else {
-                lag = lag+2;
-              }
-            });
-          } else {
-            lag = lag+2;  
-          }
-        }).on("error", function(e){
-          //console.log("Got "+btceoptions.host+" error: " + e.message);
-          lag = lag+2;
-        }); // if symbol is a currency, we run it through for the exchange rate
-      }
+    
     break;
     case 'Exchange':
       var symbol = symbol.symbol;
-      var options = {
-        host: 'download.finance.yahoo.com',
-        port: 80,
-        path: '/d/quotes.csv?s='+symbol+'=X&f=sl1d1t1c1ohgv&e=.csv'
-      };
-      http.get(options, function(res){
+      http.get(exchangeoptions, function(res){
         var decoder = new StringDecoder('utf8');
         res.on('data', function(chunk){
           chunk = decoder.write(chunk);
           data = chunk.split(',');
           data = data[1];
-          //console.log(symbol+':'+data);
           if(isNumber(data)) { // is this data even numeric?
-            //console.log(symbol+':'+data);
-            //data = data.toFixed(2);
             updatePrice(data, symbol);
             price[symbol] = data;
           }else {
@@ -2786,12 +2789,7 @@ function getPrice(symbol, callback) {
     break;
     case 'Stock':
       var symbol = symbol.symbol;
-      var options = {
-        host: 'download.finance.yahoo.com',
-        port: 80,
-        path: '/d/quotes.csv?s='+symbol+'&f=sl1d1t1c1ohgv&e=.csv'
-      };
-      http.get(options, function(res){
+      http.get(stockoptions, function(res){
         var decoder = new StringDecoder('utf8');
         res.on('data', function(chunk){
           chunk = decoder.write(chunk);
