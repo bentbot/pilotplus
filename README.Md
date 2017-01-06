@@ -71,6 +71,8 @@ $ nano keys.json
 	* Mail Settings
 	* SSL Settings
 
+	Please remove the SSL block if you are not using a domain with SSL
+
 ### 3. Install NodeJS both locally and remotely to start the servers
 
 If you already have Node and NPM installed, start the server with `node binarybtc.js` or `nodemon`

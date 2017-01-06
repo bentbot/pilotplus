@@ -42,10 +42,12 @@ var stripe = require("stripe")(keys.stripe.secret);
 authy.api.mode = 'production'
 authy.api.token = keys.authy;
 
-keys.ssl.lock = {
-  "ca": fs.readFileSync(JSON.stringify(keys.ssl.ca).split('"')[1], 'utf8'),
-  "key": fs.readFileSync(JSON.stringify(keys.ssl.key).split('"')[1], 'utf8'),
-  "cert": fs.readFileSync(JSON.stringify(keys.ssl.cert).split('"')[1], 'utf8')
+if ( keys.ssl && keys.ssl.ca && keys.ssl.key && keys.ssl.cert ) {
+	keys.ssl.lock = {
+  		"ca": fs.readFileSync(JSON.stringify(keys.ssl.ca).split('"')[1], 'utf8'),
+  		"key": fs.readFileSync(JSON.stringify(keys.ssl.key).split('"')[1], 'utf8'),
+  		"cert": fs.readFileSync(JSON.stringify(keys.ssl.cert).split('"')[1], 'utf8')
+	}
 }
 
 //****************//
