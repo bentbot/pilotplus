@@ -480,7 +480,7 @@ padding:0px 0px 0px 10px;
         position: absolute;
         top: 0px;
         right: 70px;
-        font-weight: 700;
+        font-weight: 700 !important;
         letter-spacing: 1px;
         opacity: 1;
         -webkit-transition: all 0.2s;
@@ -912,6 +912,16 @@ height: 70px;
     -webkit-trasition: all 0.1s ease-in-out;
     trasition: all 0.1s ease-in-out;
 }
+.allhistorictrades .alert-info {
+  color: #3190bf;
+  background-color: #e4f6ff;
+  border-bottom: 1px solid #d5f8ff;
+  padding: 14px;
+  font-size: 17px;
+}
+.allhistorictrades .alert-info .percentagestring {
+  font-weight: bold;
+}
 .historictrade {
   -webkit-transition: all 0.2s ease-in-out;
   transition: all 0.2s ease-in-out;
@@ -930,6 +940,37 @@ height: 70px;
     background: #D2D2D2;
     height: 300px;
   }
+.historictradebuttons {
+  width: 100%;
+  padding: 0 0px 7px;
+}
+
+.historictradebuttons .btn-default {
+  background-color: #55b3e4;
+  border-color: #70adce;
+  color: #ffffff;
+  text-shadow: 1px 1px 0px rgba(106, 114, 160, 0.25);
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.08s ease-in-out;
+  font-size: 13px;
+  border-radius: 0px;
+  padding: 2px 17px;
+  font-weight: 600;
+  min-width: 100px;
+  border-radius: 3px 0 0 4px;
+}
+.historictradebuttons .btn-default.left {
+  border-radius: 0 3px 4px 0 !important;
+}
+.historictradebuttons .btn-default.disabled,
+.historictradebuttons .btn-default.disabled:hover {
+  background-color: #c7e3f3;
+  border-color: #bbe2f7;
+}
+.historicblock .header {
+  font-size: 15px !important;
+  padding: 8px 14px !important;
+}
 
 .guesttrades .row-fluid {
   height: 177px;
@@ -1168,6 +1209,9 @@ height: 70px;
   margin: auto;
   text-align: center;
   margin-top: 12px;
+  position: relative;
+  z-index: 100;
+  cursor: pointer;
 }
 .centerlogo img {
   width: 100%;
@@ -1333,8 +1377,9 @@ margin: 0 auto;
 float:left;
 list-style: none;
 }.accounttray ul li {
-float: left;
-margin-right: 15px;
+  float: left;
+  margin-right: 0;
+  padding: 8px 10px;
 }.accounttray a {
   color: white;
 }.accounttray a:hover {
@@ -1397,6 +1442,20 @@ font-family: monospace;
   box-shadow: 5px 5px 20px rgba(0, 0, 0, 0.14);
   border-right: 1px solid rgb(113, 163, 188);
   border-radius: 0px;
+}
+.recenttrades .alert-info {
+  color: #31708f;
+  background-color: #d9edf7;
+  border-color: #bce8f1;
+  border-radius: 0;
+  border-bottom: 1px solid #c7d4da;
+  padding: 5px 10px;
+}
+.recenttrades .alert-warning {
+  color: #8a6d3b;
+  background-color: #fcf8e3;
+  border-color: #faebcc;
+  border-bottom: 1px solid #faebcc;
 }
 .wallet .alert-success {
     position: relative;
@@ -2712,8 +2771,9 @@ margin: 0 auto;
 float:left;
 list-style: none;
 }.financestray ul li {
-float: left;
-margin-right: 15px;
+  float: left;
+  margin-right: 0;
+  padding: 8px 10px;
 }.financestray a {
   color: white;
 }.financestray a:hover {
@@ -3015,6 +3075,10 @@ background-color: white;
 margin: 5px 0px 20px 0px;
 border: 1px solid #EEE;
 border-radius: 3px;
+max-height: 35px;
+transition: all 1.6s ease-in-out;
+}.userprefs.open {
+  max-height: 1000px;
 }.userprefs .header {
   font-weight: bold;
 }
@@ -3433,7 +3497,7 @@ border-top: 0px solid #FFF;
   border-radius: 0px;
   text-align: center;
   transition: all 0.3s;
-  font-weight: 400;
+  font-weight: 200;
   text-transform: uppercase;
   padding: 0px !important;
 }.loginbtn:hover, .loginbtn:focus, .loginbtn:active {

@@ -1,6 +1,15 @@
-var selectedtrade;
+var selectedtrade, tradedata, limititems = 25, pagenumber = 1;
+// Button Labels
+var prev = {
+  class : '',
+  label: 'Previous'
+}
+var next = {
+  class : '',
+  label: 'Next'
+}
 function showhistoric(data, append) {
-
+    tradedata = data;
     var twins = 0;
     var tpush = 0;
     var tlosses = 0;
@@ -9,6 +18,15 @@ function showhistoric(data, append) {
     var tradehtml = '';
     tradehtml = tradehtml+ '<div class="historicblock"><div class="header" data-translate="historictrades">Historic Trades <span style="float:right"><span class="green twins">x</span> / <span class="orange tpush">y</span> / <span class="red tlosses">z</span></span></div>';     
     if ( data ) {
+
+      if (tradedata.length >= limititems) {
+        prev.class = 'disabled';
+        next.class = '';
+      } else if ( limititems > tradedata.length ) {
+        next.class = 'disabled';
+        prev.class = '';
+      }
+
       lasthistoric = data;
       tradehtml = tradehtml + '<div class="row-fluid"><div class="span12"><div><table class="table" id="historictrades">';
       tradehtml = tradehtml + '<tbody>';
@@ -103,9 +121,29 @@ function historicTrades(data) {
     var tpush = 0;
     var tlosses = 0;
     var tid = 0;
+    tradedata = data;
+    var numberoftrades = '';
+    if (tradecount > 0) {
+      numberoftrades = '<span class="right"><strong class="tradecount">'+tradecount+'</strong> Trades</span>';
+    }
+
+    var percentagechange = '', color = '';
+    if (percentage > 0) {
+      numerator = '+';
+      color = 'green';
+    } else if (percentage < 0) {
+      numerator = '-';
+      color = 'red';
+    }
+    var percentagechange = '<span class="left">Percentage Change <span class="percentagestring"><span class="'+color+'">'+numerator+percentage+'%</span></span></span>';
+
+    
     $('.allhistorictrades').html('');
     var tradehtml = '';
-    tradehtml = tradehtml+ '<div class="historicblock"><div class="header" data-translate="historictrades">Historic Trades <span style="float:right"><span class="green twins">x</span> / <span class="orange tpush">y</span> / <span class="red tlosses">z</span></span></div>';
+    var pagetrades = tradedata.length;
+    tradehtml = tradehtml + '<div class="alert-info">'+percentagechange+numberoftrades+'</div>'
+    tradehtml = tradehtml+ '<div class="historicblock"><div class="header" data-translate="historictrades">'+tradedata.length+' Historic Trades <span style="float:right"><span class="green twins">x</span> / <span class="orange tpush">y</span> / <span class="red tlosses">z</span></span></div>';
+    tradehtml = tradehtml+ '<div class="historicblock" class="header"><div class="historictradebuttons buttons"><button class="btn-sm btn-default btn-next '+next.class+' right">'+next.label+'</button></div></div>';
     if (data) {
     tradehtml = tradehtml + '<div class="row-fluid"><div class="span12"><div><table class="table" id="historictrades">';
     tradehtml = tradehtml + '<tbody>';
@@ -218,7 +256,13 @@ function historicTrades(data) {
 
   }
 }
+
+    // End historic trade table
     tradehtml = tradehtml + '</div></div></div></tbody></table></div>';
+
+    // Add next and prev buttons
+    tradehtml = tradehtml + '<div class="historictradebuttons buttons"><button class="btn-sm btn-default btn-prev '+prev.class+' left">'+prev.label+'</button><button class="btn-sm btn-default btn-next '+next.class+' right">'+next.label+'</button></div>';
+    
     $('.allhistorictrades').append(tradehtml);
     $('.twins').html(twins);
     $('.tpush').html(tpush);
@@ -233,6 +277,31 @@ $(function() {
     $(this).addClass('selected');
     selectedtrade = $(this).attr('id');
   });
+  
+  var limit = limititems;
+  var limit = 0;
+
+  $('.hook').on("click", ".historictradebuttons .btn-next", function (e) {
+    if ( tradedata.length >= limititems-1 ) { 
+      if (limit >= 0) limit = limit + limititems;
+      if (pagenumber > 0) pagenumber = pagenumber + 1;
+      $('.btn-prev').addClass('disabled');
+      $('.btn-next').addClass('disabled');
+      socket.emit('historictrades', { limit: limititems, skip: limit });
+    }
+    
+  });
+
+  $('.hook').on("click", ".historictradebuttons .btn-prev", function (e) {
+    if ( pagenumber > 1 ) { 
+      if (limit >= 0) limit = limit - limititems;
+      if (pagenumber > 1) pagenumber = pagenumber - 1;
+      socket.emit('historictrades', { limit: limititems, skip: limit });
+    }
+    $('.btn-next').addClass('disabled');
+    $('.btn-prev').addClass('disabled');
+  });
+
   $('.hook').on("click", ".guesttrades .row-fluid", function (e) {
     // if ( $(this).scrollTop() + $(this).innerHeight() >= $(this)[0].scrollHeight ) {
       console.log(e);

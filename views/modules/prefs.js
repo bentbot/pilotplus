@@ -26,7 +26,7 @@ function showPrefs() {
   '</div>';
 
   var trading = '<div class="userprefs"><div class="header" data-translate="tradesettings">Trade Settings</div>'+
-  '<table class="table trading-preferences table-hover">'+
+  '<table class="table trading-preferences table-hover trade-settings-table">'+
     '<tbody>'+
       '<tr>'+
         '<td>Visual Countdown Timer</td>'+
@@ -75,8 +75,6 @@ function showPrefs() {
 
 
 $(function() {
-	
-  socket.emit('get-pref');
 
 	$(".hook").on("click",".preference",function(e) {  
     e.preventDefault();
@@ -86,14 +84,17 @@ $(function() {
     if (pref == 'remember-me') $('.remember-me').html('Remember Me <span class="pref-info">Requires logout</span>');
   });
 
+  socket.emit('get-pref', false);
+
   socket.on('get-pref', function(data) {
     $('a[data-pref="'+data.pref+'"]').each(function () {
       var setting = $(this).data('setting');
-      if (setting == true && data.setting == false) $(this).removeClass('enabled').html('Enable');
-      if (setting == true && data.setting == true) $(this).addClass('enabled').html('Enabled');
-      if (setting == false && data.setting == true) $(this).removeClass('enabled').html('Disable');
-      if (setting == false && data.setting == false) $(this).addClass('enabled').html('Disabled');
+      if (setting == true && data.setting === false) $(this).removeClass('enabled').html('Enable');
+      if (setting == true && data.setting === true) $(this).addClass('enabled').html('Enabled');
+      if (setting == false && data.setting === true) $(this).removeClass('enabled').html('Disable');
+      if (setting == false && data.setting === false) $(this).addClass('enabled').html('Disabled');
     });
+    $('.userprefs').addClass('open');
   });
 
 });

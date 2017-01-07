@@ -42,12 +42,10 @@ var stripe = require("stripe")(keys.stripe.secret);
 authy.api.mode = 'production'
 authy.api.token = keys.authy;
 
-if ( keys.ssl && keys.ssl.ca && keys.ssl.key && keys.ssl.cert ) {
-	keys.ssl.lock = {
-  		"ca": fs.readFileSync(JSON.stringify(keys.ssl.ca).split('"')[1], 'utf8'),
-  		"key": fs.readFileSync(JSON.stringify(keys.ssl.key).split('"')[1], 'utf8'),
-  		"cert": fs.readFileSync(JSON.stringify(keys.ssl.cert).split('"')[1], 'utf8')
-	}
+keys.ssl.lock = {
+  "ca": fs.readFileSync(JSON.stringify(keys.ssl.ca).split('"')[1], 'utf8'),
+  "key": fs.readFileSync(JSON.stringify(keys.ssl.key).split('"')[1], 'utf8'),
+  "cert": fs.readFileSync(JSON.stringify(keys.ssl.cert).split('"')[1], 'utf8')
 }
 
 //****************//
@@ -93,8 +91,8 @@ var UserSchema = new mongoose.Schema({
     ratio: {type: String },
     referral: {type: String },
     achievements: {type: String },
-    percentage: {type: String },
-    experience: {type: Number },
+    percentage: { type: Number, default: 0 },
+    experience: { type: Number },
     level: {type: Number}
 });
 
@@ -597,6 +595,7 @@ var totalput = {};
 var tradingnow = false;
 var useraddress = {};
 var payout = new Array();
+var cachedPoints = {};
 var y = new Array();
 var x = new Array();
 var z = new Array();
@@ -627,34 +626,39 @@ function trade() {
           }
         };
 
+        // Solve undefined trades
+        var symbolprice;
+        if ( !price[trade.symbol] && price[trade.symbol] != undefined ) {
+          symbolprice = trade.price;
+        } else {
+          symbolprice = price[trade.symbol];
+        }
 
         // Check if the cycle has ended
         if (cycle.seconds <= keys.site.stoptrading && cycle.seconds < 1) {
           // Check the direction and calculate the outcome
           var winnings = 0;
-          if (trade.direction == 'Call'){
-            if (trade.price > price[trade.symbol]) {
+          if (trade.direction == 'Call') {
+            if (trade.price > symbolprice) {
               trade.outcome = 'Lose'; //Loss
               // User loses call
-            } else if (trade.price < price[trade.symbol]){
+            } else if (trade.price < symbolprice){
               trade.outcome = 'Win'; 
-              // User wins trade
               winnings = Number(+trade.amount + (+trade.amount*trade.offer) ).toFixed(2);
               
-            } else if (trade.price == price[trade.symbol]) {
+            } else if (trade.price == symbolprice) {
               trade.outcome = 'Tie';
               if (keys.site.returntie) winnings = trade.amount;
             }
-          } else if (trade.direction == 'Put'){
-              if (trade.price < price[trade.symbol]) {
+          } else if (trade.direction == 'Put') {
+              if (trade.price < symbolprice) {
               trade.outcome = 'Lose';//Lose
               // User lost put
-            } else if (trade.price > price[trade.symbol]){
+            } else if (trade.price > symbolprice){
               winnings = Number(+trade.amount + (+trade.amount*trade.offer) ).toFixed(2);
               trade.outcome = 'Win';
-              //Update user balance and move winnings out of the bank
               
-            } else if (trade.price == price[trade.symbol]) {
+            } else if (trade.price == symbolprice) {
               trade.outcome = 'Tie';
               if (keys.site.returntie) winnings = trade.amount;
             } 
@@ -701,8 +705,8 @@ function trade() {
 
       });//foreach trade loop
 
-          // Run graphical updates 
-        if (loopedtrades.length > 0) cookTrades(loopedtrades);
+      // Run graphical updates 
+      if (loopedtrades.length > 0) cookTrades(loopedtrades);
     });//active trades
 
     // empty the ram and database of old objects
@@ -718,12 +722,9 @@ function trade() {
     lasttrade = time;
   } else {
     tradingnow = false;
+    console.log('Trade loop was triggered however it did not run.');
   }
 }
-
-setInterval( function () {
-  trade();
-}, 500);
 
 
 var x = new Array();
@@ -843,7 +844,7 @@ function isNumber(n) {
 }
 
 // Add a trade for a user
-function addTrade(symbol, amount, direction, user, expiry, socket) {
+function addTrade(symbol, amount, direction, user, expiry, socket, callback) {
   var err = {};
 
   symbol = symbolswitch(symbol);
@@ -957,6 +958,7 @@ function addTrade(symbol, amount, direction, user, expiry, socket) {
                   socket.emit('activetrades', activetrades);
                 });
                 a++;
+                if (callback) callback(trade);
                 return true;
             });
           });
@@ -1076,9 +1078,13 @@ function checknextTrade() {
 
     nexttradesecs[i] = Number( Number(hrs[i]*3600)+Number(mins[i]*60)+Number(secs[i]));
 
-      // console.log(hrs[i],mins[i],secs[i], nexttradesecs[i], string);
+    //console.log(hrs[i],mins[i],secs[i], nexttradesecs[i], string);
 
-     if (nexttradesecs[i] == 0) tradenow = true;
+    if (nexttradesecs[i] == 0) {
+      tradenow = true;
+      console.log('calling a trade');
+      trade();
+    }
 
   };
 
@@ -1166,11 +1172,28 @@ function updateChart(data, symbol, force) {
   }
 }
 
- var unsavedCharts = [];
+// First create an array to hold all new chart data.
+// This is used to cache entries before hitting the DB.
+var unsavedCharts = [];
 
 // chart point for the client
+var a = 1;
 function chartPoint(data, symbol) {
   symbol = symbolswitch(symbol);
+    
+  Historicprices.findOne({ 'symbol': symbol }).sort({time:-1}).exec(function( err, historic ) {
+    if (err) throw (err);
+    a++;
+    // console.log('individual queries', a);
+
+    if (historic && historic.price != price.price || historic && historic.time-price.time > 10000 ) {
+      unsavedCharts.push(price);
+    } else if (!historic) {
+      unsavedCharts.push(price);
+    }
+
+  });
+
   if ( data && Number(data) ) {
 
     // Check if the value has changed and put it in the DB
@@ -1191,16 +1214,106 @@ function chartPoint(data, symbol) {
         unsavedCharts.push(price);
       }
 
-    if ( unsavedCharts.length > keys.symbols.length ) {
+    });
+  }
+}
+
+
+function generateChart (data, callback) {
+
+  if (data.params) data = data.params;
+
+  if (data) {
+    if (!data.candle || data.candle < 1000) data.candle = 60000;
+    if (!data.time) data.time = 1800000;
+    if (!data.type) data.type = 'line';
+    var points = new Array(); var lastdoc;
+    if (data.type == 'line') {
+      Historicprices.find({ symbol: data.symbol }).where('time').gte(time-data.time).sort({ time: -1 }).exec(function (err, docs) {
+        if (err) throw (err);
+
+        if (docs) {
+
+           async.each(docs, function (data) {
+            // Assign each point to the chart
+            points.unshift([Number(data.time), Number(data.price)]);
+          });
+
+          // Add the first key to the beginning of the array.
+          if (points[points.length-1]) points.unshift([Number(time), Number(points[points.length-1][1])]);
+
+          // Sort the keys (very important)
+          points = sortByKey(points,0);
+
+          callback(err, points);
+
+        } else {
+
+          callback({ code: 404, err: 'No chart data found!' });
+        
+        }
+
+
+      });
+    } else if (data.type == 'candlestick') {
+       
+        Historicprices.find({ symbol: data.symbol }).where('time').gte(time-data.time).sort({ time: -1 }).exec(function (err, docs) {
+        if (err) throw (err);
+        if (docs) {
+          
+          // Generate candle stick time windows
+          for (var t = 0; t < data.time; t = t + data.candle ) {
+            
+            // Re-create stick variables
+            var open; var high; var low; var close;
+            
+            // Loop through times & prices
+            for (var i = docs.length - 1; i >= 0; i--) {
+              
+              // Compare the historic time with the time window and candlestick
+              if ( docs[i].time > time-data.time+t && docs[i].time < time-data.time+t+data.candle ) {
+
+                // Calculate candle stick arguments ReCheck
+                if ( !open ) open = Number(docs[i].price);
+                if ( !low || low > Number(docs[i].price) ) low = Number(docs[i].price);
+                if ( !high || high < Number(docs[i].price) ) high = Number(docs[i].price);
+                close = Number(docs[i].price);
+
+              }
+            
+            }
+            
+            // Push candlestick to chart array
+            points.push([Number(time-data.time+t), Number(open), Number(high), Number(low), Number(close)]);
+          
+          }
+          
+          // Send the chart
+          callback(err, points);
+
+        } else {
+          callback({ code: 404, err: 'No chart data found!' });
+        }
+    });
+
+    }
+  } else {
+    callback({ err: 'Invalid data input.' });
+  }
+}
+
+// Then, this price updater will save the array of new prices to the DB in one shot.
+var priceUpdater = setInterval(function () {
+
+  // if ( unsavedCharts.length > keys.symbols.length ) {
+  if ( unsavedCharts.length > -1 ) {
       Historicprices.create(unsavedCharts, function (err, prices) {
         if (err) throw (err);
         unsavedCharts = [];
       });
     }
 
-    });
-  }
-}
+}, 1000);
 
 
 
@@ -1342,70 +1455,18 @@ io.sockets.on('connection', function (socket) {
     //socket.emit('nexttrade', { next: nexttrade, stoptrading: keys.site.stoptrading });
   });
 
+
+
+//  socket.emit('tradecount', 10 );
+
 /***
 /* Main chart sending api
 /**/
-  socket.on('chart', function (data) {
-    if (!data.candle || data.candle < 1000) data.candle = 60000;
-    if (!data.time) data.time = 1800000;
-    if (!data.type) data.type = 'line';
-    var points = new Array(); var lastdoc;
-    if (data.type == 'line') {
-      Historicprices.find({ symbol: data.symbol }).where('time').gte(time-data.time).sort({ time: -1 }).exec(function (err, docs) {
-      if (err) throw (err);
-        
-        async.each(docs, function (data) {
-          // Assign each point to the chart
-          points.unshift([Number(data.time), Number(data.price)]);
-        });
-        
-        points.unshift([Number(time), Number(points[points.length-1][1])]);
 
-        points = sortByKey(points,0);
-
-        socket.emit('chart', { symbol: data.symbol, chart: points, type: data.type });
-      });
-    } else if (data.type == 'candlestick') {
-       
-        Historicprices.find({ symbol: data.symbol }).where('time').gte(time-data.time).sort({ time: -1 }).exec(function (err, docs) {
-        if (docs) {
-          
-          // Generate candle stick time windows
-          for (var t = 0; t < data.time; t = t + data.candle ) {
-            
-            // Re-create stick variables
-            var open; var high; var low; var close;
-            
-            // Loop through times & prices
-            for (var i = docs.length - 1; i >= 0; i--) {
-              
-              // Compare the historic time with the time window and candlestick
-              if ( docs[i].time > time-data.time+t && docs[i].time < time-data.time+t+data.candle ) {
-
-                // Calculate candle stick arguments ReCheck
-                if ( !open ) open = Number(docs[i].price);
-                if ( !low || low > Number(docs[i].price) ) low = Number(docs[i].price);
-                if ( !high || high < Number(docs[i].price) ) high = Number(docs[i].price);
-                close = Number(docs[i].price);
-
-              }
-            
-            }
-            
-            // Push candlestick to chart array
-            points.push([Number(time-data.time+t), Number(open), Number(high), Number(low), Number(close)]);
-          
-          }
-          
-          // Send the chart
-          socket.emit('chart', { symbol: data.symbol, chart: points, type: data.type });
-
-        }
+  socket.on('chart', function (requestData) {
+    generateChart(requestData, function(err, chartData) {
+      socket.emit('chart', { symbol: requestData.symbol, chart: chartData, type: requestData.type });
     });
-
-    }
-
-    
   });
 
   socket.on('flags', function (data) {
@@ -1573,6 +1634,7 @@ io.sockets.on('connection', function (socket) {
       }
     });
 
+    // Get user data
     User.findOne({ username: myName }, function (err, docs) {
       if (err) throw (err);
       if (docs) {
@@ -1582,6 +1644,12 @@ io.sockets.on('connection', function (socket) {
         userpercentage = docs.percentage;
         userratio = docs.ratio;
       }
+    });
+
+    // Count the user's trades
+    Historictrades.find({ user: myName }).exec(function (err, results) {
+      var count = results.length
+      socket.emit('tradecount', count);
     });
 
     // Get the user's balance
@@ -1716,7 +1784,9 @@ io.sockets.on('connection', function (socket) {
       var re = new RegExp(/[\s\[\]\(\)=,"\/\?@\:\;]/g);
       if (re.test(data.amount)) { console.log('Illegal trade input from '+myName); } else {
         // Push data to addTrade
-        addTrade(data.symbol, data.amount, data.direction, data.user, data.time, socket);
+        addTrade(data.symbol, data.amount, data.direction, data.user, data.time, socket, function (trade) {
+          socket.emit('newtrade', trade);  
+        });
       }
     }
   });
@@ -1977,17 +2047,10 @@ io.sockets.on('connection', function (socket) {
   });
 
   socket.on('set-pref', function (data) {
-    
-    var userPref = new Userprefs({
-      user: myName,
-      preference: data.pref,
-      setting: data.setting
-    });
 
     Userprefs.findOneAndUpdate( {user: myName, preference: data.pref}, {setting:data.setting}, {upsert:true}, function(err) {
       if (err) throw (err);
-      console.log({ pref: data.pref, setting: data.setting });
-      socket.emit('get-pref', { pref: data.pref, setting: data.setting });
+      socket.emit('get-pref', data);
     });
     
   });
@@ -1998,13 +2061,13 @@ io.sockets.on('connection', function (socket) {
     if (data) {
       Userprefs.findOne({ user: myName, preference: data.pref }, function (err, docs) {
         if (err) throw (err);
-        socket.emit('get-pref', { pref: docs.preference, setting: docs.setting });
+        socket.emit('get-pref', { pref: docs.preference, setting: JSON.parse(docs.setting) });
       });  
     } else {
       Userprefs.find({ user: myName }, function (err, docs) {
         if (err) throw (err);
         docs.forEach(function(doc) {
-          socket.emit('get-pref', { pref: doc.preference, setting: doc.setting });  
+          socket.emit('get-pref', { pref: doc.preference, setting: JSON.parse(doc.setting) });  
         });
       });
     }
@@ -2195,6 +2258,15 @@ app.get('/2f/stats', function(req, res, next){
     res.send(data);
   });
 });
+
+app.get('/chart/:symbol', function (req, res) {
+
+  generateChart( req, function (err, chartData) {
+    res.send(chartData);
+  });
+
+});
+
 
 app.get('/checkusername/:data', function(req, res, next){
   var un = req.params.data;
@@ -2412,22 +2484,26 @@ app.get('/login/:username/:password/:factor', function(req, res) {
 
           Userfirewall.count({username: username}, function(err, loginattempts){
             if (err) throw (err)
+            
             // If this user has less than 5 failed login attempts in the past hour
             if (!loginattempts || loginattempts < keys.site.loginattempts) {
+              
               // If the username and password exist
               if (username && password) {
+              
                 // Find the user in the database
                 User.findOne({ username: username }, function(err, user) {
                   if (err) throw err;
+                  
                   // If user exits
-
                   if (user) {
-                   // Test the password
-
+                    console.log(user)
+                    // Test the password
                     var cookieTimeout = keys.cookietimeout; // 10 Hour timeout
 
                       user.comparePassword(password, function(isMatch, err) {
                           if (err)  { throw (err); } else {
+                            console.log(isMatch)
                             // On success
                             if (isMatch == true) {
                               // Generate a signature
@@ -2468,7 +2544,7 @@ app.get('/login/:username/:password/:factor', function(req, res) {
                               })
                             } else if (isMatch == false) {
                               // On error
-                              res.send("Invalid username or password.");
+                              res.send("Invalid entry.");
                               // Log the failed request
                               var loginRequest = new Userfirewall({
                                 username: username,
@@ -2481,7 +2557,7 @@ app.get('/login/:username/:password/:factor', function(req, res) {
                          }
                     });
                 } else {
-                  res.send("Username not found.");
+                  res.send("Unknown User.");
                 }
                 });
               }
@@ -2655,12 +2731,12 @@ app.get('/newpassword/:username/:currentpassword/:newpassword', function(req, re
                           });
                         }
                       } else {
-                        res.send('Incorrect password combination.');
+                        res.send('Incorrect entry.');
                       }
                     }
                     });
                 } else {
-                  res.send("Invalid username or password.");
+                  res.send("Invalid entry.");
                 }
                 });
               }

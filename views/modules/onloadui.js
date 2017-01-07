@@ -12,10 +12,12 @@ function bottlepop(tx, amount) {
 }
 
 // Emoji
-emoji.include_title = true;
-emoji.img_set = 'apple';
-emoji.init_emoticons();
-emoji.init_env();
+// if (emoji) {
+//   emoji.include_title = true;
+//   emoji.img_set = 'apple';
+//   emoji.init_emoticons();
+//   emoji.init_env();
+// }
 
 // Trading
 $(function() {
@@ -206,6 +208,11 @@ $(".globalheader").on("click",".keystones .seeall",function(e) {
   }
 });
 
+$(".globalheader").on("click",".centerlogo",function(e) {
+  e.preventDefault();
+  page('trade', symbol);
+});
+
 
 
 //console.log('loaded ui jquery');
@@ -288,25 +295,39 @@ $(".globalheader").on("click",".keystones .seeall",function(e) {
       cache: false
     }).done(function( html ) {
       console.log(html);
-      if (html == "Too many requests." || html == "Invalid username or password." || html == "Error") {
-        $('.loginbtn span').removeClass('hidden');
-        $('.loginbtn').removeClass('btn-warning').addClass('btn-danger').html("<i class='fa fa-times'></i><span>"+html+"</span>");
-        setTimeout( function() { $('.loginbtn span').addClass('hidden'); }, 2500);
-      } else if (html == "Two Factor") {
-        $('.loginbtn').removeClass('btn-warning').addClass('btn-yellow').html("<img src='/assets/img/com.authy.authy.png' height='30' width='30'>");
         
-        $('.headerlogin').hide();
-        $('.headerpassword').hide();
+      // Handle the login responce
 
-        $('.header2factor').show();
-        $('.headerauthy').show().focus();
-        
-      } else if (html == 'Authy Error') {
-        $('.loginbtn').removeClass('btn-yellow').addClass('btn-warning');
-      } else if (html == "OK") {
-        $('.loginbtn').removeClass('btn-warning').removeClass('btn-yellow').addClass('btn-success').html("<i class='fa fa-check'></i>");
-        setTimeout( function() { document.location.reload(); }, 750);
-      }
+        switch ( html ) {
+          case "Two Factor":
+
+            $('.loginbtn').removeClass('btn-warning').addClass('btn-yellow').html("<img src='/assets/img/com.authy.authy.png' height='30' width='30'>");            
+            $('.headerlogin').hide();
+            $('.headerpassword').hide();
+            $('.header2factor').show();
+            $('.headerauthy').show().focus();
+
+          break;
+          case "Authy Error":
+            
+            $('.loginbtn').removeClass('btn-yellow').addClass('btn-warning');
+          
+          break;
+          case "OK":
+            
+            $('.loginbtn').removeClass('btn-warning').removeClass('btn-yellow').addClass('btn-success').html("<i class='fa fa-check'></i>");
+            setTimeout( function() { document.location.reload(); }, 750);
+
+          break;
+          default:
+
+            $('.loginbtn span').removeClass('hidden');
+            $('.loginbtn').removeClass('btn-warning').addClass('btn-danger').html("<i class='fa fa-times'></i><span>"+ html +"</span>");
+            setTimeout( function() { $('.loginbtn span').addClass('hidden'); }, 2500);
+
+          break;
+
+        }
 
     });
   }
@@ -413,9 +434,9 @@ $(".globalheader").on("click",".keystones .seeall",function(e) {
     $('.'+symbol+' .chart-time.downplay').toggleClass('vanish');
   });
 
-  var applyingtrade, applyingtrade = false;
   $(".hook").on("click",".applytrade",function(e) {
       if (applyingtrade==false) {
+        applyingtrade = true;
         var symbol = $(this).attr('data-symbol');
         var direction = $('.'+symbol+' .action').val();
         var amount = Number($('.'+symbol+' .info .amount .amountfield').val());
@@ -430,15 +451,13 @@ $(".globalheader").on("click",".keystones .seeall",function(e) {
             time : tradetime,
             user : user
           });
-          applyingtrade = true;
         }
-      } 
-      setTimeout(function () { applyingtrade = false; }, 700);
+      }
   });
 
-  var applyingtrade, applyingtrade = false;
   $(".hook").on("click",".applyautotrade",function(e) {
-      if (applyingtrade==false) {
+      // if (applyingtrade == false) {
+        applyingtrade = true;
         var symbol = $(this).attr('data-symbol');
         var direction = $('.'+symbol+' .action').html();
         var repeat = Number($('#'+symbol+' .info .repeat .repeatfield').val());
@@ -452,9 +471,7 @@ $(".globalheader").on("click",".keystones .seeall",function(e) {
           direction : direction,
           user : user
         });
-        applyingtrade = true;
-      } 
-      setTimeout(function () { applyingtrade = false; }, 700);
+      // }
   });
   //   $(".hook").on("keyup",".applyautotrade",function(e) {
   //     if (applyingtrade==false && e.keyCode == 13) {
@@ -627,14 +644,16 @@ console.log(last)
 
 });
 
+// Change the amount in the price selector by adding/subtracting 1 or 10 or 100 units...
+amountchange = 10;
 
 $(".hook").on("click",".amountup",function(e) {
   var symbol = $(this).attr('data-symbol');
   var amount = Number($('.'+symbol+' .amountfield').val());
-  if ( !amount || amount < 1 ) {
-    amount = 1;
+  if ( !amount || amount < amountchange ) {
+    amount = amountchange;
   } else {
-    amount = Number(amount+1);
+    amount = Number(amount+amountchange);
   }
   if ( amount >= 0 ) {
     $('.'+symbol+' .amountfield').val(amount).trigger('change');
@@ -645,10 +664,10 @@ $(".hook").on("click",".amountup",function(e) {
 $(".hook").on("click",".amountdown",function(e) {
   var symbol = $(this).attr('data-symbol');
   var amount = Number($('.'+symbol+' .amountfield').val());
-  if ( !amount || amount < 1 ) {
+  if ( !amount || amount < amountchange ) {
     amount = 0;
   } else {
-    amount = Number(amount-1);
+    amount = Number(amount-amountchange);
   }
   if ( amount >= 0 ) {
     $('.'+symbol+' .amountfield').val(amount).trigger('change');

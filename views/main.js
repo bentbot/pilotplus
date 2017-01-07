@@ -32,6 +32,8 @@ var card = false;
 var target = 0;
 var offer = 0;
 var bal = 0;
+var percentage = 0;
+var tradecount = 0;
 var autocolor = 1;
 var autotrader = new Array();
 var tradingopen = true;
@@ -96,12 +98,25 @@ socket.on('offer', function (data) {
   offer = data;
 });
 
-
+socket.on('tradecount', function (data) {
+  tradecount = data;
+  $('.tradecount').html(data);
+});
 // Socket and Trade Timing Functions
 
 socket.on('servertime', function (data) {
   date = new Date(data);
   $('.servertime').html(date.customFormat( "#hhh#:#mm#:#ss#" ));
+});
+
+var applyingtrade = false;
+socket.on('newtrade', function (trade) {
+  if (trade) {
+    setTimeout(function() {
+      applyingtrade = false;
+    }, 500);
+  }
+  console.log(trade);
 });
 
 var selectedtime;
@@ -277,12 +292,15 @@ socket.on('symbols', function (data) {
   });
 });
 
-function showloginfield(username, bal) {
+function showloginfield(user, bal) {
 
   if (user) {
+
     $('.btnuser.username').html(user);
     $('.btnfinance.userbal').html(bal);
+
       var login = '<div type="button" style="height: 31px;" class="btn btnuser username" tabindex="3">'+user+'</div>';
+
       if (bal) {
         login = login + '<div style="height: 31px;" class="btn userbal btnfinance" tabindex="2">'+bal+'</div>';
       } else { 
@@ -315,7 +333,7 @@ function showloginfield(username, bal) {
     $('.topright').addClass('loginform');
   }
 
-  $('.topright').append(login);
+  $('.topright').html(login);
   
 }
 function loadTrades(displaysymbols, guest) {
@@ -541,8 +559,8 @@ function loadHistory() {
     '<div class="notif"></div>'+
     '<div class="allhistorictrades">'+
     '</div>'+
-    '</div>';
-  socket.emit('historictrades', { limit: 30, skip: 0 });
+  '</div>';
+  socket.emit('historictrades', { limit: 25, skip: 0 });
   socket.on('historictrades', function (data) {
     historicTrades(data);
   });
@@ -663,7 +681,7 @@ function loadProfile() {
       ratio = data.ratio;
       percentage = data.percentage;
       lastpass = data.lastpassword;
-      if (percentage == null) percentage = 50;
+      if (percentage == null) percentage = 0;
       level = data.level;
       console.log('Hello '+user+' #'+userid+' '+email+' coin:'+currency+' btc:'+userdeposit+' 2f:'+dualfactor+' email:'+verified+' radio:'+ratio+' %:'+percentage);
       showloginfield(data.hello);
@@ -672,6 +690,11 @@ function loadProfile() {
     // Logout
     socket.on('logout', function (data) {
       window.location = '/logout';
+    });
+
+    // Logging
+    socket.on('log', function (data) {
+      console.log(log);
     });
 
     // Get user preferences
@@ -712,10 +735,19 @@ function loadProfile() {
       $('.ratio').html(ratio);
     });
 
-    var percentage = 50;
+    var percentage = 0;
     socket.on('percentage', function (data) {
       percentage = data;
+      var percentagechange = '', color = '';
+      if (percentage > 0) {
+        numerator = '+';
+        color = 'green';
+      } else if (percentage < 0) {
+        numerator = '-';
+        color = 'red';
+      }
       $('.percentage').html(percentage);
+      $('.percentagetradestring').html('<span class="'+color+'">'+numerator+percentage+'%</span>');
     });
 
     var level = 0;
@@ -908,6 +940,16 @@ socket.on('flags', function (data) {
 function updateOption(symbol) {
 
   socket.emit('chart', {symbol: symbol});
+
+    // $.ajax({
+    //   url: '/chart/'+symbol,
+    //   cache: false
+    // }).done(function( data ) {
+    //   console.log(data);
+    //   loadChart(symbol);
+    // });
+
+
   socket.emit('historictrades', {user: user, limit: 5});
 
   if ($('.chart-flags').hasClass('active')) {
