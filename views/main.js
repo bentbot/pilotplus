@@ -109,15 +109,6 @@ socket.on('servertime', function (data) {
   $('.servertime').html(date.customFormat( "#hhh#:#mm#:#ss#" ));
 });
 
-var applyingtrade = false;
-socket.on('newtrade', function (trade) {
-  if (trade) {
-    setTimeout(function() {
-      applyingtrade = false;
-    }, 500);
-  }
-  console.log(trade);
-});
 
 var selectedtime;
 socket.on('nexttrade', function (data) {
@@ -368,23 +359,32 @@ function loadTrades(displaysymbols, guest) {
 
   if (user && prefs['historictrades'] != false) {
     socket.emit('historictrades', { limit: 5, skip: 0 });
-    socket.on('historictrades', function (data) {
-      $('li.recenttrades').remove();
 
-      // Historic trades
-      $('.grid').append('<li class="recenttrades" data-row="'+row+'" data-col="1" data-sizex="4" data-sizey="2"></li>'); row++;
-      showhistoric(data);
-
-    });
   }
 
+  socket.on('historictrades', function (data) {
+    // console.log(data);
+
+
+
+    $('li.recenttrades').remove();
+    // Historic trades
+    $('.grid').append('<li class="recenttrades" data-row="'+row+'" data-col="1" data-sizex="4" data-sizey="2"></li>'); row++;
+    
+      //loadHistory(data);
+      historicTrades(data);
+      showhistoric(data);
+
+  });
+
+
   if (user && prefs['statistics'] != false) {
-    $('.grid').append('<li class="xp" data-row="'+row+'" data-col="2" data-sizex="2" data-sizey="2"></li>'); row++;
+    $('.grid').append('<li class="xp" data-row="'+row+'" data-col="1" data-sizex="2" data-sizey="2"></li>'); row++;
     displayxp();
   }
 
   if (prefs['chat'] != false) {
-    $('.grid').append('<li class="chat" data-row="'+row+'" data-col="1" data-sizex="2" data-sizey="2"></li>'); row++;
+    $('.grid').append('<li class="chat" data-row="'+row+'" data-col="2" data-sizex="2" data-sizey="2"></li>'); row++;
     showChat();
   }
   
@@ -560,11 +560,8 @@ function loadHistory() {
     '<div class="allhistorictrades">'+
     '</div>'+
   '</div>';
-  socket.emit('historictrades', { limit: 25, skip: 0 });
-  socket.on('historictrades', function (data) {
-    historicTrades(data);
-  });
   $('.hook').html(page);
+  socket.emit('historictrades', { limit: 25, skip: 0, historicTrades: true });
 }
 
 function loadProfile() {
@@ -683,7 +680,7 @@ function loadProfile() {
       lastpass = data.lastpassword;
       if (percentage == null) percentage = 0;
       level = data.level;
-      console.log('Hello '+user+' #'+userid+' '+email+' coin:'+currency+' btc:'+userdeposit+' 2f:'+dualfactor+' email:'+verified+' radio:'+ratio+' %:'+percentage);
+      //  console.log('Hello '+user+' #'+userid+' '+email+' coin:'+currency+' btc:'+userdeposit+' 2f:'+dualfactor+' email:'+verified+' radio:'+ratio+' %:'+percentage);
       showloginfield(data.hello);
      currencysymbol = currencySwitch(data.currency);
     });
@@ -869,10 +866,7 @@ socket.on('alertuser', function (data) {
 
 var windowInFocus = true;
 socket.on('tradeoutcome', function (data) {
-  socket.emit('historictrades', { limit: 5, skip: 0 });
-  socket.on('historictrades', function (data) {
-    historicTrades(data);
-  });
+  console.log(data);
   if (data.user == user) {
     showSplit(data.x, data.y, data.z, data.change);
     // var windowAnnounceCheck = setInterval( function() {
@@ -880,7 +874,7 @@ socket.on('tradeoutcome', function (data) {
         // clearInterval(windowAnnounceCheck);
         setTimeout( function() {
           showXP(data.xp, data.lastxp, data.nextxp, data.change);
-          socket.emit('historictrades', { limit: 5 });
+          socket.emit('historictrades');
           setTimeout( function() {
             showSymbols();
           },data.change)
@@ -962,10 +956,6 @@ function updateOption(symbol) {
       showactive(data, nexttrade);
       activetrades = data;
     }
-  });
-
-  socket.on('historictrades', function (data) {
-    showhistoric(data);
   });
 
   socket.on(symbol+'_updatedchart', function (data) {

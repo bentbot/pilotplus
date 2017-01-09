@@ -113,6 +113,11 @@ function showhistoric(data, append) {
     $('.twins').html(twins);
     $('.tpush').html(tpush);
     $('.tlosses').html(tlosses);
+    $('time.timeago').each(function (i) {
+      var time = $(this).attr('datetime');
+      time = $.timeago(new Date(parseInt(time)));
+      $(this).html(time);
+    });
   }
 }
 
@@ -127,7 +132,7 @@ function historicTrades(data) {
       numberoftrades = '<span class="right"><strong class="tradecount">'+tradecount+'</strong> Trades</span>';
     }
 
-    var percentagechange = '', color = '';
+    var percentagechange = '', color = '', numerator = '';
     if (percentage > 0) {
       numerator = '+';
       color = 'green';
@@ -143,7 +148,7 @@ function historicTrades(data) {
     var pagetrades = tradedata.length;
     tradehtml = tradehtml + '<div class="alert-info">'+percentagechange+numberoftrades+'</div>'
     tradehtml = tradehtml+ '<div class="historicblock"><div class="header" data-translate="historictrades">'+tradedata.length+' Historic Trades <span style="float:right"><span class="green twins">x</span> / <span class="orange tpush">y</span> / <span class="red tlosses">z</span></span></div>';
-    tradehtml = tradehtml+ '<div class="historicblock" class="header"><div class="historictradebuttons buttons"><button class="btn-sm btn-default btn-next '+next.class+' right">'+next.label+'</button></div></div>';
+    // tradehtml = tradehtml+ '<div class="historicblock" class="header"><div class="historictradebuttons buttons"><button class="btn-sm btn-default btn-next '+next.class+' right">'+next.label+'</button></div></div>';
     if (data) {
     tradehtml = tradehtml + '<div class="row-fluid"><div class="span12"><div><table class="table" id="historictrades">';
     tradehtml = tradehtml + '<tbody>';
@@ -261,7 +266,7 @@ function historicTrades(data) {
     tradehtml = tradehtml + '</div></div></div></tbody></table></div>';
 
     // Add next and prev buttons
-    tradehtml = tradehtml + '<div class="historictradebuttons buttons"><button class="btn-sm btn-default btn-prev '+prev.class+' left">'+prev.label+'</button><button class="btn-sm btn-default btn-next '+next.class+' right">'+next.label+'</button></div>';
+    //tradehtml = tradehtml + '<div class="historictradebuttons buttons"><button class="btn-sm btn-default btn-prev '+prev.class+' left">'+prev.label+'</button><button class="btn-sm btn-default btn-next '+next.class+' right">'+next.label+'</button></div>';
     
     $('.allhistorictrades').append(tradehtml);
     $('.twins').html(twins);

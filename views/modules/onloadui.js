@@ -434,26 +434,34 @@ $(".globalheader").on("click",".centerlogo",function(e) {
     $('.'+symbol+' .chart-time.downplay').toggleClass('vanish');
   });
 
+
   $(".hook").on("click",".applytrade",function(e) {
-      if (applyingtrade==false) {
-        applyingtrade = true;
-        var symbol = $(this).attr('data-symbol');
-        var direction = $('.'+symbol+' .action').val();
-        var amount = Number($('.'+symbol+' .info .amount .amountfield').val());
-        var tradetime = $('.'+symbol+' .time').val();
-        amount = amount.toFixed(2);
-        //user = userid;
-        if (symbol && direction != 'none' && amount > 0) {
-          socket.emit('trade', {
-            symbol : symbol,
-            amount : amount,
-            direction : direction,
-            time : tradetime,
-            user : user
-          });
-        }
-      }
+    var symbol = $(this).attr('data-symbol');
+    var direction = $('.'+symbol+' .action').val();
+    var amount = Number($('.'+symbol+' .info .amount .amountfield').val());
+    var tradetime = $('.'+symbol+' .time').val();
+    amount = amount.toFixed(2);
+    //user = userid;
+    if (symbol && direction != 'none' && amount > 0) {
+      socket.emit('trade', {
+        symbol : symbol,
+        amount : amount,
+        direction : direction,
+        time : tradetime,
+        user : user
+      });
+    }
   });
+
+  socket.on('newtrade', function (trade) {
+    if (trade) {
+      setTimeout(function() {
+        applyingtrade = false;
+      }, 500);
+    }
+    console.log(trade);
+  });
+
 
   $(".hook").on("click",".applyautotrade",function(e) {
       // if (applyingtrade == false) {

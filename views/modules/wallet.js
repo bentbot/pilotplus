@@ -137,9 +137,11 @@ function showWallet(data) {
     showCards(data);
     //$(".wallet").html(html);
 
-    $.get('/view/wallet-deposit', function (data, status) {
+    $.get('/view/wallet', function (data, status) {
       $('.wallet').html(data);
-    })
+    });
+
+    console.log('loading wallet page')
 
 }
 

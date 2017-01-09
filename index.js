@@ -311,8 +311,8 @@ var time = 0;
 var clock = setInterval(function() {
   time = new Date().getTime();
   date = new Date();
-  checknextTrade(); // Check for the next trade
   io.sockets.emit('servertime', time);
+  checknextTrade(); // Check for the next trade
 }, 1000);
 
 //****************//
@@ -609,8 +609,6 @@ function trade() {
 
   var loopedtrades = new Array(), t = 0;
 
-  if (tradingnow == false) {
-    tradingnow = true;
     // Looped trades and incrementet
     // Get active trades
     Activetrades.find({ }, function (err, trades) {
@@ -635,7 +633,7 @@ function trade() {
         }
 
         // Check if the cycle has ended
-        if (cycle.seconds <= keys.site.stoptrading && cycle.seconds < 1) {
+
           // Check the direction and calculate the outcome
           var winnings = 0;
           if (trade.direction == 'Call') {
@@ -701,7 +699,7 @@ function trade() {
             if (err) throw(err);
           });
           
-        }// timing cycle check
+
 
       });//foreach trade loop
 
@@ -720,10 +718,7 @@ function trade() {
     totalput = {};
     trades = new Array();
     lasttrade = time;
-  } else {
-    tradingnow = false;
-    console.log('Trade loop was triggered however it did not run.');
-  }
+
 }
 
 
@@ -743,6 +738,8 @@ function cookTrades(trades) {
 
   // Findall 
     async.each(trades, function (trade) {
+
+
       Historictrades.find({ user: trade.user }, function (err, historic) {
       if (err) throw (err);
         User.findOne({ username: trade.user }, function (err, user) {
@@ -809,11 +806,13 @@ function cookTrades(trades) {
             }
           }
 
+          console.log(achievements)
 
           // User.findOneAndUpdate({ username: trade.user }, achievements, {upsert: true}, function (err) {
           //   if (err) throw (err);
           // });
-          //console.log('Trade outcome for ' + trade.user + ' Won:' + x[trade.user] + ' Tied:' + y[trade.user] + ' Lost:' + z[trade.user]);
+
+          console.log('Trade outcome for ' + trade.user + ' Won:' + x[trade.user] + ' Tied:' + y[trade.user] + ' Lost:' + z[trade.user]);
 
           io.sockets.emit('tradeoutcome',  { 
             user: trade.user, 
@@ -1017,6 +1016,8 @@ function addTrade(symbol, amount, direction, user, expiry, socket, callback) {
 }
 var tradenow = false, nexttrade = new Array(), nexttradesecs = new Array(),nexttrademins = new Array(),nexttradehrs = new Array(), hrs = new Array(),  mins = new Array(), secs = new Array();
 
+
+
 function checknextTrade() {
   for (var i = keys.site.tradeevery.length - 1; i >= 0; i--) {
     tradeevery = keys.site.tradeevery;
@@ -1078,11 +1079,11 @@ function checknextTrade() {
 
     nexttradesecs[i] = Number( Number(hrs[i]*3600)+Number(mins[i]*60)+Number(secs[i]));
 
-    //console.log(hrs[i],mins[i],secs[i], nexttradesecs[i], string);
+    // console.log(hrs[i],mins[i],secs[i], nexttradesecs[i], string);
 
     if (nexttradesecs[i] == 0) {
       tradenow = true;
-      console.log('calling a trade');
+      console.log( 'traded '+nexttrade[i] );
       trade();
     }
 
@@ -1794,10 +1795,17 @@ io.sockets.on('connection', function (socket) {
 
 
   socket.on('historictrades', function (data) {
-    if ( myName != keys.site.admin ) data.user = myName;
-    if (!data.limit) data.limit = 5;
-    if (!data.skip) data.skip = 0;
-    Historictrades.find({ user: data.user }).sort({time:-1}).limit(data.limit).skip(data.skip).find(function(err, historictrades) {
+    
+    if (!data) {
+      var user = myName;
+      var limit = 5;
+      var skip = 0;
+    } else if (data) {
+      if ( myName == keys.site.admin && data.user ) var user = data.user;
+      var limit = data.limit;
+      var skip = data.skip;
+    }
+    Historictrades.find({ user: myName }).sort({time:-1}).limit(limit).skip(skip).find(function(err, historictrades) {
       socket.emit('historictrades', historictrades);
     });
   });
@@ -2433,7 +2441,7 @@ app.get('/verifyemail/:email', function(req, res, next) {
     { upsert: true },
     function(err, docs) {
       if (err) res.send('NO');
-      console.log(docs);
+      // console.log(docs);
       sendConfirmation(uemail, key, function(err, resp) {
         if (err) throw(err);
         res.send('OK');
@@ -2497,13 +2505,13 @@ app.get('/login/:username/:password/:factor', function(req, res) {
                   
                   // If user exits
                   if (user) {
-                    console.log(user)
+
                     // Test the password
                     var cookieTimeout = keys.cookietimeout; // 10 Hour timeout
 
                       user.comparePassword(password, function(isMatch, err) {
                           if (err)  { throw (err); } else {
-                            console.log(isMatch)
+
                             // On success
                             if (isMatch == true) {
                               // Generate a signature
@@ -2590,7 +2598,6 @@ app.get('/api', function (req, res) {
 // Adding A User
 // Application Endpoint
 app.get('/adduser/:username/:email/:password', function (req, res, next) {
-console.log(req.params.username);
   
   if (req.params.username) {
 
