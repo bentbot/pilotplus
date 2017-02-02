@@ -176,21 +176,6 @@ function historicTrades(data) {
           var arrowhtml = '<span style="opacity: 0.7" class="glyphicon glyphicon-arrow-down"></span>';
         }
 
-        var coeff = 1000 * 60 * 1;
-        var entrytime = new Date(0);
-        var entrydate = new Date(0);
-        var iodate = new Date(0);
-        entrytime.setUTCMilliseconds(entry.time);
-        entrydate.setUTCMilliseconds(entry.time);
-        iodate.setUTCMilliseconds(entry.time);
-        entrytime = new Date(Math.round(entrytime.getTime() / coeff) * coeff);
-        entrydate = new Date(Math.round(entrydate.getTime() / coeff) * coeff);
-        iodate = new Date(Math.round(iodate.getTime() / coeff) * coeff);
-        entrytime = entrytime.customFormat( "#hhh#:#mm# " );
-        entrydate = entrydate.customFormat( "#DD#/#MM#/#YYYY#" );
-        iodate = iodate.toISOString();
-
-
         if (entry.outcome == 'Win') {
           twins++;
           var thumbhtml = '<span class="green" data-translate="won">Won</span>';
@@ -227,7 +212,7 @@ function historicTrades(data) {
         tradehtml = tradehtml + '<tr class="historictrade '+classes+'" id="'+entry._id+'">' +
                     '<td class="symbol">'+entry.symbol+'</td>'+
                     '<td class="trade">'+arrowhtml+' <span class="tradeprice">'+entry.price+'</span></td>'+
-                    '<td class="time"><i style="opacity: 0.7"  class="fa fa-clock-o"></i> <time class="timeago" datetime="'+iodate+'">'+entrydate+' '+entrytime+'</time></td>'+
+                    '<td class="time"><i style="opacity: 0.7"  class="fa fa-clock-o"></i> <time class="timeago" datetime="'+entry.time+'">'+entry.time+'</time></td>'+
                     '<td class="price"><i style="opacity: 0.7"  class="fa fa-bell"></i> <span class="tradeprice">'+entry.finalprice+'</span></td>'+
                     //'<td title="Expires: '+thisdate+' '+thistime+'">'+thistime+'</td>'+
                     '<td class="amount">'+currencyicon+' '+entry.amount+'</td>'+
@@ -268,7 +253,7 @@ function historicTrades(data) {
     // Add next and prev buttons
     //tradehtml = tradehtml + '<div class="historictradebuttons buttons"><button class="btn-sm btn-default btn-prev '+prev.class+' left">'+prev.label+'</button><button class="btn-sm btn-default btn-next '+next.class+' right">'+next.label+'</button></div>';
     
-    $('.allhistorictrades').append(tradehtml);
+    $('.allhistorictrades').html(tradehtml);
     $('.twins').html(twins);
     $('.tpush').html(tpush);
     $('.tlosses').html(tlosses);

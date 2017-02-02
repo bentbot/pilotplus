@@ -9,12 +9,13 @@ require(['modules/remote']);
 require(['modules/local']);
 require(['modules/guest']);
 require(['modules/wallet']);
-require(['modules/withdrawal']);
+require(['modules/withdrawal']);  
 require(['modules/security']);
 require(['modules/terms']);
 require(['modules/chat']);
 require(['modules/xp']);
 require(['modules/referrals']);
+require(['modules/loginmodal']);
 
 
 var socket = io.connect('https://pilot.plus:3030', {secure: true});
@@ -51,7 +52,9 @@ var minsx, progress, symbols;
 var price = new Array();
 var updatekeystones = true;
 var publictrades = false;
+var currentpage = false;
 var date, percentagecomplete = 0, lasthistoric = null;
+var activeTradeUpdater = null, historicTradeUpdater = null;
 
 socket.on('stripe', function (data) {
   Stripe.setPublishableKey(data.publishableKey);
@@ -357,16 +360,11 @@ function loadTrades(displaysymbols, guest) {
   displayOptions(displaysymbols);
   updateOption(displaysymbols);
 
-  if (user && prefs['historictrades'] != false) {
-    socket.emit('historictrades', { limit: 5, skip: 0 });
-
-  }
+  // if (user && prefs['historictrades'] != false) {
+  //   // socket.emit('historictrades', { limit: 5, skip: 0 });
+  // }
 
   socket.on('historictrades', function (data) {
-    // console.log(data);
-
-
-
     $('li.recenttrades').remove();
     // Historic trades
     $('.grid').append('<li class="recenttrades" data-row="'+row+'" data-col="1" data-sizex="4" data-sizey="2"></li>'); row++;
@@ -374,7 +372,6 @@ function loadTrades(displaysymbols, guest) {
       //loadHistory(data);
       historicTrades(data);
       showhistoric(data);
-
   });
 
 
@@ -558,10 +555,20 @@ function loadHistory() {
   var page = '<div class="container" style="padding: 4px 0px;">'+
     '<div class="notif"></div>'+
     '<div class="allhistorictrades">'+
+    '<p class="preloader"><i class="fa fa-circle-o-notch fa-spin fa-2x fa-fw"></i></p>'+
     '</div>'+
   '</div>';
   $('.hook').html(page);
-  socket.emit('historictrades', { limit: 25, skip: 0, historicTrades: true });
+
+  if (activeTradeUpdater != null) clearInterval(activeTradeUpdater);
+  historicTradeUpdater = setInterval( function() {
+    socket.emit('historictrades', { limit: 25, skip: 0, historicTrades: true });
+  }, 1000);
+
+  // socket.on('historictrades', function (data) {
+  //     showhistoric(data);
+  // });
+
 }
 
 function loadProfile() {
@@ -572,6 +579,7 @@ function loadProfile() {
 
 // Page Changer
     socket.on('loadpage', function (data) {
+      currentpage = data.page;
       //console.log('loadpage ' + data.page);
       switch (data.page) {
         case 'trade':
@@ -732,7 +740,7 @@ function loadProfile() {
       $('.ratio').html(ratio);
     });
 
-    var percentage = 0;
+    var percentage = 0, numerator = '';
     socket.on('percentage', function (data) {
       percentage = data;
       var percentagechange = '', color = '';
@@ -744,7 +752,7 @@ function loadProfile() {
         color = 'red';
       }
       $('.percentage').html(percentage);
-      $('.percentagetradestring').html('<span class="'+color+'">'+numerator+percentage+'%</span>');
+      $('.percentagestring').html('<span class="'+color+'">'+numerator+percentage+'%</span>');
     });
 
     var level = 0;
@@ -813,8 +821,8 @@ function loadProfile() {
 
          socket.on('tradeadded', function (symbol) {
           symbol = symbolSwitch(symbol);
-           $('.apply'+symbol).removeClass('btn-warning').removeClass('btn-danger').removeClass('btn-default').addClass('btn-success').html('<span class="glyphicon glyphicon-ok"></span>');
-
+            $('.apply'+symbol).removeClass('btn-warning').removeClass('btn-danger').removeClass('btn-default').addClass('btn-success').html('<span class="glyphicon glyphicon-ok"></span>');
+            $('.'+symbol+' .action').val('none');
            setTimeout(function(e){
                 $('.call'+symbol).removeClass('btn-warnng').removeClass('btn-default').addClass('btn-success');
                 $('.put'+symbol).removeClass('btn-warnng').removeClass('btn-default').addClass('btn-danger');
@@ -830,7 +838,7 @@ function loadProfile() {
            $('.apply'+symbol).removeClass('btn-warning').addClass('btn-danger').html('<span  class="glyphicon glyphicon-remove"></span> '+err);
 
            setTimeout(function(e){
-                $('.apply'+symbol).removeClass('btn-danger').addClass('btn-warning').html('Apply');
+              $('.apply'+symbol).removeClass('btn-danger').addClass('btn-warning').html('Apply');
             },1000);
           });
 
@@ -866,21 +874,19 @@ socket.on('alertuser', function (data) {
 
 var windowInFocus = true;
 socket.on('tradeoutcome', function (data) {
-  console.log(data);
   if (data.user == user) {
     showSplit(data.x, data.y, data.z, data.change);
-    // var windowAnnounceCheck = setInterval( function() {
+    var windowAnnounceCheck = setInterval( function() {
       if (windowInFocus) {
-        // clearInterval(windowAnnounceCheck);
+        clearInterval(windowAnnounceCheck);
         setTimeout( function() {
           showXP(data.xp, data.lastxp, data.nextxp, data.change);
-          socket.emit('historictrades');
           setTimeout( function() {
             showSymbols();
           },data.change)
         }, data.change);
       }
-    // }, 500);
+    }, 500);
   }
   $('.trades li').css('left', '100%');
 });
@@ -942,9 +948,10 @@ function updateOption(symbol) {
     //   console.log(data);
     //   loadChart(symbol);
     // });
-
-
-  socket.emit('historictrades', {user: user, limit: 5});
+  if (historicTradeUpdater != null) clearInterval(historicTradeUpdater);
+  activeTradeUpdater = setInterval( function() {
+    socket.emit('historictrades', {user: user, limit: limittrades});
+  }, 1000);
 
   if ($('.chart-flags').hasClass('active')) {
     var time = $('.chart-time.active').attr('data-time');
@@ -991,7 +998,7 @@ if (!('contains' in String.prototype)) {
         return -1 !== String.prototype.indexOf.call(this, str, startIndex);
     };
 }
-
+ 
 // Function to add custom formats to dates in milliseconds
 Date.prototype.customFormat = function(formatString){
     var YYYY,YY,MMMM,MMM,MM,M,DDDD,DDD,DD,D,hhh,hh,h,mm,m,ss,s,ampm,AMPM,dMod,th;

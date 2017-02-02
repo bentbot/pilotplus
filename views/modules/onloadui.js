@@ -454,35 +454,29 @@ $(".globalheader").on("click",".centerlogo",function(e) {
   });
 
   socket.on('newtrade', function (trade) {
-    if (trade) {
-      setTimeout(function() {
-        applyingtrade = false;
-      }, 500);
-    }
-    console.log(trade);
+    // console.log(trade);
   });
 
 
   $(".hook").on("click",".applyautotrade",function(e) {
-      // if (applyingtrade == false) {
-        applyingtrade = true;
-        var symbol = $(this).attr('data-symbol');
-        var direction = $('.'+symbol+' .action').html();
-        var repeat = Number($('#'+symbol+' .info .repeat .repeatfield').val());
-        var amount = Number($('#'+symbol+' .info .amount .repeatamountfield').val());
-        amount = amount.toFixed(2);
-        //user = userid;
-        socket.emit('autotrade', {
-          symbol : symbol,
-          amount : amount,
-          repeat : repeat,
-          direction : direction,
-          user : user
-        });
-      // }
+    var symbol = $(this).attr('data-symbol');
+    var direction = $('.'+symbol+' .action').html();
+    var repeat = Number($('#'+symbol+' .info .repeat .repeatfield').val());
+    var amount = Number($('#'+symbol+' .info .amount .repeatamountfield').val());
+    amount = amount.toFixed(2);
+    //user = userid;
+    socket.emit('autotrade', {
+      symbol : symbol,
+      amount : amount,
+      repeat : repeat,
+      direction : direction,
+      user : user
+    });
   });
+  
+
+
   //   $(".hook").on("keyup",".applyautotrade",function(e) {
-  //     if (applyingtrade==false && e.keyCode == 13) {
   //       var symbol = $(this).attr('data-symbol');
   //       var direction = $('.'+symbol+' .action').html();
   //       var repeat = Number($('#'+symbol+' .info .repeat .repeatfield').val());
@@ -496,9 +490,7 @@ $(".globalheader").on("click",".centerlogo",function(e) {
   //         direction : direction,
   //         user : user
   //       });
-  //       applyingtrade = true;
   //     } 
-  //     setTimeout(function () { applyingtrade = false; }, 700);
   // });
 
   $(".hook").on("change keyup",".amountfield",function() {
@@ -863,13 +855,25 @@ function showSplit(x, y, z, change) {
     $(".announcesplit .z").html('');
 
     $(".announcesplit .x").css('width', (x/total)*100+'%');
-    if (((x/total)*100) > 10) { $(".announcesplit .x").html('Won for '+currencysymbol+' '+x.toFixed(2));  }
+    if (((x/total)*100) > 16) { 
+      $(".announcesplit .x").html('Won for '+currencysymbol+' '+x.toFixed(2));  
+    } else {
+      $(".announcesplit .x").html(currencysymbol +' '+ x.toFixed(2));  
+    }
 
     $(".announcesplit .y").css('width', (y/total)*100+'%').css('left', (x/total)*100+'%');
-    if (((y/total)*100) > 10) { $(".announcesplit .y").html('Pushed for '+currencysymbol+' '+y.toFixed(2)); }
+    if (((y/total)*100) > 16) { 
+      $(".announcesplit .y").html('Pushed for '+currencysymbol+' '+y.toFixed(2)); 
+    } else {
+      $(".announcesplit .y").html(currencysymbol +' '+ y.toFixed(2)); 
+    }
 
     $(".announcesplit .z").css('width', (z/total)*100+'%');
-    if (((z/total)*100) > 10) {  $(".announcesplit .z").html('Lost for '+currencysymbol+' '+z.toFixed(2)); }
+    if (((z/total)*100) > 16) { 
+      $(".announcesplit .z").html('Lost for '+currencysymbol+' '+z.toFixed(2)); 
+    } else {
+      $(".announcesplit .z").html(currencysymbol +' '+ z.toFixed(2)); 
+    }
 
     $(".announcesplit div").removeClass('applyspotlight');
 

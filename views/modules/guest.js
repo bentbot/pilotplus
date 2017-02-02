@@ -90,7 +90,6 @@ $(function () {
     var em = $(".email").val();
     var pwd = $(".pwd").val();
     var path = "adduser/"+un+"/"+em+"/"+pwd;
-    console.log( path );
     if (un && em && pwd && term && validemail && un.length >= 3) {
     $.ajax({
       url: path,

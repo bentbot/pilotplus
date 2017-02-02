@@ -80,12 +80,17 @@ function displayOptions(displaysymbols, guest) {
                             '</button>'+
                           '</div>'+
                       '</div>'+
-                  '</div>'+
+                  '</div>';
 
                  
 
-                  '<button type="button" data-translate="apply" data-symbol="'+symbol+'" class="btn btn-default applytrade apply'+symbol+'">Apply</button>'+
-                  '<span class="floater">+50xp</span>'+
+                  if ( !user ) {
+                    show = show + '<button type="button" data-translate="apply" data-symbol="'+symbol+'" class="btn btn-default applytrade apply'+symbol+'" data-toggle="modal" data-target="#login-modal">Apply</button>';
+                  } else {
+                    show = show + '<button type="button" data-translate="apply" data-symbol="'+symbol+'" class="btn btn-default applytrade apply'+symbol+'">Apply</button>';
+                  }
+                  
+                  show = show + '<span class="floater">+50xp</span>'+
 
                   '</div>'+
                 '<div class="auto hide">'+

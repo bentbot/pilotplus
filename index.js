@@ -402,8 +402,8 @@ Pageviews.remove({}, function(err) {
 //****************//
 var redis = require('redis')
 // Key value connect and money handling
-rclient = redis.createClient();
-rclient.auth(keys.redis);
+rclient = redis.createClient(6379, '198.84.239.37');
+rclient.auth(keys.redis.password);
 
 function pay(amount, tradeuser, currency, callback) {
   
@@ -594,6 +594,7 @@ var totalcall = {};
 var totalput = {};
 var tradingnow = false;
 var useraddress = {};
+var traders = new Array();
 var payout = new Array();
 var cachedPoints = {};
 var y = new Array();
@@ -607,7 +608,7 @@ var a = 0;
 
 function trade() {
 
-  var loopedtrades = new Array(), t = 0;
+  var loopedtrades = new Array(), traders = [], t = 0;
 
     // Looped trades and incrementet
     // Get active trades
@@ -615,6 +616,9 @@ function trade() {
 
       // For Loop
       trades.forEach( function (trade) {
+
+        // if ( trade.time + trade.expires ) 
+
 
         // Get the correct time cycle for this trade
         var cycle;
@@ -624,16 +628,29 @@ function trade() {
           }
         };
 
-        // Solve undefined trades
+
+
+        // Solve undefined symbols
         var symbolprice;
         if ( !price[trade.symbol] && price[trade.symbol] != undefined ) {
+          // An undefined price will generate a tie
           symbolprice = trade.price;
         } else {
           symbolprice = price[trade.symbol];
         }
 
-        // Check if the cycle has ended
+        // Add the trade user to the 'traders' array
+        var uniquetrader = true;
+        if (traders.length > 0) {
+          traders.forEach( function (trader) {
+              if (trader == trade.user) uniquetrader = false;
+          })
+        }
+        if (uniquetrader == true) traders.push(trade.user);  
+        
 
+        // Check if the cycle has ended
+        if (cycle.seconds < 1) {
           // Check the direction and calculate the outcome
           var winnings = 0;
           if (trade.direction == 'Call') {
@@ -698,14 +715,16 @@ function trade() {
           Activetrades.remove({ _id: trade._id }, function(err) {
             if (err) throw(err);
           });
-          
-
+        }
+        
 
       });//foreach trade loop
-
+        //console.log('Number of Traders: ', traders.length);
+        //console.log(traders);
       // Run graphical updates 
       if (loopedtrades.length > 0) cookTrades(loopedtrades);
     });//active trades
+
 
     // empty the ram and database of old objects
     x = new Array(); //win
@@ -718,6 +737,7 @@ function trade() {
     totalput = {};
     trades = new Array();
     lasttrade = time;
+    tradenow = false;
 
 }
 
@@ -735,100 +755,102 @@ function cookTrades(trades) {
   var currentlevel = new Array();
   var lastlevel = new Array();
   var nextlevel = new Array();
+  var processedtrades = new Array();
 
-  // Findall 
-    async.each(trades, function (trade) {
+  // Each trade
+  async.each(trades, function (trade) {
 
-
-      Historictrades.find({ user: trade.user }, function (err, historic) {
-      if (err) throw (err);
-        User.findOne({ username: trade.user }, function (err, user) {
-          if (err) throw (err);
-
-          // Send the pay function after the trade has been calculated
-          if (payout[trade.user+'.'+trade.currency] > 0) {
-            console.log(payout[trade.user+'.'+trade.currency]);
-            pay(payout[trade.user+'.'+trade.currency], trade.user, trade.currency, function (err, amount, username, currency) {
-              if (err) throw (err);
-                // Reset the user's payout
-                payout[trade.user+'.'+trade.currency] = null;
-            });
-          }
-
-        var achievements = {}, percentage = 50, i=0, w=0, l=0;
-
-        async.each( historic, function ( item ) {
-          i++;
-          if ( item.outcome == 'Win' ) w++;
-          if ( item.outcome == 'Lose' ) l++;
-        });
-
-        trade.amount = Number( trade.amount );
-        trade.offer = Number( trade.offer );
-
-        if (!x[trade.user]) x[trade.user] = 0;
-        if (!y[trade.user]) y[trade.user] = 0;
-        if (!z[trade.user]) z[trade.user] = 0;
-
-        if (trade.outcome == 'Win') { w++;
-          x[trade.user] = Number(+x[trade.user] + (+trade.amount+(trade.amount*trade.offer)));
-          xp[trade.user] = Number(+Number(xp[trade.user]) + +Number(keys.site.experience.win));
-        } else if (trade.outcome == 'Tie') {
-          y[trade.user] = Number(+y[trade.user] + trade.amount);
-          xp[trade.user] = Number(+Number(xp[trade.user]) + +Number(keys.site.experience.tie));
-        } else if (trade.outcome == 'Lose') { l++;
-          z[trade.user] = Number(+z[trade.user] + trade.amount);
-          xp[trade.user] = Number(+Number(xp[trade.user]) + +Number(keys.site.experience.loss));
-        }
-
-        percentage = Number(l/w*100);
-
-        if (user.experience) {
-          achievements.experience = Number(+Number(user.experience) + +Number(xp[trade.user]));
-        } else {
-          achievements.experience = Number(xp[trade.user]);
-        }
-
-          //achievements.experience = Number(experience);
-
-          for (var i = keys.site.levels.length - 1; i >= 0; i--) {
-            if ( keys.site.levels[i].xp < achievements.experience ) {
-              if ( keys.site.levels[i++].xp > achievements.experience ) {
-                currentlevel[trade.user] = level.name;
-                if (keys.site.levels[i--]) {
-                  lastlevel[trade.user] = keys.site.levels[i--].xp;
-                } else {
-                  levellevel[trade.user] = 0;
-                }
-                nextlevel[trade.user] = keys.site.levels[i++].xp;
-
-              }
-            }
-          }
-
-          console.log(achievements)
-
-          // User.findOneAndUpdate({ username: trade.user }, achievements, {upsert: true}, function (err) {
-          //   if (err) throw (err);
-          // });
-
-          console.log('Trade outcome for ' + trade.user + ' Won:' + x[trade.user] + ' Tied:' + y[trade.user] + ' Lost:' + z[trade.user]);
-
-          io.sockets.emit('tradeoutcome',  { 
-            user: trade.user, 
-            x: x[trade.user], 
-            y: y[trade.user], 
-            z: z[trade.user], 
-            xp: xp[trade.user], 
-            change: keys.site.splittimer,
-            level: currentlevel[trade.user], 
-            lastlevel: lastlevel[trade.user], 
-            nextlevel: nextlevel[trade.user] 
-          });
+    // Send the pay function after the trade has been calculated
+    if (payout[trade.user+'.'+trade.currency] > 0) {
+      console.log(payout[trade.user+'.'+trade.currency]);
+      pay(payout[trade.user+'.'+trade.currency], trade.user, trade.currency, function (err, amount, username, currency) {
+        if (err) throw (err);
+          // Reset the user's payout
+          payout[trade.user+'.'+trade.currency] = null;
       });
+    }
 
-    });
-  });
+    // Set default variables
+    var achievements = {}, percentage = 50, i=0, w=0, l=0;
+
+    // Calculate total wins / losses
+    // async.each( historic, function ( item ) {
+    //   i++;
+    //   if ( item.outcome == 'Win' ) w++;
+    //   if ( item.outcome == 'Lose' ) l++;
+    // });
+
+    percentage = Number(l/w*100);
+
+    // Numberify these variables
+    trade.amount = Number( trade.amount );
+    trade.offer = Number( trade.offer );
+
+    // Create empty array for x=win, y=tie, z=loss
+    if (!x[trade.user]) x[trade.user] = 0;
+    if (!y[trade.user]) y[trade.user] = 0;
+    if (!z[trade.user]) z[trade.user] = 0;
+
+    if (trade.outcome == 'Win') { w++;
+      x[trade.user] = Number(+x[trade.user] + (+trade.amount+(trade.amount*trade.offer)));
+      xp[trade.user] = Number(+Number(xp[trade.user]) + +Number(keys.site.experience.win));
+    } else if (trade.outcome == 'Tie') {
+      y[trade.user] = Number(+y[trade.user] + trade.amount);
+      xp[trade.user] = Number(+Number(xp[trade.user]) + +Number(keys.site.experience.tie));
+    } else if (trade.outcome == 'Lose') { l++;
+      z[trade.user] = Number(+z[trade.user] + trade.amount);
+      xp[trade.user] = Number(+Number(xp[trade.user]) + +Number(keys.site.experience.loss));
+    }
+
+    // if (!achievements.experience) achievements.experience = 0;
+    // if (user.experience) {
+    //   achievements.experience = Number(+Number(user.experience) + +Number(xp[trade.user]));
+    // } else {
+    //   achievements.experience = Number(xp[trade.user]);
+    // }
+
+
+    // Calculate the user's level
+    for (var i = keys.site.levels.length - 1; i >= 0; i--) {
+      if ( keys.site.levels[i].xp < achievements.experience ) {
+        if ( keys.site.levels[i++].xp > achievements.experience ) {
+          currentlevel[trade.user] = level.name;
+          if (keys.site.levels[i--]) {
+            lastlevel[trade.user] = keys.site.levels[i--].xp;
+          } else {
+            levellevel[trade.user] = 0;
+          }
+          nextlevel[trade.user] = keys.site.levels[i++].xp;
+
+        }
+      }
+    }
+
+    // console.log(achievements)
+
+    // User.findOneAndUpdate({ username: trade.user }, achievements, {upsert: true}, function (err) {
+    //   if (err) throw (err);
+    // });
+
+    console.log('Trade outcome for ' + trade.user + ' Won:' + x[trade.user] + ' Tied:' + y[trade.user] + ' Lost:' + z[trade.user]);
+    var justtraded = { 
+      user: trade.user, 
+      x: x[trade.user], 
+      y: y[trade.user], 
+      z: z[trade.user], 
+      xp: xp[trade.user], 
+      change: keys.site.splittimer,
+      level: currentlevel[trade.user], 
+      lastlevel: lastlevel[trade.user], 
+      nextlevel: nextlevel[trade.user] 
+    };
+
+    io.sockets.emit('tradeoutcome', justtraded);
+    
+    processedtrades.push(justtraded);
+
+  }); // Async trades
+
 }
 
 // Mathmatics
@@ -1083,7 +1105,6 @@ function checknextTrade() {
 
     if (nexttradesecs[i] == 0) {
       tradenow = true;
-      console.log( 'traded '+nexttrade[i] );
       trade();
     }
 
@@ -1795,17 +1816,20 @@ io.sockets.on('connection', function (socket) {
 
 
   socket.on('historictrades', function (data) {
-    
     if (!data) {
       var user = myName;
       var limit = 5;
       var skip = 0;
     } else if (data) {
-      if ( myName == keys.site.admin && data.user ) var user = data.user;
+      if ( myName == keys.site.admin && data.user ) {
+        var user = data.user;
+      } else {
+        user = myName;
+      }
       var limit = data.limit;
       var skip = data.skip;
     }
-    Historictrades.find({ user: myName }).sort({time:-1}).limit(limit).skip(skip).find(function(err, historictrades) {
+    Historictrades.find({ user: user }).sort({time:-1}).limit(limit).skip(skip).find(function(err, historictrades) {
       socket.emit('historictrades', historictrades);
     });
   });
