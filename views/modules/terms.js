@@ -36,7 +36,7 @@ function showTerms() {
     html = html + '<div class="alert alert-info" style="margin: 20px 0px;"><i class="fa fa-ticket" style="margin: 0px 10px;"></i><strong>Cookies</strong> This site may store a temporary cookie in your browser. Our cookies get eaten after a short time and you must login again.</div>';
 
     html = html + '<h2>Security</h2><p>'+
-      'This is an open source project. <b>Please send any bug reports to <a href="mailto:mail@vbit.io">mail@vbit.io</a> right away.</b><br />'+
+      'This is an open source project. <b>Please send any bug reports to <a href="mailto:mail@pilot.plus">mail@pilot.plus</a> right away.</b><br />'+
       'Security is a top concern, any breaches will be posted.'+
     '</p>'; 
 
@@ -47,8 +47,8 @@ function showTerms() {
     html = html + '<h1>Terms</h1>';
 
     html = html + '<p>'+
-      "Welcome to our website. If you continue to browse and use this website, you are agreeing to comply with and be bound by the following terms and conditions of use, which together with our privacy policy govern vbit's relationship with you in the context of this website"+
-      "The term 'vbit', 'vbit.io', or 'us' or 'we' refers to the owner of the website. The term 'you' refers to the user or viewer of our website." +
+      "Welcome to our website. If you continue to browse and use this website, you are agreeing to comply with and be bound by the following terms and conditions of use, which together with our privacy policy govern pilot's relationship with you in the context of this website"+
+      "The term 'pilot', 'pilot.plus', or 'us' or 'we' refers to the owner of the website. The term 'you' refers to the user or viewer of our website." +
       "The use of this website is subject to the following terms of use:" +
       "The content of the pages of this website is for your general information and use only. It is subject to change without notice." +
       "Neither we nor any third parties provide any warranty or guarantee as to the accuracy, timeliness, performance, completeness or suitability of the information and materials found or offered on this website for any particular purpose. Information provided by external APIs such as live prices are subject to external terms of service agreements, and such information may not be current or valid. You acknowledge that such information and materials may contain inaccuracies or errors and we expressly exclude liability for any such inaccuracies or errors to the fullest extent permitted by law." +
