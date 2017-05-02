@@ -51,8 +51,12 @@
 		"connection": "pilot.plus",
 		"channel": "#github"
 	},
-	"mongo": "mongodb://nodemongo:mongopassword@localhost/binarybtc",
-	"redis": "masterredispassword",
+	"mongo": "mongodb://airfrance:u6vfUrmXHnx6kaV6MUJ2fj86VpjJPbjE@198.84.239.37/pilot",
+        "redis": {
+                "password": "SuperExcryptedCypherForRedis",
+                "port": 6379,
+                "host": "localhost"
+        },
 	"send": "MasterMoneySendingPassword",
     "btcrpc": {
         "user": "bitcoin",
