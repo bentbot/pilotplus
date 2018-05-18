@@ -18,7 +18,7 @@
     "ejs": "2.3.1",
     "express": "4.12.3",
     "express-partials": "0.3.0",
-    "express-session": "1.11.1",
+    "express-session": "1.14.0",
     "irc": "0.3.11",
     "jade": "^1.11.0",
     "kapitalize": "0.3.3",
