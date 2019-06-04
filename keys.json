@@ -103,8 +103,8 @@
 			{ "title": "Comrade", "xp": "10000" },
 			{ "title": "Captain", "xp": "40000" },
 			{ "title": "Senior", "xp": "80000" },
-			{ "title": "Minor", "xp": "100000" },
-			{ "title": "Major", "xp": "300000" },
+			{ "title": "Senior Captain", "xp": "100000" },
+			{ "title": "Major General", "xp": "300000" },
 			{ "title": "Pro", "xp": "500000" },
 			{ "title": "Master", "xp": "1000000" }
 		],
