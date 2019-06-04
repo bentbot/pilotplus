@@ -5,6 +5,11 @@
 ### 1. Install Node.js, Redis, and MongoDB
 Install [Node.js](https://nodejs.org/en/download/) with *npm* if not already installed. This tutorial works best in  Ubuntu virtual environments.
 
+````
+$ yum install gcc
+$ yum install gcc-c++
+````
+
 Use a batch script or `apt-get` to install **MongoDB** and **Redis**
 ```
 $ sudo chmod +x ./dependencies.sh
