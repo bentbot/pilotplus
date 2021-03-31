@@ -1,4 +1,6 @@
-# [Pilot.Plus](https://pilot.plus/) Binary Options
+# [Pilot.Plus](http://hogan.re:8686/) Binary Options
+
+[Click here to play the demo!](http://hogan.re:8686/)
 
 ## Setup
 
