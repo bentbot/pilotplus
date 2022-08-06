@@ -25,7 +25,7 @@
     "merge-recursive": "0.0.3",
     "mongodb": "~2.0.39",
     "mongodb-core": "~1.2.7",
-    "mongoose": "^5.5.12",
+    "mongoose": "^6.4.6",
     "object-manage": "^0.8.0",
     "object-merge": "^2.5.1",
     "passport": "0.2.1",
