@@ -4,7 +4,9 @@
   "description": "Easily trade currencies in a secure environment, earning profitable returns.",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "snyk-protect": "snyk protect",
+    "prepublish": "npm run snyk-protect"
   },
   "dependencies": {
     "async": "0.9.0",
@@ -39,7 +41,8 @@
     "stripe": "^4.14.0",
     "striptags": "^2.1.1",
     "uuid": "^3.0.1",
-    "wildcard-subdomains": "^0.1.0"
+    "wildcard-subdomains": "^0.1.0",
+    "snyk": "^1.192.0"
   },
   "repository": {
     "type": "git",
@@ -54,5 +57,6 @@
     "url": "https://github.com/bentbot/pilotplus/issues"
   },
   "homepage": "https://pilot.plus/",
-  "engine": "0.10.33"
+  "engine": "0.10.33",
+  "snyk": true
 }
